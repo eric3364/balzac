@@ -60,14 +60,18 @@ export const useUserStats = () => {
           .rpc('get_user_max_level', { user_uuid: user.id });
 
         // Calculer le temps total passé uniquement sur les tests complétés
+        console.log('Sessions data:', sessions);
         const timeSpent = sessions?.reduce((total, session) => {
+          console.log('Processing session:', session);
           // Ne compter que les sessions complétées avec des dates valides
           if (session.started_at && session.ended_at && session.status === 'completed') {
             const start = new Date(session.started_at);
             const end = new Date(session.ended_at);
             const sessionDuration = Math.round((end.getTime() - start.getTime()) / (1000 * 60)); // en minutes
+            console.log('Session duration:', sessionDuration, 'minutes');
             // Ignorer les sessions anormalement longues (plus de 8 heures = 480 minutes)
             if (sessionDuration > 0 && sessionDuration <= 480) {
+              console.log('Adding duration to total:', sessionDuration);
               return total + sessionDuration;
             }
           }
