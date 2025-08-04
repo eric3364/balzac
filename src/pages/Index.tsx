@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BookOpen, Award, Users, CheckCircle, Star, ArrowRight } from 'lucide-react';
+import { BookOpen, Award, Users, CheckCircle, Star, ArrowRight, Shield } from 'lucide-react';
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -44,6 +44,10 @@ const Index = () => {
             </div>
           </div>
           <div className="flex items-center gap-4">
+            <Button variant="ghost" onClick={() => navigate('/admin-auth')}>
+              <Shield className="mr-2 h-4 w-4" />
+              Administration
+            </Button>
             <Button variant="ghost" onClick={() => navigate('/auth')}>
               Connexion
             </Button>
