@@ -647,9 +647,14 @@ export default function Test() {
           <Card>
             <CardHeader>
               <div className="space-y-3">
-                {/* Numéro de la question */}
-                <div className="text-2xl font-bold text-primary">
-                  Question {currentQuestionIndex + 1}
+                {/* Numéro de la question et ID */}
+                <div className="flex items-center justify-between">
+                  <div className="text-2xl font-bold text-primary">
+                    Question {currentQuestionIndex + 1}
+                  </div>
+                  <div className="text-sm text-muted-foreground bg-gray-100 px-2 py-1 rounded">
+                    ID: {currentQuestion.id}
+                  </div>
                 </div>
                 
                 {/* Niveau et type */}
