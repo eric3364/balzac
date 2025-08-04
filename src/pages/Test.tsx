@@ -19,6 +19,7 @@ interface Question {
   answer: string;
   type: string;
   level: number;
+  rule?: string;
   explanation?: string;
 }
 
@@ -645,35 +646,53 @@ export default function Test() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl">
-                Question {currentQuestionIndex + 1}
-              </CardTitle>
-              <div className="flex items-center gap-2">
-                <Badge variant="outline">Niveau {currentQuestion.level}</Badge>
-                <Badge variant="outline">{currentQuestion.type}</Badge>
+              <div className="space-y-3">
+                {/* Numéro de la question */}
+                <div className="text-2xl font-bold text-primary">
+                  Question {currentQuestionIndex + 1}
+                </div>
+                
+                {/* Niveau et type */}
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary">Niveau {currentQuestion.level}</Badge>
+                  <Badge variant="outline">{currentQuestion.type}</Badge>
+                </div>
+                
+                {/* Règle (si présente) */}
+                {currentQuestion.rule && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <div className="text-sm font-medium text-blue-800 mb-1">Règle :</div>
+                    <div className="text-blue-700">{currentQuestion.rule}</div>
+                  </div>
+                )}
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="text-lg font-medium leading-relaxed">
+              {/* Contenu de la question */}
+              <div className="text-lg font-medium leading-relaxed bg-gray-50 p-4 rounded-lg border">
                 {currentQuestion.content}
               </div>
 
+              {/* Choix de réponses */}
               {currentQuestion.choices && currentQuestion.choices.length > 0 ? (
-                <RadioGroup value={selectedAnswer} onValueChange={handleAnswerSelect}>
-                  <div className="space-y-3">
-                    {currentQuestion.choices.map((choice, index) => (
-                      <div key={index} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors">
-                        <RadioGroupItem value={choice} id={`choice-${index}`} />
-                        <Label htmlFor={`choice-${index}`} className="flex-1 cursor-pointer">
-                          {choice}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </RadioGroup>
+                <div>
+                  <div className="text-sm font-medium text-muted-foreground mb-3">Choix de réponses :</div>
+                  <RadioGroup value={selectedAnswer} onValueChange={handleAnswerSelect}>
+                    <div className="space-y-3">
+                      {currentQuestion.choices.map((choice, index) => (
+                        <div key={index} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors">
+                          <RadioGroupItem value={choice} id={`choice-${index}`} />
+                          <Label htmlFor={`choice-${index}`} className="flex-1 cursor-pointer">
+                            {choice}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </RadioGroup>
+                </div>
               ) : (
                 <div className="space-y-3">
-                  <Label htmlFor="answer-input">Votre réponse :</Label>
+                  <Label htmlFor="answer-input" className="text-sm font-medium">Votre réponse :</Label>
                   <Input
                     id="answer-input"
                     type="text"
