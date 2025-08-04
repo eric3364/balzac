@@ -74,12 +74,54 @@ export type Database = {
         }
         Relationships: []
       }
+      question_attempts: {
+        Row: {
+          attempts_count: number | null
+          created_at: string | null
+          id: string
+          is_correct: boolean | null
+          last_attempt_at: string | null
+          level: number
+          question_id: number
+          user_id: string
+        }
+        Insert: {
+          attempts_count?: number | null
+          created_at?: string | null
+          id?: string
+          is_correct?: boolean | null
+          last_attempt_at?: string | null
+          level: number
+          question_id: number
+          user_id: string
+        }
+        Update: {
+          attempts_count?: number | null
+          created_at?: string | null
+          id?: string
+          is_correct?: boolean | null
+          last_attempt_at?: string | null
+          level?: number
+          question_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_attempts_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       questions: {
         Row: {
           answer: string | null
           choices: string[] | null
           content: string | null
           created_at: string | null
+          explanation: string | null
           id: number
           level: number | null
           rule: string | null
@@ -90,6 +132,7 @@ export type Database = {
           choices?: string[] | null
           content?: string | null
           created_at?: string | null
+          explanation?: string | null
           id?: number
           level?: number | null
           rule?: string | null
@@ -100,6 +143,7 @@ export type Database = {
           choices?: string[] | null
           content?: string | null
           created_at?: string | null
+          explanation?: string | null
           id?: number
           level?: number | null
           rule?: string | null
@@ -164,13 +208,47 @@ export type Database = {
         }
         Relationships: []
       }
+      test_batches: {
+        Row: {
+          batch_number: number
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          level: number
+          questions_count: number | null
+          user_id: string
+        }
+        Insert: {
+          batch_number: number
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          level: number
+          questions_count?: number | null
+          user_id: string
+        }
+        Update: {
+          batch_number?: number
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          level?: number
+          questions_count?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       test_sessions: {
         Row: {
+          certification_target: boolean | null
           created_at: string | null
+          current_batch: number | null
+          current_level: number | null
           deleted_at: string | null
           ended_at: string | null
           id: string
           level: number | null
+          questions_mastered: number | null
           score: number | null
           started_at: string | null
           status: string | null
@@ -178,11 +256,15 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          certification_target?: boolean | null
           created_at?: string | null
+          current_batch?: number | null
+          current_level?: number | null
           deleted_at?: string | null
           ended_at?: string | null
           id?: string
           level?: number | null
+          questions_mastered?: number | null
           score?: number | null
           started_at?: string | null
           status?: string | null
@@ -190,15 +272,46 @@ export type Database = {
           user_id: string
         }
         Update: {
+          certification_target?: boolean | null
           created_at?: string | null
+          current_batch?: number | null
+          current_level?: number | null
           deleted_at?: string | null
           ended_at?: string | null
           id?: string
           level?: number | null
+          questions_mastered?: number | null
           score?: number | null
           started_at?: string | null
           status?: string | null
           total_questions?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_certifications: {
+        Row: {
+          certified_at: string | null
+          created_at: string | null
+          id: string
+          level: number
+          score: number
+          user_id: string
+        }
+        Insert: {
+          certified_at?: string | null
+          created_at?: string | null
+          id?: string
+          level: number
+          score: number
+          user_id: string
+        }
+        Update: {
+          certified_at?: string | null
+          created_at?: string | null
+          id?: string
+          level?: number
+          score?: number
           user_id?: string
         }
         Relationships: []
@@ -244,6 +357,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_max_level: {
+        Args: { user_uuid?: string }
+        Returns: number
+      }
       is_super_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
