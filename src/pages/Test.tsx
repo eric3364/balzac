@@ -678,8 +678,8 @@ export default function Test() {
                 {currentQuestion.content}
               </div>
 
-              {/* Choix de réponses */}
-              {currentQuestion.choices && currentQuestion.choices.length > 0 ? (
+              {/* Choix de réponses - affiché seulement si choices n'est pas null */}
+              {currentQuestion.choices && currentQuestion.choices.length > 0 && (
                 <div>
                   <div className="text-sm font-medium text-muted-foreground mb-3">Choix de réponses :</div>
                   <RadioGroup value={selectedAnswer} onValueChange={handleAnswerSelect}>
@@ -695,7 +695,10 @@ export default function Test() {
                     </div>
                   </RadioGroup>
                 </div>
-              ) : (
+              )}
+
+              {/* Champ de saisie libre - affiché seulement si pas de choices */}
+              {(!currentQuestion.choices || currentQuestion.choices.length === 0) && (
                 <div className="space-y-3">
                   <Label htmlFor="answer-input" className="text-sm font-medium">Votre réponse :</Label>
                   <Input
