@@ -57,9 +57,43 @@ const Dashboard = () => {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card>
             <CardHeader>
-              <CardTitle>Tableau de bord</CardTitle>
+              <CardTitle>Tests passés</CardTitle>
               <CardDescription>
-                Votre progression et statistiques
+                Nombre total de tests effectués
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">
+                {userStats.loading ? '...' : userStats.totalTests}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Tests complétés
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Questions répondues</CardTitle>
+              <CardDescription>
+                Total des questions traitées
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">
+                {userStats.loading ? '...' : userStats.totalQuestions}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Questions au total
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Progression</CardTitle>
+              <CardDescription>
+                Votre taux de réussite
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -67,7 +101,62 @@ const Dashboard = () => {
                 {userStats.loading ? '...' : `${userStats.progressPercentage}%`}
               </p>
               <p className="text-sm text-muted-foreground">
-                Progression globale ({userStats.correctAnswers}/{userStats.totalQuestions} correctes)
+                De bonnes réponses
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Réponses correctes</CardTitle>
+              <CardDescription>
+                Questions réussies
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-green-600">
+                {userStats.loading ? '...' : userStats.correctAnswers}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Bonnes réponses
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Réponses incorrectes</CardTitle>
+              <CardDescription>
+                Questions à retravailler
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-red-600">
+                {userStats.loading ? '...' : userStats.incorrectAnswers}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Erreurs commises
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Temps d'étude</CardTitle>
+              <CardDescription>
+                Durée sur la plateforme
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">
+                {userStats.loading ? '...' : 
+                  userStats.timeSpent >= 60 ? 
+                    `${Math.floor(userStats.timeSpent / 60)}h ${userStats.timeSpent % 60}min` :
+                    `${userStats.timeSpent}min`
+                }
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Temps total passé
               </p>
             </CardContent>
           </Card>
