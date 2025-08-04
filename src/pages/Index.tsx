@@ -3,15 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { BookOpen, Award, Users, CheckCircle, Star, ArrowRight } from 'lucide-react';
 
 const Index = () => {
-  const { user, loading, signOut } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect to auth if not authenticated
+  // Redirect authenticated users to dashboard
   useEffect(() => {
-    if (!loading && !user) {
-      navigate('/auth');
+    if (!loading && user) {
+      navigate('/dashboard');
     }
   }, [user, loading, navigate]);
 
@@ -26,89 +27,203 @@ const Index = () => {
     );
   }
 
-  if (!user) {
-    return null; // Will redirect to auth
+  if (user) {
+    return null; // Will redirect to dashboard
   }
 
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-card">
+      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-primary">Balzac Certification</h1>
-            <p className="text-sm text-muted-foreground">Plateforme d'apprentissage du français</p>
+          <div className="flex items-center gap-2">
+            <BookOpen className="h-8 w-8 text-primary" />
+            <div>
+              <h1 className="text-2xl font-bold text-primary">Balzac Certification</h1>
+              <p className="text-sm text-muted-foreground">Excellence en français</p>
+            </div>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">
-              Bonjour, {user.user_metadata?.first_name || user.email}
-            </span>
-            <Button variant="outline" onClick={signOut}>
-              Déconnexion
+            <Button variant="ghost" onClick={() => navigate('/auth')}>
+              Connexion
+            </Button>
+            <Button onClick={() => navigate('/auth')}>
+              Commencer
             </Button>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card>
-            <CardHeader>
-              <CardTitle>Tableau de bord</CardTitle>
-              <CardDescription>
-                Votre progression et statistiques
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">0%</p>
-              <p className="text-sm text-muted-foreground">Progression globale</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Certifications</CardTitle>
-              <CardDescription>
-                Vos badges obtenus
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">0</p>
-              <p className="text-sm text-muted-foreground">Certifications obtenues</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Niveau actuel</CardTitle>
-              <CardDescription>
-                Votre niveau d'étude
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">Élémentaire</p>
-              <p className="text-sm text-muted-foreground">Niveau 1</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="mt-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Commencer un test</CardTitle>
-              <CardDescription>
-                Testez vos connaissances et progressez dans votre apprentissage
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button className="w-full sm:w-auto">
-                Démarrer un nouveau test
+      {/* Hero Section */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-primary/5 to-background">
+        <div className="container mx-auto px-4 py-20 text-center">
+          <div className="max-w-4xl mx-auto">
+            <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+              Maîtrisez le français avec excellence
+            </h1>
+            <p className="text-xl md:text-2xl text-muted-foreground mb-8 leading-relaxed">
+              Une plateforme de certification complète pour valider et perfectionner vos compétences en langue française
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button size="lg" className="text-lg px-8 py-4" onClick={() => navigate('/auth')}>
+                Commencer gratuitement
+                <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
-            </CardContent>
-          </Card>
+              <Button size="lg" variant="outline" className="text-lg px-8 py-4">
+                Découvrir nos programmes
+              </Button>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-20 bg-card/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Pourquoi choisir Balzac Certification ?</h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Une approche moderne et rigoureuse pour certifier vos compétences linguistiques
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <CardHeader className="text-center">
+                <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                  <BookOpen className="h-6 w-6 text-primary" />
+                </div>
+                <CardTitle>Tests adaptatifs</CardTitle>
+                <CardDescription>
+                  Des évaluations personnalisées qui s'adaptent à votre niveau pour un apprentissage optimal
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <CardHeader className="text-center">
+                <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                  <Award className="h-6 w-6 text-primary" />
+                </div>
+                <CardTitle>Certifications reconnues</CardTitle>
+                <CardDescription>
+                  Obtenez des certifications officielles valorisables dans votre parcours professionnel
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <CardHeader className="text-center">
+                <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                  <Users className="h-6 w-6 text-primary" />
+                </div>
+                <CardTitle>Communauté active</CardTitle>
+                <CardDescription>
+                  Rejoignez une communauté d'apprenants motivés et bénéficiez d'un accompagnement personnalisé
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-3 gap-8 text-center">
+            <div>
+              <div className="text-4xl md:text-5xl font-bold text-primary mb-2">10K+</div>
+              <p className="text-lg text-muted-foreground">Apprenants certifiés</p>
+            </div>
+            <div>
+              <div className="text-4xl md:text-5xl font-bold text-primary mb-2">95%</div>
+              <p className="text-lg text-muted-foreground">Taux de satisfaction</p>
+            </div>
+            <div>
+              <div className="text-4xl md:text-5xl font-bold text-primary mb-2">15+</div>
+              <p className="text-lg text-muted-foreground">Niveaux disponibles</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-20 bg-card/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Ce que disent nos apprenants</h2>
+          </div>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              {
+                name: "Marie Dubois",
+                role: "Étudiante en commerce",
+                content: "Grâce à Balzac Certification, j'ai pu valider mon niveau B2 et décrocher le stage de mes rêves !",
+                rating: 5
+              },
+              {
+                name: "Pierre Martin",
+                role: "Professionnel",
+                content: "Une plateforme exceptionnelle qui m'a permis de progresser rapidement en français professionnel.",
+                rating: 5
+              },
+              {
+                name: "Sofia Chen",
+                role: "Étudiante internationale",
+                content: "L'approche pédagogique est remarquable. Je recommande vivement cette certification.",
+                rating: 5
+              }
+            ].map((testimonial, index) => (
+              <Card key={index} className="border-0 shadow-lg">
+                <CardContent className="p-6">
+                  <div className="flex mb-4">
+                    {[...Array(testimonial.rating)].map((_, i) => (
+                      <Star key={i} className="h-5 w-5 fill-primary text-primary" />
+                    ))}
+                  </div>
+                  <p className="text-muted-foreground mb-4 italic">"{testimonial.content}"</p>
+                  <div>
+                    <p className="font-semibold">{testimonial.name}</p>
+                    <p className="text-sm text-muted-foreground">{testimonial.role}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-gradient-to-r from-primary to-primary/80">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            Prêt à certifier vos compétences ?
+          </h2>
+          <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
+            Rejoignez des milliers d'apprenants qui ont déjà validé leur maîtrise du français
+          </p>
+          <Button size="lg" variant="secondary" className="text-lg px-8 py-4" onClick={() => navigate('/auth')}>
+            Commencer maintenant
+            <CheckCircle className="ml-2 h-5 w-5" />
+          </Button>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t bg-card">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <div className="flex items-center gap-2 mb-4 md:mb-0">
+              <BookOpen className="h-6 w-6 text-primary" />
+              <span className="font-semibold">Balzac Certification</span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              © 2024 Balzac Certification. Tous droits réservés.
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
