@@ -38,6 +38,42 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          company_name: string | null
+          full_name: string | null
+          id: string
+          is_founder: boolean | null
+          role: string | null
+          updated_at: string | null
+          username: string | null
+          website: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          company_name?: string | null
+          full_name?: string | null
+          id: string
+          is_founder?: boolean | null
+          role?: string | null
+          updated_at?: string | null
+          username?: string | null
+          website?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          company_name?: string | null
+          full_name?: string | null
+          id?: string
+          is_founder?: boolean | null
+          role?: string | null
+          updated_at?: string | null
+          username?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
       questions: {
         Row: {
           answer: string | null
@@ -165,49 +201,41 @@ export type Database = {
           total_questions?: number | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "test_sessions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       users: {
         Row: {
-          auth_id: string | null
           class_name: string | null
           created_at: string | null
           email: string
-          first_name: string
+          first_name: string | null
           id: string
           is_active: boolean | null
-          last_name: string
+          last_name: string | null
           school: string | null
+          user_id: string | null
         }
         Insert: {
-          auth_id?: string | null
           class_name?: string | null
           created_at?: string | null
           email: string
-          first_name: string
+          first_name?: string | null
           id?: string
           is_active?: boolean | null
-          last_name: string
+          last_name?: string | null
           school?: string | null
+          user_id?: string | null
         }
         Update: {
-          auth_id?: string | null
           class_name?: string | null
           created_at?: string | null
           email?: string
-          first_name?: string
+          first_name?: string | null
           id?: string
           is_active?: boolean | null
-          last_name?: string
+          last_name?: string | null
           school?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
