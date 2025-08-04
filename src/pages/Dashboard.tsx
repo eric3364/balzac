@@ -1,11 +1,13 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserStats } from '@/hooks/useUserStats';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 const Dashboard = () => {
   const { user, loading, signOut } = useAuth();
+  const userStats = useUserStats();
   const navigate = useNavigate();
 
   // Redirect to auth if not authenticated
@@ -61,8 +63,12 @@ const Dashboard = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold">0%</p>
-              <p className="text-sm text-muted-foreground">Progression globale</p>
+              <p className="text-2xl font-bold">
+                {userStats.loading ? '...' : `${userStats.progressPercentage}%`}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Progression globale ({userStats.correctAnswers}/{userStats.totalQuestions} correctes)
+              </p>
             </CardContent>
           </Card>
 
@@ -74,7 +80,9 @@ const Dashboard = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold">0</p>
+              <p className="text-2xl font-bold">
+                {userStats.loading ? '...' : userStats.certificationsCount}
+              </p>
               <p className="text-sm text-muted-foreground">Certifications obtenues</p>
             </CardContent>
           </Card>
@@ -87,8 +95,18 @@ const Dashboard = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold">Élémentaire</p>
-              <p className="text-sm text-muted-foreground">Niveau 1</p>
+              <p className="text-2xl font-bold">
+                {userStats.loading ? '...' : 
+                  userStats.currentLevel === 1 ? 'Élémentaire' :
+                  userStats.currentLevel === 2 ? 'Intermédiaire' :
+                  userStats.currentLevel === 3 ? 'Avancé' :
+                  userStats.currentLevel === 4 ? 'Expert' :
+                  userStats.currentLevel === 5 ? 'Maître' : 'Élémentaire'
+                }
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Niveau {userStats.loading ? '1' : userStats.currentLevel}
+              </p>
             </CardContent>
           </Card>
         </div>
