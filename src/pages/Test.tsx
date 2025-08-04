@@ -695,49 +695,17 @@ export default function Test() {
                 {currentQuestion.content}
               </div>
 
-              {/* Choix de réponses - affiché seulement si choices n'est pas null */}
-              {currentQuestion.choices && Array.isArray(currentQuestion.choices) && currentQuestion.choices.length > 0 && (
-                <div>
-                  <div className="text-sm font-medium text-muted-foreground mb-3">
-                    Choix de réponses : (ID: {currentQuestion.id})
-                  </div>
-                  <RadioGroup value={selectedAnswer} onValueChange={handleAnswerSelect}>
-                    <div className="space-y-3">
-                      {currentQuestion.choices.map((choice, index) => (
-                        <div key={index} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors">
-                          <RadioGroupItem value={choice} id={`choice-${index}`} />
-                          <Label htmlFor={`choice-${index}`} className="flex-1 cursor-pointer">
-                            {choice}
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
-                  </RadioGroup>
-                </div>
-              )}
-
-              {/* Debug info pour vérifier les données */}
-              {process.env.NODE_ENV === 'development' && (
-                <div className="text-xs text-gray-500 bg-gray-100 p-2 rounded">
-                  Debug - Choices: {JSON.stringify(currentQuestion.choices)} 
-                  <br />Type: {typeof currentQuestion.choices}
-                  <br />IsArray: {Array.isArray(currentQuestion.choices).toString()}
-                </div>
-              )}
-
-              {/* Champ de saisie libre - affiché seulement si pas de choices */}
-              {(!currentQuestion.choices || currentQuestion.choices.length === 0) && (
-                <div className="space-y-3">
-                  <Label htmlFor="answer-input" className="text-sm font-medium">Votre réponse :</Label>
-                  <Input
-                    id="answer-input"
-                    type="text"
-                    value={selectedAnswer}
-                    onChange={(e) => setSelectedAnswer(e.target.value)}
-                    placeholder="Tapez votre réponse ici..."
-                  />
-                </div>
-              )}
+              {/* Champ de saisie libre - toujours disponible */}
+              <div className="space-y-3">
+                <Label htmlFor="answer-input" className="text-sm font-medium">Votre réponse :</Label>
+                <Input
+                  id="answer-input"
+                  type="text"
+                  value={selectedAnswer}
+                  onChange={(e) => setSelectedAnswer(e.target.value)}
+                  placeholder="Tapez votre réponse ici..."
+                />
+              </div>
 
               <div className="flex justify-between items-center pt-4">
                 <div className="text-sm text-muted-foreground">
