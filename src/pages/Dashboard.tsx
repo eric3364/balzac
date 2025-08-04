@@ -102,7 +102,7 @@ const Dashboard = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full sm:w-auto">
+              <Button className="w-full sm:w-auto" onClick={() => navigate('/test')}>
                 Démarrer un nouveau test
               </Button>
             </CardContent>
