@@ -679,9 +679,11 @@ export default function Test() {
               </div>
 
               {/* Choix de réponses - affiché seulement si choices n'est pas null */}
-              {currentQuestion.choices && currentQuestion.choices.length > 0 && (
+              {currentQuestion.choices && Array.isArray(currentQuestion.choices) && currentQuestion.choices.length > 0 && (
                 <div>
-                  <div className="text-sm font-medium text-muted-foreground mb-3">Choix de réponses :</div>
+                  <div className="text-sm font-medium text-muted-foreground mb-3">
+                    Choix de réponses : (ID: {currentQuestion.id})
+                  </div>
                   <RadioGroup value={selectedAnswer} onValueChange={handleAnswerSelect}>
                     <div className="space-y-3">
                       {currentQuestion.choices.map((choice, index) => (
@@ -694,6 +696,15 @@ export default function Test() {
                       ))}
                     </div>
                   </RadioGroup>
+                </div>
+              )}
+
+              {/* Debug info pour vérifier les données */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className="text-xs text-gray-500 bg-gray-100 p-2 rounded">
+                  Debug - Choices: {JSON.stringify(currentQuestion.choices)} 
+                  <br />Type: {typeof currentQuestion.choices}
+                  <br />IsArray: {Array.isArray(currentQuestion.choices).toString()}
                 </div>
               )}
 
