@@ -59,12 +59,17 @@ export const useUserStats = () => {
         const { data: maxLevelData } = await supabase
           .rpc('get_user_max_level', { user_uuid: user.id });
 
-        // Calculer le temps total passé (approximation basée sur les sessions)
+        // Calculer le temps total passé uniquement sur les tests complétés
         const timeSpent = sessions?.reduce((total, session) => {
-          if (session.started_at && session.ended_at) {
+          // Ne compter que les sessions complétées avec des dates valides
+          if (session.started_at && session.ended_at && session.status === 'completed') {
             const start = new Date(session.started_at);
             const end = new Date(session.ended_at);
-            return total + Math.round((end.getTime() - start.getTime()) / (1000 * 60)); // en minutes
+            const sessionDuration = Math.round((end.getTime() - start.getTime()) / (1000 * 60)); // en minutes
+            // Ignorer les sessions anormalement longues (plus de 8 heures = 480 minutes)
+            if (sessionDuration > 0 && sessionDuration <= 480) {
+              return total + sessionDuration;
+            }
           }
           return total;
         }, 0) || 0;
