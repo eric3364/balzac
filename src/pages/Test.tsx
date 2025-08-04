@@ -1,127 +1,236 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { toast } from '@/components/ui/use-toast';
+import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, CheckCircle, XCircle, Clock } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { ArrowLeft, Clock, Trophy, CheckCircle, AlertTriangle, Star } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Badge } from '@/components/ui/badge';
 
 interface Question {
   id: number;
   content: string;
-  choices: string[];
+  choices: string[] | null;
   answer: string;
   type: string;
   level: number;
-  rule?: string;
+  explanation?: string;
 }
 
 interface TestSession {
   id: string;
   started_at: string;
   total_questions: number;
+  current_level: number;
+  current_batch: number;
+  questions_mastered: number;
+  certification_target: boolean;
 }
 
-const Test = () => {
+interface UserCertification {
+  id: string;
+  level: number;
+  certified_at: string;
+  score: number;
+}
+
+interface QuestionAttempt {
+  question_id: number;
+  attempts_count: number;
+  is_correct: boolean;
+}
+
+interface TestBatch {
+  id: string;
+  batch_number: number;
+  level: number;
+  questions_count: number;
+  completed_at?: string;
+}
+
+export default function Test() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
   
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState('');
-  const [userAnswers, setUserAnswers] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [selectedAnswer, setSelectedAnswer] = useState<string>('');
+  const [userAnswers, setUserAnswers] = useState<{ [key: number]: string }>({});
+  const [loading, setLoading] = useState(true);
   const [testSession, setTestSession] = useState<TestSession | null>(null);
-  const [timeElapsed, setTimeElapsed] = useState(0);
-  const [testCompleted, setTestCompleted] = useState(false);
+  const [timer, setTimer] = useState(0);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [isBatchCompleted, setIsBatchCompleted] = useState(false);
   const [score, setScore] = useState(0);
+  const [currentLevel, setCurrentLevel] = useState(1);
+  const [maxLevel, setMaxLevel] = useState(0);
+  const [certifications, setCertifications] = useState<UserCertification[]>([]);
+  const [questionAttempts, setQuestionAttempts] = useState<{ [key: number]: QuestionAttempt }>({});
+  const [currentBatch, setCurrentBatch] = useState<TestBatch | null>(null);
+  const [incorrectQuestions, setIncorrectQuestions] = useState<Set<number>>(new Set());
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [lastAnswer, setLastAnswer] = useState<{ correct: boolean; explanation?: string } | null>(null);
+  const [completedQuestionIds, setCompletedQuestionIds] = useState<Set<number>>(new Set());
+  const [batchScore, setBatchScore] = useState(0);
+  const [totalAnswered, setTotalAnswered] = useState(0);
+  const [correctAnswers, setCorrectAnswers] = useState(0);
 
   // Timer effect
   useEffect(() => {
-    if (testSession && !testCompleted) {
-      const timer = setInterval(() => {
-        setTimeElapsed(prev => prev + 1);
+    if (testSession && !isCompleted) {
+      const interval = setInterval(() => {
+        setTimer(prev => prev + 1);
       }, 1000);
-      return () => clearInterval(timer);
+      return () => clearInterval(interval);
     }
-  }, [testSession, testCompleted]);
+  }, [testSession, isCompleted]);
 
-  // Load questions on component mount
+  // Load initial data
   useEffect(() => {
     if (!user) {
       navigate('/auth');
       return;
     }
-    loadQuestions();
+    loadInitialData();
   }, [user, navigate]);
 
-  const loadQuestions = async () => {
+  const loadInitialData = async () => {
     try {
-      setIsLoading(true);
+      setLoading(true);
       
-      // Fetch 10 random questions
-      const { data: questionsData, error } = await supabase
+      // Get user's max certified level
+      const { data: maxLevelData } = await supabase
+        .rpc('get_user_max_level', { user_uuid: user!.id });
+      
+      const userMaxLevel = maxLevelData || 0;
+      setMaxLevel(userMaxLevel);
+      
+      // Start with the next level to certify
+      const targetLevel = userMaxLevel + 1;
+      setCurrentLevel(targetLevel);
+      
+      // Load user certifications
+      const { data: certificationsData } = await supabase
+        .from('user_certifications')
+        .select('*')
+        .eq('user_id', user!.id);
+      
+      setCertifications(certificationsData || []);
+      
+      // Load questions for the target level
+      await loadQuestionsForLevel(targetLevel);
+      
+    } catch (error) {
+      console.error('Error loading initial data:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les données du test.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadQuestionsForLevel = async (level: number, excludeIds: number[] = []) => {
+    try {
+      // Get completed question IDs for this level
+      const { data: attemptsData } = await supabase
+        .from('question_attempts')
+        .select('question_id')
+        .eq('user_id', user!.id)
+        .eq('level', level)
+        .eq('is_correct', true);
+      
+      const completedIds = attemptsData?.map(a => a.question_id) || [];
+      const allExcludedIds = [...completedIds, ...excludeIds];
+      
+      setCompletedQuestionIds(new Set(completedIds));
+      
+      // Load new batch of 30 questions, excluding completed ones
+      let query = supabase
         .from('questions')
         .select('*')
-        .limit(10);
-
-      if (error) {
-        toast({
-          title: "Erreur",
-          description: "Impossible de charger les questions.",
-          variant: "destructive"
-        });
-        return;
+        .eq('level', level)
+        .limit(30);
+      
+      if (allExcludedIds.length > 0) {
+        query = query.not('id', 'in', `(${allExcludedIds.join(',')})`);
       }
-
+      
+      const { data: questionsData, error } = await query;
+      
+      if (error) throw error;
+      
       if (!questionsData || questionsData.length === 0) {
-        toast({
-          title: "Aucune question",
-          description: "Aucune question disponible pour le moment.",
-          variant: "destructive"
-        });
+        // No more questions available for this level
+        await checkCertificationEligibility(level);
         return;
       }
-
-      setQuestions(questionsData);
+      
+      // Shuffle questions
+      const shuffledQuestions = questionsData.sort(() => Math.random() - 0.5);
+      setQuestions(shuffledQuestions);
       
       // Create test session
       const { data: sessionData, error: sessionError } = await supabase
         .from('test_sessions')
         .insert({
-          user_id: user.id,
+          user_id: user!.id,
           status: 'in_progress',
-          total_questions: questionsData.length,
-          level: 1
+          total_questions: shuffledQuestions.length,
+          current_level: level,
+          current_batch: 1,
+          certification_target: true
         })
         .select()
         .single();
-
-      if (sessionError) {
-        console.error('Error creating test session:', sessionError);
-      } else {
-        setTestSession(sessionData);
-      }
-
+      
+      if (sessionError) throw sessionError;
+      
+      setTestSession(sessionData);
+      
+      // Create test batch
+      const { data: batchData, error: batchError } = await supabase
+        .from('test_batches')
+        .insert({
+          user_id: user!.id,
+          batch_number: 1,
+          level: level,
+          questions_count: shuffledQuestions.length
+        })
+        .select()
+        .single();
+      
+      if (batchError) throw batchError;
+      
+      setCurrentBatch(batchData);
+      
+      // Reset counters
+      setCurrentQuestionIndex(0);
+      setUserAnswers({});
+      setTotalAnswered(0);
+      setCorrectAnswers(0);
+      setBatchScore(0);
+      
     } catch (error) {
       console.error('Error loading questions:', error);
       toast({
         title: "Erreur",
-        description: "Une erreur est survenue lors du chargement.",
+        description: "Impossible de charger les questions.",
         variant: "destructive"
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const handleAnswerSelect = (answer: string) => {
     setSelectedAnswer(answer);
+    setShowExplanation(false);
   };
 
   const handleNextQuestion = async () => {
@@ -137,7 +246,27 @@ const Test = () => {
     const currentQuestion = questions[currentQuestionIndex];
     const isCorrect = selectedAnswer === currentQuestion.answer;
     
-    // Save answer to database
+    // Update counters
+    const newTotalAnswered = totalAnswered + 1;
+    const newCorrectAnswers = correctAnswers + (isCorrect ? 1 : 0);
+    const newBatchScore = Math.round((newCorrectAnswers / newTotalAnswered) * 100);
+    
+    setTotalAnswered(newTotalAnswered);
+    setCorrectAnswers(newCorrectAnswers);
+    setBatchScore(newBatchScore);
+    
+    // Show explanation for incorrect answers
+    if (!isCorrect && currentQuestion.explanation) {
+      setLastAnswer({ correct: false, explanation: currentQuestion.explanation });
+      setShowExplanation(true);
+    } else {
+      setLastAnswer({ correct: isCorrect });
+    }
+    
+    // Save/update question attempt
+    await saveQuestionAttempt(currentQuestion.id, isCorrect);
+    
+    // Save answer to test_answers
     if (testSession && user) {
       await supabase.from('test_answers').insert({
         session_id: testSession.id,
@@ -151,43 +280,149 @@ const Test = () => {
     }
 
     // Update local state
-    const newAnswers = [...userAnswers, selectedAnswer];
-    setUserAnswers(newAnswers);
+    setUserAnswers(prev => ({ ...prev, [currentQuestion.id]: selectedAnswer }));
+    
+    if (!isCorrect) {
+      setIncorrectQuestions(prev => new Set([...prev, currentQuestion.id]));
+    }
 
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       setSelectedAnswer('');
     } else {
-      // Test completed
-      await completeTest(newAnswers);
+      // Batch completed
+      await completeBatch();
     }
   };
 
-  const completeTest = async (finalAnswers: string[]) => {
-    const correctAnswers = questions.filter((question, index) => 
-      finalAnswers[index] === question.answer
-    ).length;
-    
-    const finalScore = Math.round((correctAnswers / questions.length) * 100);
-    setScore(finalScore);
-    setTestCompleted(true);
-
-    // Update test session
-    if (testSession && user) {
-      await supabase
-        .from('test_sessions')
-        .update({
-          status: 'completed',
-          score: finalScore,
-          ended_at: new Date().toISOString()
-        })
-        .eq('id', testSession.id);
+  const saveQuestionAttempt = async (questionId: number, isCorrect: boolean) => {
+    try {
+      // Get existing attempt
+      const { data: existingAttempt } = await supabase
+        .from('question_attempts')
+        .select('*')
+        .eq('user_id', user!.id)
+        .eq('question_id', questionId)
+        .eq('level', currentLevel)
+        .single();
+      
+      if (existingAttempt) {
+        // Update existing attempt
+        await supabase
+          .from('question_attempts')
+          .update({
+            attempts_count: existingAttempt.attempts_count + 1,
+            is_correct: isCorrect,
+            last_attempt_at: new Date().toISOString()
+          })
+          .eq('id', existingAttempt.id);
+      } else {
+        // Create new attempt
+        await supabase
+          .from('question_attempts')
+          .insert({
+            user_id: user!.id,
+            question_id: questionId,
+            level: currentLevel,
+            session_id: testSession?.id,
+            attempts_count: 1,
+            is_correct: isCorrect,
+            last_attempt_at: new Date().toISOString()
+          });
+      }
+    } catch (error) {
+      console.error('Error saving question attempt:', error);
     }
+  };
 
-    toast({
-      title: "Test terminé !",
-      description: `Votre score : ${finalScore}%`,
-    });
+  const completeBatch = async () => {
+    try {
+      // Update batch as completed
+      if (currentBatch) {
+        await supabase
+          .from('test_batches')
+          .update({ completed_at: new Date().toISOString() })
+          .eq('id', currentBatch.id);
+      }
+      
+      setIsBatchCompleted(true);
+      
+      // Check if user reached 75% for certification
+      if (batchScore >= 75) {
+        await checkCertificationEligibility(currentLevel);
+      }
+      
+    } catch (error) {
+      console.error('Error completing batch:', error);
+    }
+  };
+
+  const checkCertificationEligibility = async (level: number) => {
+    try {
+      // Get all correct attempts for this level
+      const { data: correctAttempts } = await supabase
+        .from('question_attempts')
+        .select('question_id')
+        .eq('user_id', user!.id)
+        .eq('level', level)
+        .eq('is_correct', true);
+      
+      // Get total questions for this level
+      const { data: totalQuestions } = await supabase
+        .from('questions')
+        .select('id')
+        .eq('level', level);
+      
+      const correctCount = correctAttempts?.length || 0;
+      const totalCount = totalQuestions?.length || 0;
+      
+      if (totalCount === 0) return;
+      
+      const overallScore = Math.round((correctCount / totalCount) * 100);
+      
+      if (overallScore >= 75) {
+        // User is certified for this level
+        await createCertification(level, overallScore);
+        setIsCompleted(true);
+        setScore(overallScore);
+      }
+      
+    } catch (error) {
+      console.error('Error checking certification eligibility:', error);
+    }
+  };
+
+  const createCertification = async (level: number, score: number) => {
+    try {
+      const { data: certification, error } = await supabase
+        .from('user_certifications')
+        .insert({
+          user_id: user!.id,
+          level: level,
+          score: score
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      setCertifications(prev => [...prev, certification]);
+      
+      toast({
+        title: "🎉 Certification obtenue !",
+        description: `Félicitations ! Vous êtes certifié niveau ${level} avec ${score}% de réussite.`,
+      });
+      
+    } catch (error) {
+      console.error('Error creating certification:', error);
+    }
+  };
+
+  const continueWithNewBatch = async () => {
+    const incorrectIds = Array.from(incorrectQuestions);
+    await loadQuestionsForLevel(currentLevel, []);
+    setIsBatchCompleted(false);
+    setIncorrectQuestions(new Set());
   };
 
   const formatTime = (seconds: number) => {
@@ -200,18 +435,88 @@ const Test = () => {
     return null;
   }
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <h1 className="text-2xl font-semibold mb-2">Chargement du test...</h1>
-          <p className="text-muted-foreground">Préparation de vos questions</p>
+          <p className="text-muted-foreground">Préparation de vos questions niveau {currentLevel}</p>
         </div>
       </div>
     );
   }
 
-  if (testCompleted) {
+  // Batch completion screen
+  if (isBatchCompleted && !isCompleted) {
+    return (
+      <div className="min-h-screen bg-background">
+        <header className="border-b bg-card">
+          <div className="container mx-auto px-4 py-4">
+            <Button variant="ghost" onClick={() => navigate('/dashboard')} className="mb-2">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Retour au tableau de bord
+            </Button>
+          </div>
+        </header>
+
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-2xl mx-auto text-center">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-center gap-2">
+                  <Star className="h-6 w-6 text-yellow-500" />
+                  Lot de 30 questions terminé
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-primary mb-2">{batchScore}%</div>
+                  <p className="text-muted-foreground">Score de ce lot</p>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 text-center">
+                  <div>
+                    <div className="text-2xl font-semibold text-green-600">{correctAnswers}</div>
+                    <p className="text-sm text-muted-foreground">Correctes</p>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-semibold text-red-600">{totalAnswered - correctAnswers}</div>
+                    <p className="text-sm text-muted-foreground">Incorrectes</p>
+                  </div>
+                </div>
+
+                {batchScore >= 75 ? (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <p className="text-green-800 font-medium">
+                      Excellent ! Vous progressez vers la certification niveau {currentLevel}.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <p className="text-yellow-800 font-medium">
+                      Continuez vos efforts ! Il vous faut 75% pour obtenir la certification.
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-3">
+                  <Button onClick={continueWithNewBatch} size="lg">
+                    Continuer avec 30 nouvelles questions
+                  </Button>
+                  <Button variant="outline" onClick={() => navigate('/dashboard')}>
+                    Arrêter et revenir au tableau de bord
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Final certification screen
+  if (isCompleted) {
     return (
       <div className="min-h-screen bg-background">
         <header className="border-b bg-card">
@@ -226,54 +531,60 @@ const Test = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-2xl mx-auto text-center">
             <div className="mb-8">
-              {score >= 70 ? (
-                <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-              ) : (
-                <XCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-              )}
-              <h1 className="text-3xl font-bold mb-2">Test terminé !</h1>
+              <Trophy className="h-16 w-16 text-yellow-500 mx-auto mb-4" />
+              <h1 className="text-3xl font-bold mb-2">🎉 Certification obtenue !</h1>
               <p className="text-xl text-muted-foreground">
-                Votre score : <span className="font-bold text-primary">{score}%</span>
+                Niveau {currentLevel} certifié avec <span className="font-bold text-primary">{score}%</span>
               </p>
             </div>
 
             <Card>
               <CardHeader>
-                <CardTitle>Résultats détaillés</CardTitle>
+                <CardTitle>Félicitations !</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex justify-between">
-                  <span>Questions répondues :</span>
-                  <span className="font-semibold">{questions.length}</span>
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <p className="text-green-800">
+                    Vous avez obtenu votre certification niveau {currentLevel} ! 
+                    Le niveau {currentLevel + 1} est maintenant disponible.
+                  </p>
                 </div>
-                <div className="flex justify-between">
-                  <span>Réponses correctes :</span>
-                  <span className="font-semibold text-green-600">
-                    {questions.filter((q, i) => userAnswers[i] === q.answer).length}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Réponses incorrectes :</span>
-                  <span className="font-semibold text-red-600">
-                    {questions.filter((q, i) => userAnswers[i] !== q.answer).length}
-                  </span>
-                </div>
+                
                 <div className="flex justify-between">
                   <span>Temps total :</span>
-                  <span className="font-semibold">{formatTime(timeElapsed)}</span>
+                  <span className="font-semibold">{formatTime(timer)}</span>
+                </div>
+                
+                <div className="flex justify-between">
+                  <span>Score final :</span>
+                  <span className="font-semibold text-green-600">{score}%</span>
                 </div>
               </CardContent>
             </Card>
 
             <div className="mt-8 flex gap-4 justify-center">
-              <Button onClick={() => navigate('/dashboard')}>
+              <Button onClick={() => navigate('/dashboard')} size="lg">
                 Retour au tableau de bord
               </Button>
               <Button variant="outline" onClick={() => window.location.reload()}>
-                Refaire un test
+                Continuer vers le niveau {currentLevel + 1}
               </Button>
             </div>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (questions.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <h1 className="text-2xl font-semibold mb-2">Aucune question disponible</h1>
+          <p className="text-muted-foreground">Toutes les questions de ce niveau ont été complétées.</p>
+          <Button onClick={() => navigate('/dashboard')} className="mt-4">
+            Retour au tableau de bord
+          </Button>
         </div>
       </div>
     );
@@ -291,14 +602,18 @@ const Test = () => {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Retour au tableau de bord
           </Button>
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <div className="flex items-center gap-1">
-              <Clock className="h-4 w-4" />
-              {formatTime(timeElapsed)}
+          <div className="flex items-center gap-4">
+            <Badge variant="secondary">Niveau {currentLevel}</Badge>
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <Clock className="h-4 w-4" />
+                {formatTime(timer)}
+              </div>
+              <span>
+                Question {currentQuestionIndex + 1} sur {questions.length}
+              </span>
+              <span>Score: {batchScore}%</span>
             </div>
-            <span>
-              Question {currentQuestionIndex + 1} sur {questions.length}
-            </span>
           </div>
         </div>
       </header>
@@ -313,16 +628,30 @@ const Test = () => {
       {/* Question Content */}
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
+          {/* Show explanation if needed */}
+          {showExplanation && lastAnswer && !lastAnswer.correct && lastAnswer.explanation && (
+            <Card className="mb-6 border-yellow-200 bg-yellow-50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-yellow-800">
+                  <AlertTriangle className="h-5 w-5" />
+                  Explication
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-yellow-700">{lastAnswer.explanation}</p>
+              </CardContent>
+            </Card>
+          )}
+
           <Card>
             <CardHeader>
               <CardTitle className="text-xl">
                 Question {currentQuestionIndex + 1}
               </CardTitle>
-              {currentQuestion.rule && (
-                <CardDescription>
-                  Règle : {currentQuestion.rule}
-                </CardDescription>
-              )}
+              <div className="flex items-center gap-2">
+                <Badge variant="outline">Niveau {currentQuestion.level}</Badge>
+                <Badge variant="outline">{currentQuestion.type}</Badge>
+              </div>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="text-lg font-medium leading-relaxed">
@@ -345,12 +674,11 @@ const Test = () => {
               ) : (
                 <div className="space-y-3">
                   <Label htmlFor="answer-input">Votre réponse :</Label>
-                  <input
+                  <Input
                     id="answer-input"
                     type="text"
                     value={selectedAnswer}
                     onChange={(e) => setSelectedAnswer(e.target.value)}
-                    className="w-full p-3 border rounded-lg"
                     placeholder="Tapez votre réponse ici..."
                   />
                 </div>
@@ -358,14 +686,14 @@ const Test = () => {
 
               <div className="flex justify-between items-center pt-4">
                 <div className="text-sm text-muted-foreground">
-                  Niveau {currentQuestion.level} • {currentQuestion.type}
+                  {correctAnswers} correctes sur {totalAnswered} répondues
                 </div>
                 <Button 
                   onClick={handleNextQuestion}
                   disabled={!selectedAnswer}
                   size="lg"
                 >
-                  {currentQuestionIndex === questions.length - 1 ? 'Terminer le test' : 'Question suivante'}
+                  {currentQuestionIndex === questions.length - 1 ? 'Terminer le lot' : 'Question suivante'}
                 </Button>
               </div>
             </CardContent>
@@ -374,6 +702,4 @@ const Test = () => {
       </div>
     </div>
   );
-};
-
-export default Test;
+}
