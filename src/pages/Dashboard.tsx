@@ -131,7 +131,7 @@ const Dashboard = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-red-600">
+              <p className="text-2xl font-bold text-destructive">
                 {userStats.loading ? '...' : userStats.incorrectAnswers}
               </p>
               <p className="text-sm text-muted-foreground">
