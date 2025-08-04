@@ -2,12 +2,15 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserStats } from '@/hooks/useUserStats';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Settings } from 'lucide-react';
 
 const Dashboard = () => {
   const { user, loading, signOut } = useAuth();
   const userStats = useUserStats();
+  const { isAdmin } = useIsAdmin();
   const navigate = useNavigate();
 
   // Redirect to auth if not authenticated
@@ -45,6 +48,11 @@ const Dashboard = () => {
             <span className="text-sm text-muted-foreground">
               Bonjour, {user.user_metadata?.first_name || user.email}
             </span>
+            {isAdmin && (
+              <Button variant="ghost" size="icon" onClick={() => navigate('/admin')} title="Administration">
+                <Settings className="h-4 w-4" />
+              </Button>
+            )}
             <Button variant="outline" onClick={signOut}>
               Déconnexion
             </Button>
