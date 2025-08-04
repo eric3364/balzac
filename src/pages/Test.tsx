@@ -93,6 +93,26 @@ export default function Test() {
     }
   }, [testSession, isCompleted]);
 
+  // Cleanup on page unload
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (testSession) {
+        // Use sendBeacon for reliable cleanup on page unload
+        navigator.sendBeacon('/api/end-session', JSON.stringify({
+          sessionId: testSession.id
+        }));
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      // Also cleanup when component unmounts
+      endTestSession();
+    };
+  }, [testSession]);
+
   // Load initial data
   useEffect(() => {
     if (!user) {
@@ -445,6 +465,22 @@ export default function Test() {
     setIncorrectQuestions(new Set());
   };
 
+  const endTestSession = async () => {
+    if (testSession) {
+      try {
+        await supabase
+          .from('test_sessions')
+          .update({ 
+            ended_at: new Date().toISOString(),
+            status: 'completed' 
+          })
+          .eq('id', testSession.id);
+      } catch (error) {
+        console.error('Error ending test session:', error);
+      }
+    }
+  };
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -472,7 +508,10 @@ export default function Test() {
       <div className="min-h-screen bg-background">
         <header className="border-b bg-card">
           <div className="container mx-auto px-4 py-4">
-            <Button variant="ghost" onClick={() => navigate('/dashboard')} className="mb-2">
+            <Button variant="ghost" onClick={async () => {
+              await endTestSession();
+              navigate('/dashboard');
+            }} className="mb-2">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Retour au tableau de bord
             </Button>
@@ -523,7 +562,10 @@ export default function Test() {
                   <Button onClick={continueWithNewBatch} size="lg">
                     Continuer avec {questionsPerTest} nouvelles questions
                   </Button>
-                  <Button variant="outline" onClick={() => navigate('/dashboard')}>
+                  <Button variant="outline" onClick={async () => {
+                    await endTestSession();
+                    navigate('/dashboard');
+                  }}>
                     Arrêter et revenir au tableau de bord
                   </Button>
                 </div>
@@ -541,7 +583,10 @@ export default function Test() {
       <div className="min-h-screen bg-background">
         <header className="border-b bg-card">
           <div className="container mx-auto px-4 py-4">
-            <Button variant="ghost" onClick={() => navigate('/dashboard')} className="mb-2">
+            <Button variant="ghost" onClick={async () => {
+              await endTestSession();
+              navigate('/dashboard');
+            }} className="mb-2">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Retour au tableau de bord
             </Button>
@@ -583,7 +628,10 @@ export default function Test() {
             </Card>
 
             <div className="mt-8 flex gap-4 justify-center">
-              <Button onClick={() => navigate('/dashboard')} size="lg">
+              <Button onClick={async () => {
+                await endTestSession();
+                navigate('/dashboard');
+              }} size="lg">
                 Retour au tableau de bord
               </Button>
               <Button variant="outline" onClick={() => window.location.reload()}>
@@ -602,7 +650,10 @@ export default function Test() {
         <div className="text-center">
           <h1 className="text-2xl font-semibold mb-2">Aucune question disponible</h1>
           <p className="text-muted-foreground">Toutes les questions de ce niveau ont été complétées.</p>
-          <Button onClick={() => navigate('/dashboard')} className="mt-4">
+          <Button onClick={async () => {
+            await endTestSession();
+            navigate('/dashboard');
+          }} className="mt-4">
             Retour au tableau de bord
           </Button>
         </div>
@@ -618,7 +669,10 @@ export default function Test() {
       {/* Header */}
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Button variant="ghost" onClick={() => navigate('/dashboard')}>
+          <Button variant="ghost" onClick={async () => {
+            await endTestSession();
+            navigate('/dashboard');
+          }}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Retour au tableau de bord
           </Button>
