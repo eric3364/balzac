@@ -153,12 +153,12 @@ export default function Test() {
       
       setCompletedQuestionIds(new Set(completedIds));
       
-      // Load new batch of 30 questions, excluding completed ones
+      // Load new batch of 5 questions, excluding completed ones
       let query = supabase
         .from('questions')
         .select('*')
         .eq('level', level)
-        .limit(30);
+        .limit(5);
       
       if (allExcludedIds.length > 0) {
         query = query.not('id', 'in', `(${allExcludedIds.join(',')})`);
@@ -483,7 +483,7 @@ export default function Test() {
               <CardHeader>
                 <CardTitle className="flex items-center justify-center gap-2">
                   <Star className="h-6 w-6 text-yellow-500" />
-                  Lot de 30 questions terminé
+                  Lot de 5 questions terminé
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -519,7 +519,7 @@ export default function Test() {
 
                 <div className="flex flex-col gap-3">
                   <Button onClick={continueWithNewBatch} size="lg">
-                    Continuer avec 30 nouvelles questions
+                    Continuer avec 5 nouvelles questions
                   </Button>
                   <Button variant="outline" onClick={() => navigate('/dashboard')}>
                     Arrêter et revenir au tableau de bord
