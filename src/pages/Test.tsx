@@ -284,18 +284,19 @@ export default function Test() {
     // Save/update question attempt
     await saveQuestionAttempt(currentQuestion.id, isCorrect);
     
-    // Save answer to test_answers
-    if (testSession && user) {
-      await supabase.from('test_answers').insert({
-        session_id: testSession.id,
-        question_id: currentQuestion.id.toString(),
-        user_answer: selectedAnswer,
-        is_correct: isCorrect,
-        user_id: user.id,
-        answered_at: new Date().toISOString(),
-        created_at: new Date().toISOString()
-      });
-    }
+    // Save answer to test_answers - Skip this table as it expects UUID and we have bigint
+    // We'll rely on question_attempts for statistics
+    // if (testSession && user) {
+    //   await supabase.from('test_answers').insert({
+    //     session_id: testSession.id,
+    //     question_id: currentQuestion.id.toString(),
+    //     user_answer: selectedAnswer,
+    //     is_correct: isCorrect,
+    //     user_id: user.id,
+    //     answered_at: new Date().toISOString(),
+    //     created_at: new Date().toISOString()
+    //   });
+    // }
 
     // Update local state
     setUserAnswers(prev => ({ ...prev, [currentQuestion.id]: selectedAnswer }));
@@ -342,7 +343,6 @@ export default function Test() {
             user_id: user!.id,
             question_id: questionId,
             level: currentLevel,
-            session_id: testSession?.id,
             attempts_count: 1,
             is_correct: isCorrect,
             last_attempt_at: new Date().toISOString()
