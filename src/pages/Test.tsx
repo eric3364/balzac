@@ -200,6 +200,16 @@ export default function Test() {
       const shuffledQuestions = questionsData.sort(() => Math.random() - 0.5);
       setQuestions(shuffledQuestions);
       
+      // First, complete any existing in-progress sessions
+      await supabase
+        .from('test_sessions')
+        .update({ 
+          status: 'completed',
+          ended_at: new Date().toISOString()
+        })
+        .eq('user_id', user!.id)
+        .eq('status', 'in_progress');
+
       // Create test session with unique ID
       const sessionId = crypto.randomUUID();
       const { data: sessionData, error: sessionError } = await supabase
@@ -218,22 +228,10 @@ export default function Test() {
       
       if (sessionError) {
         console.error('Session error:', sessionError);
-        // Try to find existing session instead
-        const { data: existingSession, error: findError } = await supabase
-          .from('test_sessions')
-          .select('*')
-          .eq('user_id', user!.id)
-          .eq('status', 'in_progress')
-          .single();
-        
-        if (existingSession && !findError) {
-          setTestSession(existingSession);
-        } else {
-          throw sessionError;
-        }
-      } else {
-        setTestSession(sessionData);
+        throw sessionError;
       }
+      
+      setTestSession(sessionData);
       
       // Create test batch
       const { data: batchData, error: batchError } = await supabase
