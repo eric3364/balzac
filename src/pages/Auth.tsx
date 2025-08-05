@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ArrowLeft } from 'lucide-react';
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -56,6 +57,17 @@ const Auth = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md">
+        <div className="mb-6">
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Retour à l'accueil
+          </Button>
+        </div>
+        
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-primary">Balzac Certification</h1>
           <p className="text-muted-foreground mt-2">Plateforme d'apprentissage du français</p>
