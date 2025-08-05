@@ -19,6 +19,7 @@ interface AdminUser {
 
 interface UserStats {
   total_users: number;
+  total_auth_users: number;
   total_test_sessions: number;
   total_certifications: number;
   avg_study_time: number;
@@ -90,8 +91,18 @@ const Admin = () => {
         supabase.from('user_certifications').select('id', { count: 'exact', head: true })
       ]);
 
+      // Obtenir le nombre d'utilisateurs authentifiés via la fonction Edge
+      let authUsersCount = 0;
+      try {
+        const { data: authUsersData } = await supabase.functions.invoke('get-auth-users-count');
+        authUsersCount = authUsersData?.count || 0;
+      } catch (error) {
+        console.warn('Impossible de récupérer le nombre d\'utilisateurs authentifiés:', error);
+      }
+
       setUserStats({
         total_users: usersResponse.count || 0,
+        total_auth_users: authUsersCount,
         total_test_sessions: sessionsResponse.count || 0,
         total_certifications: certificationsResponse.count || 0,
         avg_study_time: 0 // À calculer si nécessaire
@@ -158,8 +169,10 @@ const Admin = () => {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{userStats?.total_users || 0}</div>
-              <p className="text-xs text-muted-foreground">Total d'utilisateurs inscrits</p>
+              <div className="text-2xl font-bold">{userStats?.total_auth_users || 0}</div>
+              <p className="text-xs text-muted-foreground">
+                Utilisateurs authentifiés ({userStats?.total_users || 0} profils)
+              </p>
             </CardContent>
           </Card>
 
