@@ -40,6 +40,10 @@ export type Database = {
       }
       certificate_templates: {
         Row: {
+          badge_background_color: string | null
+          badge_color: string | null
+          badge_icon: string | null
+          badge_size: string | null
           certificate_background_color: string | null
           certificate_border_color: string | null
           certificate_subtitle: string | null
@@ -59,6 +63,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          badge_background_color?: string | null
+          badge_color?: string | null
+          badge_icon?: string | null
+          badge_size?: string | null
           certificate_background_color?: string | null
           certificate_border_color?: string | null
           certificate_subtitle?: string | null
@@ -78,6 +86,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          badge_background_color?: string | null
+          badge_color?: string | null
+          badge_icon?: string | null
+          badge_size?: string | null
           certificate_background_color?: string | null
           certificate_border_color?: string | null
           certificate_subtitle?: string | null

@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { BadgePreview, BadgeSelector } from '@/components/BadgePreview';
 import { Users, Settings, BarChart3, Shield, ArrowLeft, Save, Plus, Edit2, Trash2, Award } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -67,6 +68,10 @@ interface CertificateTemplate {
   certificate_background_color: string;
   certificate_border_color: string;
   certificate_text_color: string;
+  badge_icon: string;
+  badge_color: string;
+  badge_background_color: string;
+  badge_size: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -121,6 +126,10 @@ const Admin = () => {
     certificate_background_color: '#ffffff',
     certificate_border_color: '#6366f1',
     certificate_text_color: '#000000',
+    badge_icon: 'award',
+    badge_color: '#6366f1',
+    badge_background_color: '#ffffff',
+    badge_size: 'medium',
     is_active: true
   });
 
@@ -454,6 +463,10 @@ const Admin = () => {
         certificate_background_color: certificate.certificate_background_color,
         certificate_border_color: certificate.certificate_border_color,
         certificate_text_color: certificate.certificate_text_color,
+        badge_icon: certificate.badge_icon || 'award',
+        badge_color: certificate.badge_color || '#6366f1',
+        badge_background_color: certificate.badge_background_color || '#ffffff',
+        badge_size: certificate.badge_size || 'medium',
         is_active: certificate.is_active
       });
     } else {
@@ -471,6 +484,10 @@ const Admin = () => {
         certificate_background_color: '#ffffff',
         certificate_border_color: '#6366f1',
         certificate_text_color: '#000000',
+        badge_icon: 'award',
+        badge_color: '#6366f1',
+        badge_background_color: '#ffffff',
+        badge_size: 'medium',
         is_active: true
       });
     }
@@ -495,6 +512,10 @@ const Admin = () => {
             certificate_background_color: certificateForm.certificate_background_color,
             certificate_border_color: certificateForm.certificate_border_color,
             certificate_text_color: certificateForm.certificate_text_color,
+            badge_icon: certificateForm.badge_icon,
+            badge_color: certificateForm.badge_color,
+            badge_background_color: certificateForm.badge_background_color,
+            badge_size: certificateForm.badge_size,
             is_active: certificateForm.is_active
           })
           .eq('id', editingCertificate.id);
@@ -522,6 +543,10 @@ const Admin = () => {
             certificate_background_color: certificateForm.certificate_background_color,
             certificate_border_color: certificateForm.certificate_border_color,
             certificate_text_color: certificateForm.certificate_text_color,
+            badge_icon: certificateForm.badge_icon,
+            badge_color: certificateForm.badge_color,
+            badge_background_color: certificateForm.badge_background_color,
+            badge_size: certificateForm.badge_size,
             is_active: certificateForm.is_active,
             created_by: user?.id
           });
@@ -954,12 +979,12 @@ const Admin = () => {
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div
-                            className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                            style={{ backgroundColor: certificate.difficulty_levels?.color || '#6366f1' }}
-                          >
-                            {certificate.difficulty_levels?.level_number || 'N'}
-                          </div>
+                          <BadgePreview
+                            icon={certificate.badge_icon || 'award'}
+                            color={certificate.badge_color || '#6366f1'}
+                            backgroundColor={certificate.badge_background_color || '#ffffff'}
+                            size="medium"
+                          />
                           <div>
                             <h5 className="font-medium">{certificate.name}</h5>
                             <p className="text-xs text-muted-foreground">
@@ -1389,6 +1414,30 @@ const Admin = () => {
                   </div>
                 </div>
               </div>
+              
+              {/* Configuration du badge */}
+              <div className="space-y-4 pt-4 border-t">
+                <h4 className="font-medium text-sm">Badge de certification</h4>
+                
+                <BadgeSelector
+                  selectedIcon={certificateForm.badge_icon}
+                  onIconSelect={(icon) => setCertificateForm({
+                    ...certificateForm,
+                    badge_icon: icon
+                  })}
+                  selectedColor={certificateForm.badge_color}
+                  onColorSelect={(color) => setCertificateForm({
+                    ...certificateForm,
+                    badge_color: color
+                  })}
+                  selectedBgColor={certificateForm.badge_background_color}
+                  onBgColorSelect={(color) => setCertificateForm({
+                    ...certificateForm,
+                    badge_background_color: color
+                  })}
+                />
+              </div>
+              
               
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
