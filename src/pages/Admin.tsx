@@ -21,6 +21,7 @@ interface UserStats {
   total_users: number;
   total_auth_users: number;
   total_test_sessions: number;
+  total_questions: number;
   total_certifications: number;
   avg_study_time: number;
 }
@@ -85,9 +86,10 @@ const Admin = () => {
       setAdministrators(admins || []);
 
       // Charger les statistiques générales
-      const [usersResponse, sessionsResponse, certificationsResponse] = await Promise.all([
+      const [usersResponse, sessionsResponse, questionsResponse, certificationsResponse] = await Promise.all([
         supabase.from('users').select('id', { count: 'exact', head: true }),
         supabase.from('test_sessions').select('id', { count: 'exact', head: true }),
+        supabase.from('questions').select('id', { count: 'exact', head: true }),
         supabase.from('user_certifications').select('id', { count: 'exact', head: true })
       ]);
 
@@ -95,6 +97,7 @@ const Admin = () => {
         total_users: usersResponse.count || 0,
         total_auth_users: usersResponse.count || 0, // Même valeur pour l'instant
         total_test_sessions: sessionsResponse.count || 0,
+        total_questions: questionsResponse.count || 0,
         total_certifications: certificationsResponse.count || 0,
         avg_study_time: 0 // À calculer si nécessaire
       });
@@ -173,8 +176,10 @@ const Admin = () => {
               <BarChart3 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{userStats?.total_test_sessions || 0}</div>
-              <p className="text-xs text-muted-foreground">Sessions de test effectuées</p>
+              <div className="text-2xl font-bold">{userStats?.total_questions || 0}</div>
+              <p className="text-xs text-muted-foreground">
+                Questions disponibles ({userStats?.total_test_sessions || 0} sessions)
+              </p>
             </CardContent>
           </Card>
 
