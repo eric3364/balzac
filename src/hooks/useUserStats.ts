@@ -61,22 +61,45 @@ export const useUserStats = () => {
 
         // Calculer le temps total passé uniquement sur les tests complétés
         console.log('Sessions data:', sessions);
-        const timeSpent = sessions?.reduce((total, session) => {
-          console.log('Processing session:', session);
-          // Ne compter que les sessions complétées avec des dates valides
-          if (session.started_at && session.ended_at && session.status === 'completed') {
-            const start = new Date(session.started_at);
-            const end = new Date(session.ended_at);
-            const sessionDuration = Math.round((end.getTime() - start.getTime()) / (1000 * 60)); // en minutes
-            console.log('Session duration:', sessionDuration, 'minutes');
-            // Ignorer les sessions anormalement longues (plus de 8 heures = 480 minutes)
-            if (sessionDuration > 0 && sessionDuration <= 480) {
-              console.log('Adding duration to total:', sessionDuration);
-              return total + sessionDuration;
-            }
+        const validSessions = sessions?.filter(session => {
+          // Ne pas compter les sessions supprimées
+          if (session.deleted_at) {
+            console.log('Ignoring deleted session:', session.id);
+            return false;
+          }
+          // Ne compter que les sessions complétées
+          if (session.status !== 'completed') {
+            console.log('Ignoring non-completed session:', session.id, session.status);
+            return false;
+          }
+          // Vérifier que les dates sont valides
+          if (!session.started_at || !session.ended_at) {
+            console.log('Ignoring session with missing dates:', session.id);
+            return false;
+          }
+          return true;
+        }) || [];
+
+        console.log('Valid sessions for time calculation:', validSessions);
+
+        const timeSpent = validSessions.reduce((total, session) => {
+          console.log('Processing session:', session.id);
+          const start = new Date(session.started_at);
+          const end = new Date(session.ended_at);
+          const sessionDuration = Math.round((end.getTime() - start.getTime()) / (1000 * 60)); // en minutes
+          console.log('Session duration:', sessionDuration, 'minutes for session', session.id);
+          
+          // Ignorer les sessions anormalement longues (plus de 8 heures = 480 minutes) ou négatives
+          if (sessionDuration > 0 && sessionDuration <= 480) {
+            console.log('Adding duration to total:', sessionDuration);
+            return total + sessionDuration;
+          } else {
+            console.log('Ignoring invalid duration:', sessionDuration, 'for session', session.id);
           }
           return total;
-        }, 0) || 0;
+        }, 0);
+
+        console.log('Total time spent:', timeSpent, 'minutes');
 
         const totalTests = sessions?.length || 0;
         const totalQuestions = attempts?.length || 0;
