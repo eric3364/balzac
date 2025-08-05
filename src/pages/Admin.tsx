@@ -561,7 +561,8 @@ const Admin = () => {
         const { error } = await supabase
           .from('site_configuration')
           .upsert({
-            ...entry,
+            config_key: entry.config_key,
+            config_value: entry.config_value,
             updated_by: user?.id
           }, {
             onConflict: 'config_key'
@@ -574,6 +575,11 @@ const Admin = () => {
         title: "Configuration sauvegardée",
         description: "La configuration de la page d'accueil a été mise à jour avec succès"
       });
+
+      // Redirection vers la page d'accueil après sauvegarde
+      setTimeout(() => {
+        navigate('/');
+      }, 1000);
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
       toast({
