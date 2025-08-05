@@ -17,6 +17,7 @@ import { Users, Settings, BarChart3, Shield, ArrowLeft, Save, Plus, Edit2, Trash
 import { useToast } from '@/hooks/use-toast';
 import { HomepageAssetUploader } from '@/components/HomepageAssetUploader';
 import { useHomepageConfig } from '@/hooks/useHomepageConfig';
+import { UserManagement } from '@/components/UserManagement';
 
 interface AdminUser {
   id: number;
@@ -752,13 +753,18 @@ const Admin = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Onglets d'administration */}
         <Tabs defaultValue="stats" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="stats">Statistiques</TabsTrigger>
+            <TabsTrigger value="students">Apprenants</TabsTrigger>
             <TabsTrigger value="homepage">Page d'accueil</TabsTrigger>
             <TabsTrigger value="certificates">Certifications</TabsTrigger>
             <TabsTrigger value="levels">Niveaux</TabsTrigger>
             <TabsTrigger value="settings">Paramètres</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="students" className="space-y-6">
+            <UserManagement />
+          </TabsContent>
 
           <TabsContent value="stats" className="space-y-6">
             <Card>
