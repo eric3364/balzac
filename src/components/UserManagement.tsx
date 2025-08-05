@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Trash2, Edit2, Plus, Download, Upload, Search, Filter } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { SCHOOLS, CLASS_LEVELS, School, ClassLevel } from '@/constants/userData';
 
 interface User {
   id: string;
@@ -27,8 +28,8 @@ interface UserFormData {
   email: string;
   first_name: string;
   last_name: string;
-  school: string;
-  class_name: string;
+  school: School | '';
+  class_name: ClassLevel | '';
   is_active: boolean;
 }
 
@@ -41,8 +42,8 @@ export const UserManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [schoolFilter, setSchoolFilter] = useState('all');
   const [classFilter, setClassFilter] = useState('all');
-  const [schools, setSchools] = useState<string[]>([]);
-  const [classes, setClasses] = useState<string[]>([]);
+  const [schools] = useState<School[]>([...SCHOOLS]);
+  const [classes] = useState<ClassLevel[]>([...CLASS_LEVELS]);
   const { toast } = useToast();
 
   const [userForm, setUserForm] = useState<UserFormData>({
@@ -72,13 +73,6 @@ export const UserManagement = () => {
       if (error) throw error;
 
       setUsers(data || []);
-      
-      // Extraire les écoles et classes uniques
-      const uniqueSchools = [...new Set(data?.map(u => u.school).filter(Boolean) || [])];
-      const uniqueClasses = [...new Set(data?.map(u => u.class_name).filter(Boolean) || [])];
-      
-      setSchools(uniqueSchools);
-      setClasses(uniqueClasses);
     } catch (error) {
       console.error('Erreur lors du chargement des utilisateurs:', error);
       toast({
@@ -120,8 +114,8 @@ export const UserManagement = () => {
         email: user.email,
         first_name: user.first_name || '',
         last_name: user.last_name || '',
-        school: user.school || '',
-        class_name: user.class_name || '',
+        school: (user.school && SCHOOLS.includes(user.school as School)) ? user.school as School : '',
+        class_name: (user.class_name && CLASS_LEVELS.includes(user.class_name as ClassLevel)) ? user.class_name as ClassLevel : '',
         is_active: user.is_active
       });
     } else {
@@ -148,8 +142,8 @@ export const UserManagement = () => {
             email: userForm.email,
             first_name: userForm.first_name,
             last_name: userForm.last_name,
-            school: userForm.school,
-            class_name: userForm.class_name,
+            school: userForm.school || null,
+            class_name: userForm.class_name || null,
             is_active: userForm.is_active
           })
           .eq('id', editingUser.id);
@@ -168,8 +162,8 @@ export const UserManagement = () => {
             email: userForm.email,
             first_name: userForm.first_name,
             last_name: userForm.last_name,
-            school: userForm.school,
-            class_name: userForm.class_name,
+            school: userForm.school || null,
+            class_name: userForm.class_name || null,
             is_active: userForm.is_active
           });
 
@@ -248,8 +242,8 @@ export const UserManagement = () => {
   const downloadTemplate = () => {
     const template = [
       ['email', 'first_name', 'last_name', 'school', 'class_name'],
-      ['exemple@email.com', 'Jean', 'Dupont', 'École Primaire Victor Hugo', '6ème A'],
-      ['autre@email.com', 'Marie', 'Martin', 'Collège Jean Moulin', '5ème B']
+      ['exemple@email.com', 'Jean', 'Dupont', 'ESCEN', 'N1'],
+      ['autre@email.com', 'Marie', 'Martin', 'Bachelor Institute', 'N2']
     ].map(row => row.join(',')).join('\n');
 
     const blob = new Blob([template], { type: 'text/csv;charset=utf-8;' });
@@ -521,20 +515,36 @@ export const UserManagement = () => {
             
             <div className="space-y-2">
               <Label htmlFor="school">École</Label>
-              <Input
-                id="school"
+              <Select
                 value={userForm.school}
-                onChange={(e) => setUserForm(prev => ({ ...prev, school: e.target.value }))}
-              />
+                onValueChange={(value) => setUserForm(prev => ({ ...prev, school: value as School | '' }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une école" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SCHOOLS.map(school => (
+                    <SelectItem key={school} value={school}>{school}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="class_name">Classe</Label>
-              <Input
-                id="class_name"
+              <Select
                 value={userForm.class_name}
-                onChange={(e) => setUserForm(prev => ({ ...prev, class_name: e.target.value }))}
-              />
+                onValueChange={(value) => setUserForm(prev => ({ ...prev, class_name: value as ClassLevel | '' }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une classe" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CLASS_LEVELS.map(className => (
+                    <SelectItem key={className} value={className}>{className}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           
