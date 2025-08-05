@@ -39,8 +39,8 @@ export const UserManagement = () => {
   const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [schoolFilter, setSchoolFilter] = useState('');
-  const [classFilter, setClassFilter] = useState('');
+  const [schoolFilter, setSchoolFilter] = useState('all');
+  const [classFilter, setClassFilter] = useState('all');
   const [schools, setSchools] = useState<string[]>([]);
   const [classes, setClasses] = useState<string[]>([]);
   const { toast } = useToast();
@@ -102,11 +102,11 @@ export const UserManagement = () => {
       );
     }
 
-    if (schoolFilter) {
+    if (schoolFilter && schoolFilter !== 'all') {
       filtered = filtered.filter(user => user.school === schoolFilter);
     }
 
-    if (classFilter) {
+    if (classFilter && classFilter !== 'all') {
       filtered = filtered.filter(user => user.class_name === classFilter);
     }
 
@@ -365,7 +365,7 @@ export const UserManagement = () => {
                 <SelectValue placeholder="Filtrer par école" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Toutes les écoles</SelectItem>
+                <SelectItem value="all">Toutes les écoles</SelectItem>
                 {schools.map(school => (
                   <SelectItem key={school} value={school}>{school}</SelectItem>
                 ))}
@@ -377,7 +377,7 @@ export const UserManagement = () => {
                 <SelectValue placeholder="Filtrer par classe" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Toutes les classes</SelectItem>
+                <SelectItem value="all">Toutes les classes</SelectItem>
                 {classes.map(className => (
                   <SelectItem key={className} value={className}>{className}</SelectItem>
                 ))}
