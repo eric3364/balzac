@@ -507,13 +507,22 @@ const Admin = () => {
             id,
             level_number,
             name,
-            color
+            color,
+            description,
+            is_active,
+            created_at,
+            updated_at
           )
-        `)
-        .order('difficulty_levels.level_number', { ascending: true });
+        `);
 
       if (error) throw error;
-      setCertificateTemplates(templates as any || []);
+      
+      // Trier les templates par level_number côté client
+      const sortedTemplates = (templates || []).sort((a: any, b: any) => 
+        (a.difficulty_levels?.level_number || 0) - (b.difficulty_levels?.level_number || 0)
+      );
+      
+      setCertificateTemplates(sortedTemplates as CertificateTemplate[]);
     } catch (error) {
       console.error('Erreur lors du chargement des certificats:', error);
     }
@@ -902,6 +911,24 @@ Délivré le {date}.`
           description: "Le modèle de certificat a été mis à jour avec succès"
         });
       } else {
+        // Vérifier si un template existe déjà pour ce niveau
+        const { data: existing, error: checkError } = await supabase
+          .from('certificate_templates')
+          .select('id')
+          .eq('difficulty_level_id', certificateForm.difficulty_level_id)
+          .maybeSingle();
+
+        if (checkError) throw checkError;
+
+        if (existing) {
+          toast({
+            title: "Erreur",
+            description: "Un modèle de certificat existe déjà pour ce niveau de difficulté",
+            variant: "destructive"
+          });
+          return;
+        }
+
         // Créer un nouveau certificat
         const { error } = await supabase
           .from('certificate_templates')
