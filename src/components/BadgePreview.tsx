@@ -10,6 +10,7 @@ interface BadgePreviewProps {
   backgroundColor: string;
   size?: 'small' | 'medium' | 'large';
   className?: string;
+  customImageUrl?: string;
 }
 
 const iconMap = {
@@ -43,7 +44,8 @@ export const BadgePreview = ({
   color, 
   backgroundColor, 
   size = 'medium', 
-  className = '' 
+  className = '',
+  customImageUrl
 }: BadgePreviewProps) => {
   const IconComponent = iconMap[icon as keyof typeof iconMap] || Award;
   const sizeClasses = sizeMap[size];
@@ -62,10 +64,18 @@ export const BadgePreview = ({
         boxShadow: `0 4px 12px ${color}20`
       }}
     >
-      <IconComponent 
-        className={sizeClasses.icon}
-        style={{ color }}
-      />
+      {customImageUrl ? (
+        <img 
+          src={customImageUrl} 
+          alt="Badge personnalisé"
+          className={`${sizeClasses.icon} object-cover rounded-full`}
+        />
+      ) : (
+        <IconComponent 
+          className={sizeClasses.icon}
+          style={{ color }}
+        />
+      )}
     </div>
   );
 };
@@ -76,7 +86,10 @@ export const BadgeSelector = ({
   selectedColor,
   onColorSelect,
   selectedBgColor,
-  onBgColorSelect
+  onBgColorSelect,
+  customImageUrl,
+  onCustomImageUpload,
+  onCustomImageRemove
 }: {
   selectedIcon: string;
   onIconSelect: (icon: string) => void;
@@ -84,6 +97,9 @@ export const BadgeSelector = ({
   onColorSelect: (color: string) => void;
   selectedBgColor: string;
   onBgColorSelect: (color: string) => void;
+  customImageUrl?: string;
+  onCustomImageUpload: (file: File) => Promise<void>;
+  onCustomImageRemove: () => void;
 }) => {
   const availableIcons = Object.keys(iconMap);
   const presetColors = [
@@ -94,31 +110,114 @@ export const BadgeSelector = ({
   return (
     <div className="space-y-4">
       <div>
-        <label className="text-sm font-medium">Icône du badge</label>
-        <div className="grid grid-cols-6 gap-2 mt-2">
-          {availableIcons.map((iconName) => (
-            <button
-              key={iconName}
-              type="button"
-              onClick={() => onIconSelect(iconName)}
-              className={`
-                p-2 rounded-lg border-2 transition-all hover:scale-105
-                ${selectedIcon === iconName 
-                  ? 'border-primary bg-primary/10' 
-                  : 'border-border hover:border-primary/50'
-                }
-              `}
-            >
-              <BadgePreview
-                icon={iconName}
-                color={selectedColor}
-                backgroundColor={selectedBgColor}
-                size="small"
-              />
-            </button>
-          ))}
+        <label className="text-sm font-medium">Type de badge</label>
+        <div className="flex gap-4 mt-2">
+          <label className="flex items-center gap-2">
+            <input
+              type="radio"
+              name="badgeType"
+              checked={!customImageUrl}
+              onChange={() => onCustomImageRemove()}
+              className="text-primary"
+            />
+            <span>Icône prédéfinie</span>
+          </label>
+          <label className="flex items-center gap-2">
+            <input
+              type="radio"
+              name="badgeType"
+              checked={!!customImageUrl}
+              onChange={() => {}}
+              className="text-primary"
+            />
+            <span>Badge personnalisé</span>
+          </label>
         </div>
       </div>
+
+      {customImageUrl ? (
+        <div>
+          <label className="text-sm font-medium">Badge personnalisé</label>
+          <div className="mt-2 space-y-2">
+            <div className="flex items-center gap-4">
+              <BadgePreview
+                icon=""
+                color={selectedColor}
+                backgroundColor={selectedBgColor}
+                size="medium"
+                customImageUrl={customImageUrl}
+              />
+              <button
+                type="button"
+                onClick={onCustomImageRemove}
+                className="px-3 py-1 text-sm bg-destructive text-destructive-foreground rounded hover:bg-destructive/90"
+              >
+                Supprimer
+              </button>
+            </div>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  onCustomImageUpload(file);
+                }
+              }}
+              className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+            />
+          </div>
+        </div>
+      ) : (
+        <div>
+          <div className="flex justify-between items-center">
+            <label className="text-sm font-medium">Icône du badge</label>
+            <div>
+              <input
+                type="file"
+                id="customBadgeUpload"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    onCustomImageUpload(file);
+                  }
+                }}
+              />
+              <label
+                htmlFor="customBadgeUpload"
+                className="px-3 py-1 text-sm bg-secondary text-secondary-foreground rounded cursor-pointer hover:bg-secondary/80"
+              >
+                Importer un badge
+              </label>
+            </div>
+          </div>
+          <div className="grid grid-cols-6 gap-2 mt-2">
+            {availableIcons.map((iconName) => (
+              <button
+                key={iconName}
+                type="button"
+                onClick={() => onIconSelect(iconName)}
+                className={`
+                  p-2 rounded-lg border-2 transition-all hover:scale-105
+                  ${selectedIcon === iconName 
+                    ? 'border-primary bg-primary/10' 
+                    : 'border-border hover:border-primary/50'
+                  }
+                `}
+              >
+                <BadgePreview
+                  icon={iconName}
+                  color={selectedColor}
+                  backgroundColor={selectedBgColor}
+                  size="small"
+                />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-4">
         <div>
@@ -190,6 +289,7 @@ export const BadgeSelector = ({
             color={selectedColor}
             backgroundColor={selectedBgColor}
             size="large"
+            customImageUrl={customImageUrl}
           />
         </div>
       </div>

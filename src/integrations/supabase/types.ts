@@ -52,6 +52,7 @@ export type Database = {
           certificate_title: string
           created_at: string
           created_by: string | null
+          custom_badge_url: string | null
           description: string | null
           difficulty_level_id: string
           id: string
@@ -75,6 +76,7 @@ export type Database = {
           certificate_title: string
           created_at?: string
           created_by?: string | null
+          custom_badge_url?: string | null
           description?: string | null
           difficulty_level_id: string
           id?: string
@@ -98,6 +100,7 @@ export type Database = {
           certificate_title?: string
           created_at?: string
           created_by?: string | null
+          custom_badge_url?: string | null
           description?: string | null
           difficulty_level_id?: string
           id?: string

@@ -72,6 +72,7 @@ interface CertificateTemplate {
   badge_color: string;
   badge_background_color: string;
   badge_size: string;
+  custom_badge_url: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -130,6 +131,7 @@ const Admin = () => {
     badge_color: '#6366f1',
     badge_background_color: '#ffffff',
     badge_size: 'medium',
+    custom_badge_url: null as string | null,
     is_active: true
   });
 
@@ -467,6 +469,7 @@ const Admin = () => {
         badge_color: certificate.badge_color || '#6366f1',
         badge_background_color: certificate.badge_background_color || '#ffffff',
         badge_size: certificate.badge_size || 'medium',
+        custom_badge_url: certificate.custom_badge_url || null,
         is_active: certificate.is_active
       });
     } else {
@@ -488,6 +491,7 @@ const Admin = () => {
         badge_color: '#6366f1',
         badge_background_color: '#ffffff',
         badge_size: 'medium',
+        custom_badge_url: null,
         is_active: true
       });
     }
@@ -510,13 +514,14 @@ const Admin = () => {
             certificate_subtitle: certificateForm.certificate_subtitle || null,
             certificate_text: certificateForm.certificate_text,
             certificate_background_color: certificateForm.certificate_background_color,
-            certificate_border_color: certificateForm.certificate_border_color,
-            certificate_text_color: certificateForm.certificate_text_color,
-            badge_icon: certificateForm.badge_icon,
-            badge_color: certificateForm.badge_color,
-            badge_background_color: certificateForm.badge_background_color,
-            badge_size: certificateForm.badge_size,
-            is_active: certificateForm.is_active
+        certificate_border_color: certificateForm.certificate_border_color,
+        certificate_text_color: certificateForm.certificate_text_color,
+        badge_icon: certificateForm.badge_icon,
+        badge_color: certificateForm.badge_color,
+        badge_background_color: certificateForm.badge_background_color,
+        badge_size: certificateForm.badge_size,
+        custom_badge_url: certificateForm.custom_badge_url,
+        is_active: certificateForm.is_active
           })
           .eq('id', editingCertificate.id);
 
@@ -1435,6 +1440,47 @@ const Admin = () => {
                     ...certificateForm,
                     badge_background_color: color
                   })}
+                  customImageUrl={certificateForm.custom_badge_url || undefined}
+                  onCustomImageUpload={async (file) => {
+                    try {
+                      const fileExt = file.name.split('.').pop();
+                      const fileName = `${Date.now()}.${fileExt}`;
+                      const { data, error } = await supabase.storage
+                        .from('custom-badges')
+                        .upload(fileName, file);
+                      
+                      if (error) throw error;
+                      
+                      const { data: { publicUrl } } = supabase.storage
+                        .from('custom-badges')
+                        .getPublicUrl(fileName);
+                      
+                      setCertificateForm(prev => ({ 
+                        ...prev, 
+                        custom_badge_url: publicUrl,
+                        badge_icon: 'custom'
+                      }));
+                      
+                      toast({
+                        title: "Badge importé",
+                        description: "Le badge personnalisé a été importé avec succès.",
+                      });
+                    } catch (error) {
+                      console.error('Erreur lors de l\'upload:', error);
+                      toast({
+                        title: "Erreur",
+                        description: "Impossible d'importer le badge.",
+                        variant: "destructive",
+                      });
+                    }
+                  }}
+                  onCustomImageRemove={() => {
+                    setCertificateForm(prev => ({ 
+                      ...prev, 
+                      custom_badge_url: null,
+                      badge_icon: 'award'
+                    }));
+                  }}
                 />
               </div>
               
