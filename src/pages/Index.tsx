@@ -75,16 +75,18 @@ const Index = () => {
             <img 
               src={homepageAssets.bannerUrl} 
               alt={homepageAssets.bannerAlt}
-              className="w-full h-full object-cover opacity-10"
+              className="w-full h-full object-cover opacity-20"
             />
+            {/* Overlay sombre pour améliorer le contraste */}
+            <div className="absolute inset-0 bg-background/60"></div>
           </div>
         )}
         <div className="relative z-10 container mx-auto px-4 py-20 text-center">
           <div className="max-w-4xl mx-auto">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+            <h1 className="text-4xl md:text-6xl font-bold mb-6 text-foreground drop-shadow-lg">
               {homepageAssets.heroTitle}
             </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground mb-8 leading-relaxed">
+            <p className="text-xl md:text-2xl text-foreground/90 mb-8 leading-relaxed font-medium drop-shadow-sm">
               {homepageAssets.heroDescription}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
