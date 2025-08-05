@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Award, Star, Trophy, Shield, Crown } from 'lucide-react';
+import { Award, Star, Trophy, Shield, Crown, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -12,6 +12,7 @@ interface Certification {
   level: number;
   score: number;
   certified_at: string;
+  timeSpent?: number; // en minutes
 }
 
 interface CertificateTemplate {
@@ -47,6 +48,12 @@ const CertificationBadges = () => {
           .eq('user_id', user.id)
           .order('level', { ascending: true });
 
+        // Récupérer les sessions de test pour calculer le temps par niveau
+        const { data: sessions } = await supabase
+          .from('test_sessions')
+          .select('*')
+          .eq('user_id', user.id);
+
         // Récupérer les modèles de certificats avec les niveaux de difficulté
         const { data: certificateTemplates } = await supabase
           .from('certificate_templates')
@@ -59,7 +66,36 @@ const CertificationBadges = () => {
             )
           `);
 
-        setCertifications(userCertifications || []);
+        // Calculer le temps passé par niveau
+        const certificationsWithTime = (userCertifications || []).map(cert => {
+          const levelSessions = sessions?.filter(session => {
+            // Ne considérer que les sessions complétées pour ce niveau
+            return session.current_level === cert.level && 
+                   session.status === 'completed' &&
+                   session.started_at && 
+                   session.ended_at &&
+                   !session.deleted_at;
+          }) || [];
+
+          const timeSpent = levelSessions.reduce((total, session) => {
+            const start = new Date(session.started_at);
+            const end = new Date(session.ended_at);
+            const sessionDuration = Math.round((end.getTime() - start.getTime()) / (1000 * 60));
+            
+            // Valider la durée (entre 0 et 480 minutes)
+            if (sessionDuration > 0 && sessionDuration <= 480) {
+              return total + sessionDuration;
+            }
+            return total;
+          }, 0);
+
+          return {
+            ...cert,
+            timeSpent
+          };
+        });
+
+        setCertifications(certificationsWithTime);
         setTemplates(certificateTemplates || []);
       } catch (error) {
         console.error('Erreur lors du chargement des certifications:', error);
@@ -98,6 +134,15 @@ const CertificationBadges = () => {
     if (score >= 80) return 'text-blue-600 dark:text-blue-400';
     if (score >= 70) return 'text-yellow-600 dark:text-yellow-400';
     return 'text-orange-600 dark:text-orange-400';
+  };
+
+  const formatStudyTime = (minutes: number) => {
+    if (minutes === 0) return 'Aucun temps';
+    if (minutes < 60) return `${minutes}min`;
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    if (remainingMinutes === 0) return `${hours}h`;
+    return `${hours}h ${remainingMinutes}min`;
   };
 
   if (loading) {
@@ -180,6 +225,12 @@ const CertificationBadges = () => {
                 {/* Score */}
                 <div className={`text-lg font-bold mb-2 ${getScoreColor(cert.score)}`}>
                   {cert.score}%
+                </div>
+
+                {/* Study Time */}
+                <div className="flex items-center gap-1 mb-2 text-xs text-muted-foreground">
+                  <Clock className="h-3 w-3" />
+                  <span>{formatStudyTime(cert.timeSpent || 0)}</span>
                 </div>
 
                 {/* Date */}
