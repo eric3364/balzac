@@ -13,7 +13,7 @@ import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { BadgePreview, BadgeSelector } from '@/components/BadgePreview';
-import { Users, Settings, BarChart3, Shield, ArrowLeft, Save, Plus, Edit2, Trash2, Award } from 'lucide-react';
+import { Users, Settings, BarChart3, Shield, ArrowLeft, Save, Plus, Edit2, Trash2, Award, FileText, Upload, Download, FileDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { HomepageAssetUploader } from '@/components/HomepageAssetUploader';
 import { useHomepageConfig } from '@/hooks/useHomepageConfig';
@@ -82,6 +82,18 @@ interface CertificateTemplate {
   difficulty_levels?: DifficultyLevel;
 }
 
+interface Question {
+  id: number;
+  content: string;
+  type: 'QCM' | 'GAP_FILL' | 'ERROR_SPOT';
+  level: number;
+  rule: string | null;
+  answer: string;
+  choices: string[] | null;
+  explanation: string | null;
+  created_at: string;
+}
+
 const Admin = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
@@ -138,6 +150,21 @@ const Admin = () => {
     custom_badge_url: null as string | null,
     is_active: true
   });
+
+  // État pour la gestion des questions
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [isQuestionDialogOpen, setIsQuestionDialogOpen] = useState(false);
+  const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
+  const [questionForm, setQuestionForm] = useState({
+    content: '',
+    type: 'QCM' as 'QCM' | 'GAP_FILL' | 'ERROR_SPOT',
+    level: 1,
+    rule: '',
+    answer: '',
+    choices: ['', '', ''],
+    explanation: ''
+  });
+  const [questionStats, setQuestionStats] = useState<Record<number, number>>({});
 
   // État pour la configuration de la page d'accueil
   const [homepageConfig, setHomepageConfig] = useState({
@@ -197,6 +224,7 @@ const Admin = () => {
       loadUserStats();
       loadDifficultyLevels();
       loadCertificateTemplates();
+      loadQuestions();
       loadTestConfig();
       loadHomepageConfig();
     } catch (error) {
@@ -554,6 +582,179 @@ const Admin = () => {
     }
   };
 
+  // Fonctions pour gérer les questions
+  const loadQuestions = async () => {
+    try {
+      const { data: questionsData, error } = await supabase
+        .from('questions')
+        .select('*')
+        .order('level', { ascending: true });
+
+      if (error) throw error;
+      setQuestions((questionsData || []) as Question[]);
+
+      // Calculer les statistiques par niveau
+      const stats: Record<number, number> = {};
+      questionsData?.forEach(q => {
+        stats[q.level] = (stats[q.level] || 0) + 1;
+      });
+      setQuestionStats(stats);
+    } catch (error) {
+      console.error('Erreur lors du chargement des questions:', error);
+    }
+  };
+
+  const openQuestionDialog = (question?: Question) => {
+    if (question) {
+      setEditingQuestion(question);
+      setQuestionForm({
+        content: question.content,
+        type: question.type,
+        level: question.level,
+        rule: question.rule || '',
+        answer: question.answer,
+        choices: question.choices || ['', '', ''],
+        explanation: question.explanation || ''
+      });
+    } else {
+      setEditingQuestion(null);
+      setQuestionForm({
+        content: '',
+        type: 'QCM',
+        level: 1,
+        rule: '',
+        answer: '',
+        choices: ['', '', ''],
+        explanation: ''
+      });
+    }
+    setIsQuestionDialogOpen(true);
+  };
+
+  const saveQuestion = async () => {
+    try {
+      const questionData = {
+        content: questionForm.content,
+        type: questionForm.type,
+        level: questionForm.level,
+        rule: questionForm.rule || null,
+        answer: questionForm.answer,
+        choices: questionForm.type === 'QCM' ? questionForm.choices.filter(c => c.trim()) : null,
+        explanation: questionForm.explanation || null
+      };
+
+      if (editingQuestion) {
+        const { error } = await supabase
+          .from('questions')
+          .update(questionData)
+          .eq('id', editingQuestion.id);
+
+        if (error) throw error;
+        
+        toast({
+          title: "Question modifiée",
+          description: "La question a été mise à jour avec succès"
+        });
+      } else {
+        const { error } = await supabase
+          .from('questions')
+          .insert(questionData);
+
+        if (error) throw error;
+        
+        toast({
+          title: "Question créée",
+          description: "La nouvelle question a été créée avec succès"
+        });
+      }
+
+      setIsQuestionDialogOpen(false);
+      await loadQuestions();
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de sauvegarder la question",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const deleteQuestion = async (id: number) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette question ?')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('questions')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      toast({
+        title: "Question supprimée",
+        description: "La question a été supprimée avec succès"
+      });
+      
+      await loadQuestions();
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer la question",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const exportQuestions = () => {
+    const csvContent = [
+      ['Type', 'Niveau', 'Contenu', 'Réponse', 'Choix 1', 'Choix 2', 'Choix 3', 'Règle', 'Explication'],
+      ...questions.map(q => [
+        q.type,
+        q.level.toString(),
+        q.content,
+        q.answer,
+        q.choices?.[0] || '',
+        q.choices?.[1] || '',
+        q.choices?.[2] || '',
+        q.rule || '',
+        q.explanation || ''
+      ])
+    ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `questions_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const downloadTemplate = () => {
+    const templateContent = [
+      ['Type', 'Niveau', 'Contenu', 'Réponse', 'Choix 1', 'Choix 2', 'Choix 3', 'Règle', 'Explication'],
+      ['QCM', '1', 'Quelle est la capitale de la France ?', 'Paris', 'Paris', 'Londres', 'Berlin', '', 'Paris est la capitale de la France'],
+      ['GAP_FILL', '1', 'La capitale de la France est _____.', 'Paris', '', '', '', '', ''],
+      ['ERROR_SPOT', '1', 'Je vais au magasin pour acheter des painz.', 'pains', '', '', '', 'Accord du pluriel', 'Le mot "pain" au pluriel prend un "s"']
+    ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+
+    const blob = new Blob([templateContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'modele_questions.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const openCertificateDialog = (certificate?: CertificateTemplate, preselectedLevel?: DifficultyLevel) => {
     if (certificate) {
       setEditingCertificate(certificate);
@@ -761,11 +962,12 @@ Délivré le {date}.`
       <div className="container mx-auto px-4 py-8">
         {/* Onglets d'administration */}
         <Tabs defaultValue="stats" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="stats">Statistiques</TabsTrigger>
             <TabsTrigger value="students">Apprenants</TabsTrigger>
             <TabsTrigger value="homepage">Page d'accueil</TabsTrigger>
             <TabsTrigger value="levels">Niveaux & Certifications</TabsTrigger>
+            <TabsTrigger value="questions">Questions</TabsTrigger>
             <TabsTrigger value="settings">Paramètres</TabsTrigger>
           </TabsList>
 
@@ -1171,6 +1373,125 @@ Délivré le {date}.`
                       <Button onClick={() => openLevelDialog()}>
                         <Plus className="h-4 w-4 mr-2" />
                         Créer le premier niveau
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="questions" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight">Gestion des Questions</h2>
+                <p className="text-muted-foreground">
+                  Créez et gérez les questions pour chaque niveau de difficulté
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={downloadTemplate} variant="outline">
+                  <FileDown className="h-4 w-4 mr-2" />
+                  Modèle CSV
+                </Button>
+                <Button onClick={exportQuestions} variant="outline">
+                  <Download className="h-4 w-4 mr-2" />
+                  Exporter
+                </Button>
+                <Button onClick={() => openQuestionDialog()}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nouvelle question
+                </Button>
+              </div>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Questions par niveau</CardTitle>
+                <CardDescription>
+                  Répartition des questions selon les niveaux de difficulté
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                  {difficultyLevels.map(level => (
+                    <div key={level.id} className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <Badge style={{ backgroundColor: level.color, color: 'white' }}>
+                          Niveau {level.level_number}
+                        </Badge>
+                        <span className="text-2xl font-bold text-primary">
+                          {questionStats[level.level_number] || 0}
+                        </span>
+                      </div>
+                      <h3 className="font-medium">{level.name}</h3>
+                      <p className="text-sm text-muted-foreground">questions disponibles</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="space-y-4">
+                  {questions.length > 0 ? (
+                    questions.map(question => (
+                      <Card key={question.id} className="border-l-4" style={{ borderLeftColor: difficultyLevels.find(l => l.level_number === question.level)?.color || '#6366f1' }}>
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Badge variant="secondary">
+                                  {question.type === 'QCM' ? 'QCM' : 
+                                   question.type === 'GAP_FILL' ? 'Phrase à trous' : 
+                                   'Correction d\'erreur'}
+                                </Badge>
+                                <Badge variant="outline">
+                                  Niveau {question.level}
+                                </Badge>
+                              </div>
+                              <p className="font-medium mb-2">{question.content}</p>
+                              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                <span>Réponse: <strong>{question.answer}</strong></span>
+                                {question.type === 'QCM' && question.choices && (
+                                  <span>Choix: {question.choices.join(', ')}</span>
+                                )}
+                                {question.rule && (
+                                  <span>Règle: {question.rule}</span>
+                                )}
+                              </div>
+                              {question.explanation && (
+                                <p className="text-sm text-muted-foreground mt-2">
+                                  <em>Explication: {question.explanation}</em>
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex gap-2 ml-4">
+                              <Button
+                                onClick={() => openQuestionDialog(question)}
+                                size="sm"
+                                variant="outline"
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                onClick={() => deleteQuestion(question.id)}
+                                size="sm"
+                                variant="outline"
+                                className="text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  ) : (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p className="text-lg font-medium">Aucune question créée</p>
+                      <p className="text-sm mb-4">Commencez par créer votre première question</p>
+                      <Button onClick={() => openQuestionDialog()}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Créer la première question
                       </Button>
                     </div>
                   )}
@@ -1810,6 +2131,171 @@ Délivré le {date}.`
               disabled={!certificateForm.name.trim() || !certificateForm.difficulty_level_id}
             >
               {editingCertificate ? 'Modifier' : 'Créer'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de gestion des questions */}
+      <Dialog open={isQuestionDialogOpen} onOpenChange={setIsQuestionDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingQuestion ? 'Modifier la question' : 'Créer une nouvelle question'}
+            </DialogTitle>
+            <DialogDescription>
+              {editingQuestion ? 'Modifiez les informations de la question.' : 'Créez une nouvelle question pour enrichir votre base de données.'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="question_type">Type de question</Label>
+                <Select
+                  value={questionForm.type}
+                  onValueChange={(value: 'QCM' | 'GAP_FILL' | 'ERROR_SPOT') => setQuestionForm({
+                    ...questionForm,
+                    type: value,
+                    choices: value === 'QCM' ? ['', '', ''] : ['', '', '']
+                  })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="QCM">QCM (Choix multiples)</SelectItem>
+                    <SelectItem value="GAP_FILL">Phrase à trous</SelectItem>
+                    <SelectItem value="ERROR_SPOT">Correction d'erreur</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="question_level">Niveau</Label>
+                <Select
+                  value={questionForm.level.toString()}
+                  onValueChange={(value) => setQuestionForm({
+                    ...questionForm,
+                    level: parseInt(value)
+                  })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un niveau" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {difficultyLevels.map(level => (
+                      <SelectItem key={level.id} value={level.level_number.toString()}>
+                        Niveau {level.level_number} - {level.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="question_content">Contenu de la question</Label>
+              <Textarea
+                id="question_content"
+                value={questionForm.content}
+                onChange={(e) => setQuestionForm({
+                  ...questionForm,
+                  content: e.target.value
+                })}
+                placeholder={
+                  questionForm.type === 'QCM' ? 'Ex: Quelle est la capitale de la France ?' :
+                  questionForm.type === 'GAP_FILL' ? 'Ex: La capitale de la France est _____.' :
+                  'Ex: Je vais au magasin pour acheter des painz.'
+                }
+                rows={3}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="question_answer">Réponse correcte</Label>
+              <Input
+                id="question_answer"
+                value={questionForm.answer}
+                onChange={(e) => setQuestionForm({
+                  ...questionForm,
+                  answer: e.target.value
+                })}
+                placeholder={
+                  questionForm.type === 'QCM' ? 'Ex: Paris' :
+                  questionForm.type === 'GAP_FILL' ? 'Ex: Paris' :
+                  'Ex: pains'
+                }
+              />
+            </div>
+            
+            {questionForm.type === 'QCM' && (
+              <div className="space-y-2">
+                <Label>Choix multiples (incluez la bonne réponse)</Label>
+                <div className="space-y-2">
+                  {questionForm.choices.map((choice, index) => (
+                    <Input
+                      key={index}
+                      value={choice}
+                      onChange={(e) => {
+                        const newChoices = [...questionForm.choices];
+                        newChoices[index] = e.target.value;
+                        setQuestionForm({
+                          ...questionForm,
+                          choices: newChoices
+                        });
+                      }}
+                      placeholder={`Choix ${index + 1}`}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {questionForm.type === 'ERROR_SPOT' && (
+              <div className="space-y-2">
+                <Label htmlFor="question_rule">Règle grammaticale</Label>
+                <Input
+                  id="question_rule"
+                  value={questionForm.rule}
+                  onChange={(e) => setQuestionForm({
+                    ...questionForm,
+                    rule: e.target.value
+                  })}
+                  placeholder="Ex: Accord du pluriel"
+                />
+              </div>
+            )}
+            
+            <div className="space-y-2">
+              <Label htmlFor="question_explanation">Explication (optionnel)</Label>
+              <Textarea
+                id="question_explanation"
+                value={questionForm.explanation}
+                onChange={(e) => setQuestionForm({
+                  ...questionForm,
+                  explanation: e.target.value
+                })}
+                placeholder="Explication détaillée de la réponse"
+                rows={2}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => setIsQuestionDialogOpen(false)}
+            >
+              Annuler
+            </Button>
+            <Button 
+              type="button" 
+              onClick={saveQuestion}
+              disabled={!questionForm.content.trim() || !questionForm.answer.trim()}
+            >
+              {editingQuestion ? 'Modifier' : 'Créer'}
             </Button>
           </DialogFooter>
         </DialogContent>
