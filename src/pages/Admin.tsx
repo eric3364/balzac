@@ -554,7 +554,7 @@ const Admin = () => {
     }
   };
 
-  const openCertificateDialog = (certificate?: CertificateTemplate) => {
+  const openCertificateDialog = (certificate?: CertificateTemplate, preselectedLevel?: DifficultyLevel) => {
     if (certificate) {
       setEditingCertificate(certificate);
       setCertificateForm({
@@ -580,20 +580,28 @@ const Admin = () => {
     } else {
       setEditingCertificate(null);
       setCertificateForm({
-        difficulty_level_id: '',
-        name: '',
-        description: '',
+        difficulty_level_id: preselectedLevel?.id || '',
+        name: preselectedLevel ? `Certificat ${preselectedLevel.name}` : '',
+        description: preselectedLevel ? `Certificat pour le niveau ${preselectedLevel.name}` : '',
         min_score_required: 70,
         min_questions_correct: null,
         time_limit_seconds: null,
         certificate_title: 'Certificat de Réussite',
-        certificate_subtitle: '',
-        certificate_text: '',
+        certificate_subtitle: preselectedLevel ? `Niveau ${preselectedLevel.name}` : '',
+        certificate_text: preselectedLevel 
+          ? `Félicitations {student_name} !
+
+Vous avez brillamment réussi le niveau ${preselectedLevel.name} avec un score de {score}%.
+
+Ce certificat atteste de votre maîtrise des compétences du niveau ${preselectedLevel.name}.
+
+Délivré le {date}.`
+          : '',
         certificate_background_color: '#ffffff',
-        certificate_border_color: '#6366f1',
+        certificate_border_color: preselectedLevel?.color || '#6366f1',
         certificate_text_color: '#000000',
         badge_icon: 'award',
-        badge_color: '#6366f1',
+        badge_color: preselectedLevel?.color || '#6366f1',
         badge_background_color: '#ffffff',
         badge_size: 'medium',
         custom_badge_url: null,
@@ -1140,11 +1148,7 @@ const Admin = () => {
                             <Button
                               onClick={() => {
                                 // Pré-remplir le formulaire avec le niveau sélectionné
-                                setCertificateForm(prev => ({
-                                  ...prev,
-                                  difficulty_level_id: level.id
-                                }));
-                                openCertificateDialog();
+                                openCertificateDialog(undefined, level);
                               }}
                               size="sm"
                               variant="outline"
@@ -1488,7 +1492,7 @@ const Admin = () => {
                       ...certificateForm,
                       difficulty_level_id: value
                     })}
-                    disabled={!!editingCertificate}
+                    disabled={!!editingCertificate || !!certificateForm.difficulty_level_id}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionner un niveau" />
@@ -1501,6 +1505,11 @@ const Admin = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                  {certificateForm.difficulty_level_id && !editingCertificate && (
+                    <p className="text-xs text-muted-foreground">
+                      Niveau pré-sélectionné depuis la configuration du niveau
+                    </p>
+                  )}
                 </div>
                 
                 <div className="space-y-2">
