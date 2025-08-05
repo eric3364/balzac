@@ -15,6 +15,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { BadgePreview, BadgeSelector } from '@/components/BadgePreview';
 import { Users, Settings, BarChart3, Shield, ArrowLeft, Save, Plus, Edit2, Trash2, Award } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { HomepageAssetUploader } from '@/components/HomepageAssetUploader';
+import { useHomepageConfig } from '@/hooks/useHomepageConfig';
 
 interface AdminUser {
   id: number;
@@ -83,6 +85,7 @@ const Admin = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { config: homepageAssets, updateConfig: updateHomepageAssets } = useHomepageConfig();
   const [isAdmin, setIsAdmin] = useState(false);
   const [administrators, setAdministrators] = useState<AdminUser[]>([]);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
@@ -806,7 +809,33 @@ const Admin = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <HomepageAssetUploader
+                      label="Logo du site"
+                      currentUrl={homepageAssets.logoUrl}
+                      onUrlChange={(url) => updateHomepageAssets({ logoUrl: url })}
+                      bucketPath="logo"
+                    />
+                    
+                    <HomepageAssetUploader
+                      label="Bandeau visuel (Hero Section)"
+                      currentUrl={homepageAssets.bannerUrl}
+                      onUrlChange={(url) => updateHomepageAssets({ bannerUrl: url })}
+                      bucketPath="banner"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="banner_alt">Texte alternatif du bandeau</Label>
+                    <Input
+                      id="banner_alt"
+                      value={homepageAssets.bannerAlt}
+                      onChange={(e) => updateHomepageAssets({ bannerAlt: e.target.value })}
+                      placeholder="Description du bandeau pour l'accessibilité"
+                    />
+                  </div>
+                  
                   <div className="space-y-2">
                     <Label htmlFor="site_title">Titre du site</Label>
                     <Input

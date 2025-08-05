@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useHomepageConfig } from '@/hooks/useHomepageConfig';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BookOpen, Award, Users, CheckCircle, Star, ArrowRight, Shield } from 'lucide-react';
@@ -8,6 +9,7 @@ import { BookOpen, Award, Users, CheckCircle, Star, ArrowRight, Shield } from 'l
 const Index = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const { config: homepageAssets } = useHomepageConfig();
 
   // Redirect authenticated users to dashboard
   useEffect(() => {
@@ -37,7 +39,15 @@ const Index = () => {
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <BookOpen className="h-8 w-8 text-primary" />
+            {homepageAssets.logoUrl ? (
+              <img 
+                src={homepageAssets.logoUrl} 
+                alt="Logo Balzac Certification" 
+                className="h-8 w-8 object-contain"
+              />
+            ) : (
+              <BookOpen className="h-8 w-8 text-primary" />
+            )}
             <div>
               <h1 className="text-2xl font-bold text-primary">Balzac Certification</h1>
               <p className="text-sm text-muted-foreground">Excellence en français</p>
@@ -60,7 +70,16 @@ const Index = () => {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-b from-primary/5 to-background">
-        <div className="container mx-auto px-4 py-20 text-center">
+        {homepageAssets.bannerUrl && (
+          <div className="absolute inset-0 z-0">
+            <img 
+              src={homepageAssets.bannerUrl} 
+              alt={homepageAssets.bannerAlt}
+              className="w-full h-full object-cover opacity-10"
+            />
+          </div>
+        )}
+        <div className="relative z-10 container mx-auto px-4 py-20 text-center">
           <div className="max-w-4xl mx-auto">
             <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
               Maîtrisez le français avec excellence
