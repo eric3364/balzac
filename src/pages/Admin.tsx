@@ -10,7 +10,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Users, Settings, BarChart3, Shield, ArrowLeft, Save } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Users, Settings, BarChart3, Shield, ArrowLeft, Save, Plus, Edit2, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface AdminUser {
@@ -40,6 +41,17 @@ interface TestConfig {
   show_immediate_feedback: boolean;
 }
 
+interface DifficultyLevel {
+  id: string;
+  level_number: number;
+  name: string;
+  description: string | null;
+  color: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 const Admin = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
@@ -58,6 +70,18 @@ const Admin = () => {
     show_immediate_feedback: false
   });
   const [savingConfig, setSavingConfig] = useState(false);
+  
+  // État pour la gestion des niveaux de difficulté
+  const [difficultyLevels, setDifficultyLevels] = useState<DifficultyLevel[]>([]);
+  const [isLevelDialogOpen, setIsLevelDialogOpen] = useState(false);
+  const [editingLevel, setEditingLevel] = useState<DifficultyLevel | null>(null);
+  const [levelForm, setLevelForm] = useState({
+    level_number: 1,
+    name: '',
+    description: '',
+    color: '#6366f1',
+    is_active: true
+  });
 
   useEffect(() => {
     if (!loading && !user) {
@@ -128,6 +152,9 @@ const Admin = () => {
 
       // Charger la configuration des tests
       await loadTestConfig();
+      
+      // Charger les niveaux de difficulté
+      await loadDifficultyLevels();
 
     } catch (error) {
       console.error('Erreur lors du chargement des données:', error);
@@ -221,6 +248,128 @@ const Admin = () => {
       setSavingConfig(false);
     }
   };
+
+  // Fonctions pour gérer les niveaux de difficulté
+  const loadDifficultyLevels = async () => {
+    try {
+      const { data: levels, error } = await supabase
+        .from('difficulty_levels')
+        .select('*')
+        .order('level_number', { ascending: true });
+
+      if (error) throw error;
+      setDifficultyLevels(levels || []);
+    } catch (error) {
+      console.error('Erreur lors du chargement des niveaux:', error);
+    }
+  };
+
+  const openLevelDialog = (level?: DifficultyLevel) => {
+    if (level) {
+      setEditingLevel(level);
+      setLevelForm({
+        level_number: level.level_number,
+        name: level.name,
+        description: level.description || '',
+        color: level.color,
+        is_active: level.is_active
+      });
+    } else {
+      setEditingLevel(null);
+      const nextLevel = Math.max(...difficultyLevels.map(l => l.level_number), 0) + 1;
+      setLevelForm({
+        level_number: nextLevel,
+        name: '',
+        description: '',
+        color: '#6366f1',
+        is_active: true
+      });
+    }
+    setIsLevelDialogOpen(true);
+  };
+
+  const saveDifficultyLevel = async () => {
+    try {
+      if (editingLevel) {
+        // Modifier un niveau existant
+        const { error } = await supabase
+          .from('difficulty_levels')
+          .update({
+            level_number: levelForm.level_number,
+            name: levelForm.name,
+            description: levelForm.description || null,
+            color: levelForm.color,
+            is_active: levelForm.is_active
+          })
+          .eq('id', editingLevel.id);
+
+        if (error) throw error;
+        
+        toast({
+          title: "Niveau modifié",
+          description: "Le niveau de difficulté a été mis à jour avec succès"
+        });
+      } else {
+        // Créer un nouveau niveau
+        const { error } = await supabase
+          .from('difficulty_levels')
+          .insert({
+            level_number: levelForm.level_number,
+            name: levelForm.name,
+            description: levelForm.description || null,
+            color: levelForm.color,
+            is_active: levelForm.is_active,
+            created_by: user?.id
+          });
+
+        if (error) throw error;
+        
+        toast({
+          title: "Niveau créé",
+          description: "Le nouveau niveau de difficulté a été créé avec succès"
+        });
+      }
+
+      setIsLevelDialogOpen(false);
+      await loadDifficultyLevels();
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de sauvegarder le niveau de difficulté",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const deleteDifficultyLevel = async (id: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce niveau de difficulté ?')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('difficulty_levels')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      toast({
+        title: "Niveau supprimé",
+        description: "Le niveau de difficulté a été supprimé avec succès"
+      });
+      
+      await loadDifficultyLevels();
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer le niveau de difficulté",
+        variant: "destructive"
+      });
+    }
+  }
 
   if (loading || loadingData) {
     return (
@@ -386,30 +535,77 @@ const Admin = () => {
                     </p>
                   </div>
 
-                  {/* Niveau de difficulté maximum */}
-                  <div className="space-y-2">
-                    <Label htmlFor="max_difficulty">Niveau de difficulté maximum</Label>
-                    <Select 
-                      value={testConfig.max_difficulty_level.toString()} 
-                      onValueChange={(value) => setTestConfig({
-                        ...testConfig,
-                        max_difficulty_level: parseInt(value)
-                      })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner le niveau" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1">Niveau 1 (Débutant)</SelectItem>
-                        <SelectItem value="2">Niveau 2 (Élémentaire)</SelectItem>
-                        <SelectItem value="3">Niveau 3 (Intermédiaire)</SelectItem>
-                        <SelectItem value="4">Niveau 4 (Avancé)</SelectItem>
-                        <SelectItem value="5">Niveau 5 (Expert)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <p className="text-xs text-muted-foreground">
-                      Niveau maximum des questions à inclure dans les tests
-                    </p>
+                  {/* Gestion des niveaux de difficulté */}
+                  <div className="md:col-span-2 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label>Niveaux de difficulté</Label>
+                        <p className="text-xs text-muted-foreground">
+                          Gérez les niveaux de difficulté personnalisés avec noms et descriptions
+                        </p>
+                      </div>
+                      <Button onClick={() => openLevelDialog()} size="sm">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Ajouter un niveau
+                      </Button>
+                    </div>
+                    
+                    <div className="grid gap-3">
+                      {difficultyLevels.map((level) => (
+                        <div
+                          key={level.id}
+                          className="flex items-center justify-between p-3 border rounded-lg"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="w-4 h-4 rounded"
+                              style={{ backgroundColor: level.color }}
+                            />
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">
+                                  Niveau {level.level_number}: {level.name}
+                                </span>
+                                {!level.is_active && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    Inactif
+                                  </Badge>
+                                )}
+                              </div>
+                              {level.description && (
+                                <p className="text-xs text-muted-foreground">
+                                  {level.description}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={() => openLevelDialog(level)}
+                              size="sm"
+                              variant="outline"
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              onClick={() => deleteDifficultyLevel(level.id)}
+                              size="sm"
+                              variant="outline"
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                      
+                      {difficultyLevels.length === 0 && (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <p>Aucun niveau de difficulté configuré</p>
+                          <p className="text-xs">Cliquez sur "Ajouter un niveau" pour commencer</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Score minimum de réussite */}
@@ -539,6 +735,135 @@ const Admin = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Dialog pour créer/modifier un niveau de difficulté */}
+      <Dialog open={isLevelDialogOpen} onOpenChange={setIsLevelDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>
+              {editingLevel ? 'Modifier le niveau' : 'Ajouter un niveau'}
+            </DialogTitle>
+            <DialogDescription>
+              {editingLevel 
+                ? 'Modifiez les informations du niveau de difficulté'
+                : 'Créez un nouveau niveau de difficulté personnalisé'
+              }
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="level_number" className="text-right">
+                Numéro
+              </Label>
+              <Input
+                id="level_number"
+                type="number"
+                min="1"
+                max="20"
+                value={levelForm.level_number}
+                onChange={(e) => setLevelForm({
+                  ...levelForm,
+                  level_number: parseInt(e.target.value) || 1
+                })}
+                className="col-span-3"
+              />
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="level_name" className="text-right">
+                Nom
+              </Label>
+              <Input
+                id="level_name"
+                value={levelForm.name}
+                onChange={(e) => setLevelForm({
+                  ...levelForm,
+                  name: e.target.value
+                })}
+                className="col-span-3"
+                placeholder="Ex: Débutant, Intermédiaire..."
+              />
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="level_description" className="text-right">
+                Description
+              </Label>
+              <Input
+                id="level_description"
+                value={levelForm.description}
+                onChange={(e) => setLevelForm({
+                  ...levelForm,
+                  description: e.target.value
+                })}
+                className="col-span-3"
+                placeholder="Description du niveau (optionnel)"
+              />
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="level_color" className="text-right">
+                Couleur
+              </Label>
+              <div className="col-span-3 flex items-center gap-2">
+                <Input
+                  id="level_color"
+                  type="color"
+                  value={levelForm.color}
+                  onChange={(e) => setLevelForm({
+                    ...levelForm,
+                    color: e.target.value
+                  })}
+                  className="w-16 h-10 p-1 border rounded"
+                />
+                <Input
+                  value={levelForm.color}
+                  onChange={(e) => setLevelForm({
+                    ...levelForm,
+                    color: e.target.value
+                  })}
+                  className="flex-1"
+                  placeholder="#6366f1"
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="level_active" className="text-right">
+                Actif
+              </Label>
+              <div className="col-span-3">
+                <Switch
+                  id="level_active"
+                  checked={levelForm.is_active}
+                  onCheckedChange={(checked) => setLevelForm({
+                    ...levelForm,
+                    is_active: checked
+                  })}
+                />
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => setIsLevelDialogOpen(false)}
+            >
+              Annuler
+            </Button>
+            <Button 
+              type="button" 
+              onClick={saveDifficultyLevel}
+              disabled={!levelForm.name.trim()}
+            >
+              {editingLevel ? 'Modifier' : 'Créer'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
