@@ -165,6 +165,10 @@ const Admin = () => {
     explanation: ''
   });
   const [questionStats, setQuestionStats] = useState<Record<number, number>>({});
+  
+  // États pour le filtrage des questions
+  const [questionTypeFilter, setQuestionTypeFilter] = useState('all');
+  const [questionLevelFilter, setQuestionLevelFilter] = useState('all');
 
   // État pour la configuration de la page d'accueil
   const [homepageConfig, setHomepageConfig] = useState({
@@ -1465,6 +1469,52 @@ Délivré le {date}.`
               </div>
             </div>
 
+            {/* Filtres */}
+            <div className="flex gap-4 p-4 bg-muted/50 rounded-lg">
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium">Type:</label>
+                <Select value={questionTypeFilter} onValueChange={setQuestionTypeFilter}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="Tous les types" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous les types</SelectItem>
+                    <SelectItem value="QCM">QCM</SelectItem>
+                    <SelectItem value="GAP_FILL">Phrase à trous</SelectItem>
+                    <SelectItem value="ERROR_SPOT">Erreur à repérer</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium">Niveau:</label>
+                <Select value={questionLevelFilter} onValueChange={setQuestionLevelFilter}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue placeholder="Tous niveaux" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous niveaux</SelectItem>
+                    {difficultyLevels.map(level => (
+                      <SelectItem key={level.id} value={level.level_number.toString()}>
+                        Niveau {level.level_number}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex items-center gap-2 text-sm text-muted-foreground ml-auto">
+                {(() => {
+                  const filteredQuestions = questions.filter(question => {
+                    const typeMatch = questionTypeFilter === 'all' || question.type === questionTypeFilter;
+                    const levelMatch = questionLevelFilter === 'all' || question.level.toString() === questionLevelFilter;
+                    return typeMatch && levelMatch;
+                  });
+                  return `${filteredQuestions.length} question(s) affichée(s)`;
+                })()}
+              </div>
+            </div>
+
             <Card>
               <CardHeader>
                 <CardTitle>Questions par niveau</CardTitle>
@@ -1491,8 +1541,15 @@ Délivré le {date}.`
                 </div>
 
                 <div className="space-y-4">
-                  {questions.length > 0 ? (
-                    questions.map(question => (
+                  {(() => {
+                    const filteredQuestions = questions.filter(question => {
+                      const typeMatch = questionTypeFilter === 'all' || question.type === questionTypeFilter;
+                      const levelMatch = questionLevelFilter === 'all' || question.level.toString() === questionLevelFilter;
+                      return typeMatch && levelMatch;
+                    });
+                    
+                    return filteredQuestions.length > 0 ? (
+                      filteredQuestions.map(question => (
                       <Card key={question.id} className="border-l-4" style={{ borderLeftColor: difficultyLevels.find(l => l.level_number === question.level)?.color || '#6366f1' }}>
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between">
@@ -1546,18 +1603,19 @@ Délivré le {date}.`
                           </div>
                         </CardContent>
                       </Card>
-                    ))
-                  ) : (
-                    <div className="text-center py-12 text-muted-foreground">
-                      <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p className="text-lg font-medium">Aucune question créée</p>
-                      <p className="text-sm mb-4">Commencez par créer votre première question</p>
-                      <Button onClick={() => openQuestionDialog()}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Créer la première question
-                      </Button>
-                    </div>
-                  )}
+                      ))
+                    ) : (
+                      <div className="text-center py-12 text-muted-foreground">
+                        <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p className="text-lg font-medium">Aucune question trouvée</p>
+                        <p className="text-sm mb-4">Aucune question ne correspond aux filtres sélectionnés</p>
+                        <Button onClick={() => openQuestionDialog()}>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Créer une nouvelle question
+                        </Button>
+                      </div>
+                    );
+                  })()}
                 </div>
               </CardContent>
             </Card>
