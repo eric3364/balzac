@@ -578,7 +578,7 @@ const Admin = () => {
 
       // Redirection vers la page d'accueil après sauvegarde
       setTimeout(() => {
-        navigate('/');
+        navigate('/?preview=true');
       }, 1000);
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);

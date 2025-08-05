@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useHomepageConfig } from '@/hooks/useHomepageConfig';
 import { Button } from '@/components/ui/button';
@@ -10,13 +10,15 @@ const Index = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { config: homepageAssets } = useHomepageConfig();
+  const [searchParams] = useSearchParams();
+  const previewMode = searchParams.get('preview') === 'true';
 
-  // Redirect authenticated users to dashboard
+  // Redirect authenticated users to dashboard, except in preview mode
   useEffect(() => {
-    if (!loading && user) {
+    if (!loading && user && !previewMode) {
       navigate('/dashboard');
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, previewMode]);
 
   if (loading) {
     return (
@@ -29,7 +31,7 @@ const Index = () => {
     );
   }
 
-  if (user) {
+  if (user && !previewMode) {
     return null; // Will redirect to dashboard
   }
 
