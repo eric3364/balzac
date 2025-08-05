@@ -68,12 +68,21 @@ export const useHomepageConfig = () => {
 
         const configMap: any = {};
         data?.forEach(item => {
-          const rawValue = item.config_value ? item.config_value : '';
           let value = '';
-          try {
-            value = rawValue ? String(JSON.parse(String(rawValue))) : '';
-          } catch {
-            value = String(rawValue);
+          const rawValue = item.config_value;
+          
+          if (rawValue) {
+            // Si la valeur est déjà une string sans guillemets JSON, l'utiliser directement
+            if (typeof rawValue === 'string' && !rawValue.startsWith('"')) {
+              value = rawValue;
+            } else {
+              // Sinon, essayer de parser le JSON
+              try {
+                value = String(JSON.parse(String(rawValue)));
+              } catch {
+                value = String(rawValue);
+              }
+            }
           }
           
           switch (item.config_key) {
