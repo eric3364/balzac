@@ -210,12 +210,10 @@ export default function Test() {
         .eq('user_id', user!.id)
         .eq('status', 'in_progress');
 
-      // Create test session with unique ID
-      const sessionId = crypto.randomUUID();
+      // Create test session with unique ID (always generate new UUID)
       const { data: sessionData, error: sessionError } = await supabase
         .from('test_sessions')
         .insert({
-          id: sessionId,
           user_id: user!.id,
           status: 'in_progress',
           total_questions: shuffledQuestions.length,

@@ -19,7 +19,7 @@ export const useSiteConfig = () => {
           .from('site_configuration')
           .select('config_value')
           .eq('config_key', 'questions_per_test')
-          .single();
+          .maybeSingle();
 
         const questionsPerTest = data?.config_value ? Number(data.config_value) : 5;
 
