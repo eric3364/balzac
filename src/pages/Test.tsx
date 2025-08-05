@@ -200,7 +200,7 @@ export default function Test() {
       const shuffledQuestions = questionsData.sort(() => Math.random() - 0.5);
       setQuestions(shuffledQuestions);
       
-      // First, complete any existing in-progress sessions
+      // First, complete any existing in-progress sessions and clean up deleted ones
       await supabase
         .from('test_sessions')
         .update({ 
@@ -209,6 +209,13 @@ export default function Test() {
         })
         .eq('user_id', user!.id)
         .eq('status', 'in_progress');
+
+      // Clean up any sessions marked as deleted
+      await supabase
+        .from('test_sessions')
+        .delete()
+        .eq('user_id', user!.id)
+        .not('deleted_at', 'is', null);
 
       // Create test session with unique ID (always generate new UUID)
       const { data: sessionData, error: sessionError } = await supabase
@@ -256,9 +263,22 @@ export default function Test() {
       
     } catch (error) {
       console.error('Error loading questions:', error);
+      
+      // Messages d'erreur plus spécifiques
+      if (error && typeof error === 'object' && 'code' in error) {
+        if (error.code === '23505') {
+          toast({
+            title: "Session en cours",
+            description: "Une session de test est déjà active. Veuillez patienter...",
+            variant: "destructive"
+          });
+          return;
+        }
+      }
+      
       toast({
         title: "Erreur",
-        description: "Impossible de charger les questions.",
+        description: `Impossible de charger le test: ${error?.message || 'Erreur inconnue'}`,
         variant: "destructive"
       });
     }
