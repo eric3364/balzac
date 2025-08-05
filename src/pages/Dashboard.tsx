@@ -6,6 +6,7 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Settings } from 'lucide-react';
+import CertificationBadges from '@/components/CertificationBadges';
 
 const Dashboard = () => {
   const { user, loading, signOut } = useAuth();
@@ -62,6 +63,9 @@ const Dashboard = () => {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
+        {/* Section des badges de certification */}
+        <CertificationBadges />
+        
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card>
             <CardHeader>

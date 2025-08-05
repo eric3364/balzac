@@ -1,0 +1,226 @@
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Award, Star, Trophy, Shield, Crown } from 'lucide-react';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+
+interface Certification {
+  id: string;
+  level: number;
+  score: number;
+  certified_at: string;
+}
+
+interface CertificateTemplate {
+  id: string;
+  name: string;
+  certificate_title: string;
+  badge_icon: string;
+  badge_color: string;
+  badge_background_color: string;
+  difficulty_level_id: string;
+  difficulty_levels: {
+    level_number: number;
+    name: string;
+    color: string;
+  };
+}
+
+const CertificationBadges = () => {
+  const { user } = useAuth();
+  const [certifications, setCertifications] = useState<Certification[]>([]);
+  const [templates, setTemplates] = useState<CertificateTemplate[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchData = async () => {
+      try {
+        // Récupérer les certifications de l'utilisateur
+        const { data: userCertifications } = await supabase
+          .from('user_certifications')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('level', { ascending: true });
+
+        // Récupérer les modèles de certificats avec les niveaux de difficulté
+        const { data: certificateTemplates } = await supabase
+          .from('certificate_templates')
+          .select(`
+            *,
+            difficulty_levels (
+              level_number,
+              name,
+              color
+            )
+          `);
+
+        setCertifications(userCertifications || []);
+        setTemplates(certificateTemplates || []);
+      } catch (error) {
+        console.error('Erreur lors du chargement des certifications:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [user]);
+
+  const getIconComponent = (iconName: string) => {
+    switch (iconName) {
+      case 'award': return Award;
+      case 'star': return Star;
+      case 'trophy': return Trophy;
+      case 'shield': return Shield;
+      case 'crown': return Crown;
+      default: return Award;
+    }
+  };
+
+  const getLevelName = (level: number) => {
+    switch (level) {
+      case 1: return 'Élémentaire';
+      case 2: return 'Intermédiaire';
+      case 3: return 'Avancé';
+      case 4: return 'Expert';
+      case 5: return 'Maître';
+      default: return `Niveau ${level}`;
+    }
+  };
+
+  const getScoreColor = (score: number) => {
+    if (score >= 90) return 'text-green-600 dark:text-green-400';
+    if (score >= 80) return 'text-blue-600 dark:text-blue-400';
+    if (score >= 70) return 'text-yellow-600 dark:text-yellow-400';
+    return 'text-orange-600 dark:text-orange-400';
+  };
+
+  if (loading) {
+    return (
+      <Card className="mb-8">
+        <CardContent className="p-6">
+          <div className="animate-pulse">
+            <div className="h-6 bg-muted rounded w-48 mb-4"></div>
+            <div className="flex gap-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="w-24 h-24 bg-muted rounded-lg"></div>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (certifications.length === 0) {
+    return (
+      <Card className="mb-8">
+        <CardContent className="p-6 text-center">
+          <Award className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Aucune certification obtenue</h3>
+          <p className="text-muted-foreground">
+            Commencez un test pour obtenir votre première certification !
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="mb-8 bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
+      <CardContent className="p-6">
+        <div className="flex items-center gap-2 mb-6">
+          <Trophy className="h-6 w-6 text-primary" />
+          <h2 className="text-xl font-bold">Mes Certifications</h2>
+          <Badge variant="secondary" className="ml-2">
+            {certifications.length} obtenue{certifications.length > 1 ? 's' : ''}
+          </Badge>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          {certifications.map((cert) => {
+            // Trouver le template correspondant au niveau
+            const template = templates.find(t => 
+              t.difficulty_levels?.level_number === cert.level
+            );
+            
+            const IconComponent = getIconComponent(template?.badge_icon || 'award');
+            const badgeColor = template?.badge_color || '#6366f1';
+            const backgroundColor = template?.badge_background_color || '#ffffff';
+            
+            return (
+              <div
+                key={cert.id}
+                className="flex flex-col items-center p-4 rounded-lg border bg-card hover:shadow-lg transition-shadow duration-200"
+              >
+                {/* Badge Icon */}
+                <div 
+                  className="w-16 h-16 rounded-full flex items-center justify-center mb-3 shadow-md"
+                  style={{ 
+                    backgroundColor: backgroundColor,
+                    border: `2px solid ${badgeColor}`
+                  }}
+                >
+                  <IconComponent 
+                    className="h-8 w-8" 
+                    style={{ color: badgeColor }}
+                  />
+                </div>
+
+                {/* Level Name */}
+                <h3 className="font-semibold text-sm text-center mb-1">
+                  {template?.difficulty_levels?.name || getLevelName(cert.level)}
+                </h3>
+
+                {/* Score */}
+                <div className={`text-lg font-bold mb-2 ${getScoreColor(cert.score)}`}>
+                  {cert.score}%
+                </div>
+
+                {/* Date */}
+                <div className="text-xs text-muted-foreground text-center">
+                  {format(new Date(cert.certified_at), 'dd MMM yyyy', { locale: fr })}
+                </div>
+
+                {/* Perfect Score Indicator */}
+                {cert.score === 100 && (
+                  <div className="mt-2">
+                    <Badge variant="default" className="text-xs bg-yellow-500 hover:bg-yellow-600">
+                      <Star className="h-3 w-3 mr-1" />
+                      Parfait !
+                    </Badge>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Progress Indicator */}
+        <div className="mt-6 pt-4 border-t">
+          <div className="flex justify-between items-center text-sm text-muted-foreground">
+            <span>Progression des niveaux</span>
+            <span>
+              Niveau {Math.max(...certifications.map(c => c.level))} atteint
+            </span>
+          </div>
+          <div className="mt-2 h-2 bg-muted rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-primary to-primary/80 transition-all duration-500"
+              style={{ 
+                width: `${(Math.max(...certifications.map(c => c.level)) / 5) * 100}%` 
+              }}
+            />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default CertificationBadges;
