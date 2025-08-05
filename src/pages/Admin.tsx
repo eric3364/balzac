@@ -753,12 +753,11 @@ const Admin = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Onglets d'administration */}
         <Tabs defaultValue="stats" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="stats">Statistiques</TabsTrigger>
             <TabsTrigger value="students">Apprenants</TabsTrigger>
             <TabsTrigger value="homepage">Page d'accueil</TabsTrigger>
-            <TabsTrigger value="certificates">Certifications</TabsTrigger>
-            <TabsTrigger value="levels">Niveaux</TabsTrigger>
+            <TabsTrigger value="levels">Niveaux & Certifications</TabsTrigger>
             <TabsTrigger value="settings">Paramètres</TabsTrigger>
           </TabsList>
 
@@ -1000,107 +999,16 @@ const Admin = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="certificates" className="space-y-6">
+          <TabsContent value="levels" className="space-y-6">
+            {/* Section Niveaux de difficulté */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Award className="h-5 w-5" />
-                  Gestion des certifications
+                  <Settings className="h-5 w-5" />
+                  Niveaux de difficulté
                 </CardTitle>
                 <CardDescription>
-                  Critères de validation et modèles de certificats associés aux niveaux de difficulté
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Modèles de certificats</h4>
-                    <p className="text-xs text-muted-foreground">
-                      Chaque niveau de difficulté doit avoir un certificat associé
-                    </p>
-                  </div>
-                  <Button onClick={() => openCertificateDialog()} size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Nouveau certificat
-                  </Button>
-                </div>
-
-                <div className="grid gap-4">
-                  {certificateTemplates.map((certificate: any) => (
-                    <div
-                      key={certificate.id}
-                      className="p-4 border rounded-lg space-y-3"
-                      style={{ borderColor: certificate.certificate_border_color }}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <BadgePreview
-                            icon={certificate.badge_icon || 'award'}
-                            color={certificate.badge_color || '#6366f1'}
-                            backgroundColor={certificate.badge_background_color || '#ffffff'}
-                            size="medium"
-                          />
-                          <div>
-                            <h5 className="font-medium">{certificate.name}</h5>
-                            <p className="text-xs text-muted-foreground">
-                              Niveau {certificate.difficulty_levels?.name} - Score minimum: {certificate.min_score_required}%
-                            </p>
-                          </div>
-                          {!certificate.is_active && (
-                            <Badge variant="secondary" className="text-xs">
-                              Inactif
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            onClick={() => openCertificateDialog(certificate)}
-                            size="sm"
-                            variant="outline"
-                          >
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            onClick={() => deleteCertificateTemplate(certificate.id)}
-                            size="sm"
-                            variant="outline"
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                      
-                      <div className="bg-muted/30 p-3 rounded text-xs">
-                        <p><strong>Titre:</strong> {certificate.certificate_title}</p>
-                        {certificate.certificate_subtitle && (
-                          <p><strong>Sous-titre:</strong> {certificate.certificate_subtitle}</p>
-                        )}
-                        <p className="mt-1 text-muted-foreground">
-                          <strong>Texte:</strong> {certificate.certificate_text.substring(0, 100)}...
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                  
-                  {certificateTemplates.length === 0 && (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <Award className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                      <p>Aucun modèle de certificat configuré</p>
-                      <p className="text-xs">Cliquez sur "Nouveau certificat" pour commencer</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="levels" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Niveaux de difficulté</CardTitle>
-                <CardDescription>
-                  Gérez les niveaux de difficulté personnalisés avec noms et descriptions
+                  Gérez les niveaux de difficulté et leurs certificats associés
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -1163,6 +1071,101 @@ const Admin = () => {
                     <div className="text-center py-8 text-muted-foreground">
                       <p>Aucun niveau de difficulté configuré</p>
                       <p className="text-xs">Cliquez sur "Ajouter un niveau" pour commencer</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Section Certifications */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Award className="h-5 w-5" />
+                  Certifications associées
+                </CardTitle>
+                <CardDescription>
+                  Modèles de certificats pour chaque niveau de difficulté
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">Modèles de certificats</h4>
+                    <p className="text-xs text-muted-foreground">
+                      Chaque niveau de difficulté doit avoir un certificat associé
+                    </p>
+                  </div>
+                  <Button onClick={() => openCertificateDialog()} size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nouveau certificat
+                  </Button>
+                </div>
+
+                <div className="grid gap-4">
+                  {certificateTemplates.map((certificate: any) => (
+                    <div
+                      key={certificate.id}
+                      className="p-4 border rounded-lg space-y-3"
+                      style={{ borderColor: certificate.certificate_border_color }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <BadgePreview
+                            icon={certificate.badge_icon || 'award'}
+                            color={certificate.badge_color || '#6366f1'}
+                            backgroundColor={certificate.badge_background_color || '#ffffff'}
+                            size="medium"
+                            customImageUrl={certificate.custom_badge_url}
+                          />
+                          <div>
+                            <h5 className="font-medium">{certificate.name}</h5>
+                            <p className="text-xs text-muted-foreground">
+                              Niveau {certificate.difficulty_levels?.name} - Score minimum: {certificate.min_score_required}%
+                            </p>
+                          </div>
+                          {!certificate.is_active && (
+                            <Badge variant="secondary" className="text-xs">
+                              Inactif
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => openCertificateDialog(certificate)}
+                            size="sm"
+                            variant="outline"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            onClick={() => deleteCertificateTemplate(certificate.id)}
+                            size="sm"
+                            variant="outline"
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-muted/30 p-3 rounded text-xs">
+                        <p><strong>Titre:</strong> {certificate.certificate_title}</p>
+                        {certificate.certificate_subtitle && (
+                          <p><strong>Sous-titre:</strong> {certificate.certificate_subtitle}</p>
+                        )}
+                        <p className="mt-1 text-muted-foreground">
+                          <strong>Texte:</strong> {certificate.certificate_text.substring(0, 100)}...
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {certificateTemplates.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Award className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                      <p>Aucun modèle de certificat configuré</p>
+                      <p className="text-xs">Cliquez sur "Nouveau certificat" pour commencer</p>
                     </div>
                   )}
                 </div>
