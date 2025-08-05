@@ -38,6 +38,74 @@ export type Database = {
         }
         Relationships: []
       }
+      certificate_templates: {
+        Row: {
+          certificate_background_color: string | null
+          certificate_border_color: string | null
+          certificate_subtitle: string | null
+          certificate_text: string
+          certificate_text_color: string | null
+          certificate_title: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          difficulty_level_id: string
+          id: string
+          is_active: boolean
+          min_questions_correct: number | null
+          min_score_required: number
+          name: string
+          time_limit_seconds: number | null
+          updated_at: string
+        }
+        Insert: {
+          certificate_background_color?: string | null
+          certificate_border_color?: string | null
+          certificate_subtitle?: string | null
+          certificate_text: string
+          certificate_text_color?: string | null
+          certificate_title: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          difficulty_level_id: string
+          id?: string
+          is_active?: boolean
+          min_questions_correct?: number | null
+          min_score_required?: number
+          name: string
+          time_limit_seconds?: number | null
+          updated_at?: string
+        }
+        Update: {
+          certificate_background_color?: string | null
+          certificate_border_color?: string | null
+          certificate_subtitle?: string | null
+          certificate_text?: string
+          certificate_text_color?: string | null
+          certificate_title?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          difficulty_level_id?: string
+          id?: string
+          is_active?: boolean
+          min_questions_correct?: number | null
+          min_score_required?: number
+          name?: string
+          time_limit_seconds?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certificate_templates_difficulty_level_id_fkey"
+            columns: ["difficulty_level_id"]
+            isOneToOne: true
+            referencedRelation: "difficulty_levels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       difficulty_levels: {
         Row: {
           color: string | null

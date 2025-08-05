@@ -11,7 +11,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Users, Settings, BarChart3, Shield, ArrowLeft, Save, Plus, Edit2, Trash2 } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Users, Settings, BarChart3, Shield, ArrowLeft, Save, Plus, Edit2, Trash2, Award } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface AdminUser {
@@ -52,6 +53,26 @@ interface DifficultyLevel {
   updated_at: string;
 }
 
+interface CertificateTemplate {
+  id: string;
+  difficulty_level_id: string;
+  name: string;
+  description: string | null;
+  min_score_required: number;
+  min_questions_correct: number | null;
+  time_limit_seconds: number | null;
+  certificate_title: string;
+  certificate_subtitle: string | null;
+  certificate_text: string;
+  certificate_background_color: string;
+  certificate_border_color: string;
+  certificate_text_color: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  difficulty_levels?: DifficultyLevel;
+}
+
 const Admin = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
@@ -80,6 +101,26 @@ const Admin = () => {
     name: '',
     description: '',
     color: '#6366f1',
+    is_active: true
+  });
+
+  // État pour la gestion des certificats
+  const [certificateTemplates, setCertificateTemplates] = useState<CertificateTemplate[]>([]);
+  const [isCertificateDialogOpen, setIsCertificateDialogOpen] = useState(false);
+  const [editingCertificate, setEditingCertificate] = useState<CertificateTemplate | null>(null);
+  const [certificateForm, setCertificateForm] = useState({
+    difficulty_level_id: '',
+    name: '',
+    description: '',
+    min_score_required: 70,
+    min_questions_correct: null as number | null,
+    time_limit_seconds: null as number | null,
+    certificate_title: 'Certificat de Réussite',
+    certificate_subtitle: '',
+    certificate_text: '',
+    certificate_background_color: '#ffffff',
+    certificate_border_color: '#6366f1',
+    certificate_text_color: '#000000',
     is_active: true
   });
 
@@ -155,6 +196,9 @@ const Admin = () => {
       
       // Charger les niveaux de difficulté
       await loadDifficultyLevels();
+      
+      // Charger les modèles de certificats
+      await loadCertificateTemplates();
 
     } catch (error) {
       console.error('Erreur lors du chargement des données:', error);
@@ -366,6 +410,166 @@ const Admin = () => {
       toast({
         title: "Erreur",
         description: "Impossible de supprimer le niveau de difficulté",
+        variant: "destructive"
+      });
+    }
+  }
+
+  // Fonctions pour gérer les certificats
+  const loadCertificateTemplates = async () => {
+    try {
+      const { data: templates, error } = await supabase
+        .from('certificate_templates')
+        .select(`
+          *,
+          difficulty_levels (
+            id,
+            level_number,
+            name,
+            color
+          )
+        `)
+        .order('difficulty_levels(level_number)', { ascending: true });
+
+      if (error) throw error;
+      setCertificateTemplates(templates as any || []);
+    } catch (error) {
+      console.error('Erreur lors du chargement des certificats:', error);
+    }
+  };
+
+  const openCertificateDialog = (certificate?: CertificateTemplate) => {
+    if (certificate) {
+      setEditingCertificate(certificate);
+      setCertificateForm({
+        difficulty_level_id: certificate.difficulty_level_id,
+        name: certificate.name,
+        description: certificate.description || '',
+        min_score_required: certificate.min_score_required,
+        min_questions_correct: certificate.min_questions_correct,
+        time_limit_seconds: certificate.time_limit_seconds,
+        certificate_title: certificate.certificate_title,
+        certificate_subtitle: certificate.certificate_subtitle || '',
+        certificate_text: certificate.certificate_text,
+        certificate_background_color: certificate.certificate_background_color,
+        certificate_border_color: certificate.certificate_border_color,
+        certificate_text_color: certificate.certificate_text_color,
+        is_active: certificate.is_active
+      });
+    } else {
+      setEditingCertificate(null);
+      setCertificateForm({
+        difficulty_level_id: '',
+        name: '',
+        description: '',
+        min_score_required: 70,
+        min_questions_correct: null,
+        time_limit_seconds: null,
+        certificate_title: 'Certificat de Réussite',
+        certificate_subtitle: '',
+        certificate_text: '',
+        certificate_background_color: '#ffffff',
+        certificate_border_color: '#6366f1',
+        certificate_text_color: '#000000',
+        is_active: true
+      });
+    }
+    setIsCertificateDialogOpen(true);
+  };
+
+  const saveCertificateTemplate = async () => {
+    try {
+      if (editingCertificate) {
+        // Modifier un certificat existant
+        const { error } = await supabase
+          .from('certificate_templates')
+          .update({
+            name: certificateForm.name,
+            description: certificateForm.description || null,
+            min_score_required: certificateForm.min_score_required,
+            min_questions_correct: certificateForm.min_questions_correct,
+            time_limit_seconds: certificateForm.time_limit_seconds,
+            certificate_title: certificateForm.certificate_title,
+            certificate_subtitle: certificateForm.certificate_subtitle || null,
+            certificate_text: certificateForm.certificate_text,
+            certificate_background_color: certificateForm.certificate_background_color,
+            certificate_border_color: certificateForm.certificate_border_color,
+            certificate_text_color: certificateForm.certificate_text_color,
+            is_active: certificateForm.is_active
+          })
+          .eq('id', editingCertificate.id);
+
+        if (error) throw error;
+        
+        toast({
+          title: "Certificat modifié",
+          description: "Le modèle de certificat a été mis à jour avec succès"
+        });
+      } else {
+        // Créer un nouveau certificat
+        const { error } = await supabase
+          .from('certificate_templates')
+          .insert({
+            difficulty_level_id: certificateForm.difficulty_level_id,
+            name: certificateForm.name,
+            description: certificateForm.description || null,
+            min_score_required: certificateForm.min_score_required,
+            min_questions_correct: certificateForm.min_questions_correct,
+            time_limit_seconds: certificateForm.time_limit_seconds,
+            certificate_title: certificateForm.certificate_title,
+            certificate_subtitle: certificateForm.certificate_subtitle || null,
+            certificate_text: certificateForm.certificate_text,
+            certificate_background_color: certificateForm.certificate_background_color,
+            certificate_border_color: certificateForm.certificate_border_color,
+            certificate_text_color: certificateForm.certificate_text_color,
+            is_active: certificateForm.is_active,
+            created_by: user?.id
+          });
+
+        if (error) throw error;
+        
+        toast({
+          title: "Certificat créé",
+          description: "Le nouveau modèle de certificat a été créé avec succès"
+        });
+      }
+
+      setIsCertificateDialogOpen(false);
+      await loadCertificateTemplates();
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de sauvegarder le modèle de certificat",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const deleteCertificateTemplate = async (id: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce modèle de certificat ?')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('certificate_templates')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      toast({
+        title: "Certificat supprimé",
+        description: "Le modèle de certificat a été supprimé avec succès"
+      });
+      
+      await loadCertificateTemplates();
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer le modèle de certificat",
         variant: "destructive"
       });
     }
@@ -719,16 +923,93 @@ const Admin = () => {
 
             <Card>
               <CardHeader>
-                <CardTitle>Gestion des certifications</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Award className="h-5 w-5" />
+                  Gestion des certifications
+                </CardTitle>
                 <CardDescription>
-                  Critères de validation et modèles de certificats
+                  Critères de validation et modèles de certificats associés aux niveaux de difficulté
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="p-4 border rounded-lg bg-muted/50">
-                  <p className="text-sm text-muted-foreground">
-                    Configuration des critères de certification à venir...
-                  </p>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">Modèles de certificats</h4>
+                    <p className="text-xs text-muted-foreground">
+                      Chaque niveau de difficulté doit avoir un certificat associé
+                    </p>
+                  </div>
+                  <Button onClick={() => openCertificateDialog()} size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nouveau certificat
+                  </Button>
+                </div>
+
+                <div className="grid gap-4">
+                  {certificateTemplates.map((certificate: any) => (
+                    <div
+                      key={certificate.id}
+                      className="p-4 border rounded-lg space-y-3"
+                      style={{ borderColor: certificate.certificate_border_color }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                            style={{ backgroundColor: certificate.difficulty_levels?.color || '#6366f1' }}
+                          >
+                            {certificate.difficulty_levels?.level_number || 'N'}
+                          </div>
+                          <div>
+                            <h5 className="font-medium">{certificate.name}</h5>
+                            <p className="text-xs text-muted-foreground">
+                              Niveau {certificate.difficulty_levels?.name} - Score minimum: {certificate.min_score_required}%
+                            </p>
+                          </div>
+                          {!certificate.is_active && (
+                            <Badge variant="secondary" className="text-xs">
+                              Inactif
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => openCertificateDialog(certificate)}
+                            size="sm"
+                            variant="outline"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            onClick={() => deleteCertificateTemplate(certificate.id)}
+                            size="sm"
+                            variant="outline"
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-muted/30 p-3 rounded text-xs">
+                        <p><strong>Titre:</strong> {certificate.certificate_title}</p>
+                        {certificate.certificate_subtitle && (
+                          <p><strong>Sous-titre:</strong> {certificate.certificate_subtitle}</p>
+                        )}
+                        <p className="mt-1 text-muted-foreground">
+                          <strong>Texte:</strong> {certificate.certificate_text.substring(0, 100)}...
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {certificateTemplates.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Award className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                      <p>Aucun modèle de certificat configuré</p>
+                      <p className="text-xs">Cliquez sur "Nouveau certificat" pour commencer</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -860,6 +1141,288 @@ const Admin = () => {
               disabled={!levelForm.name.trim()}
             >
               {editingLevel ? 'Modifier' : 'Créer'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog pour créer/modifier un certificat */}
+      <Dialog open={isCertificateDialogOpen} onOpenChange={setIsCertificateDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingCertificate ? 'Modifier le certificat' : 'Créer un certificat'}
+            </DialogTitle>
+            <DialogDescription>
+              {editingCertificate 
+                ? 'Modifiez les critères et le modèle de certificat'
+                : 'Créez un nouveau modèle de certificat pour un niveau de difficulté'
+              }
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-6 py-4">
+            {/* Informations générales */}
+            <div className="space-y-4">
+              <h4 className="font-medium text-sm">Informations générales</h4>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="cert_difficulty_level">Niveau de difficulté</Label>
+                  <Select 
+                    value={certificateForm.difficulty_level_id} 
+                    onValueChange={(value) => setCertificateForm({
+                      ...certificateForm,
+                      difficulty_level_id: value
+                    })}
+                    disabled={!!editingCertificate}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner un niveau" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {difficultyLevels.map((level) => (
+                        <SelectItem key={level.id} value={level.id}>
+                          Niveau {level.level_number}: {level.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="cert_name">Nom du certificat</Label>
+                  <Input
+                    id="cert_name"
+                    value={certificateForm.name}
+                    onChange={(e) => setCertificateForm({
+                      ...certificateForm,
+                      name: e.target.value
+                    })}
+                    placeholder="Ex: Certificat Débutant"
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="cert_description">Description</Label>
+                <Input
+                  id="cert_description"
+                  value={certificateForm.description}
+                  onChange={(e) => setCertificateForm({
+                    ...certificateForm,
+                    description: e.target.value
+                  })}
+                  placeholder="Description du certificat (optionnel)"
+                />
+              </div>
+            </div>
+
+            {/* Critères de validation */}
+            <div className="space-y-4 pt-4 border-t">
+              <h4 className="font-medium text-sm">Critères de validation</h4>
+              
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="min_score">Score minimum (%)</Label>
+                  <Input
+                    id="min_score"
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={certificateForm.min_score_required}
+                    onChange={(e) => setCertificateForm({
+                      ...certificateForm,
+                      min_score_required: parseInt(e.target.value) || 70
+                    })}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="min_questions">Questions min. correctes</Label>
+                  <Input
+                    id="min_questions"
+                    type="number"
+                    min="0"
+                    value={certificateForm.min_questions_correct || ''}
+                    onChange={(e) => setCertificateForm({
+                      ...certificateForm,
+                      min_questions_correct: e.target.value ? parseInt(e.target.value) : null
+                    })}
+                    placeholder="Optionnel"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="time_limit">Temps limite (sec)</Label>
+                  <Input
+                    id="time_limit"
+                    type="number"
+                    min="0"
+                    value={certificateForm.time_limit_seconds || ''}
+                    onChange={(e) => setCertificateForm({
+                      ...certificateForm,
+                      time_limit_seconds: e.target.value ? parseInt(e.target.value) : null
+                    })}
+                    placeholder="Optionnel"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Modèle de certificat */}
+            <div className="space-y-4 pt-4 border-t">
+              <h4 className="font-medium text-sm">Modèle de certificat</h4>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="cert_title">Titre</Label>
+                  <Input
+                    id="cert_title"
+                    value={certificateForm.certificate_title}
+                    onChange={(e) => setCertificateForm({
+                      ...certificateForm,
+                      certificate_title: e.target.value
+                    })}
+                    placeholder="Certificat de Réussite"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="cert_subtitle">Sous-titre</Label>
+                  <Input
+                    id="cert_subtitle"
+                    value={certificateForm.certificate_subtitle}
+                    onChange={(e) => setCertificateForm({
+                      ...certificateForm,
+                      certificate_subtitle: e.target.value
+                    })}
+                    placeholder="Niveau - Matière"
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="cert_text">Texte du certificat</Label>
+                <Textarea
+                  id="cert_text"
+                  value={certificateForm.certificate_text}
+                  onChange={(e) => setCertificateForm({
+                    ...certificateForm,
+                    certificate_text: e.target.value
+                  })}
+                  placeholder="Utilisez {student_name}, {score}, {date} comme variables"
+                  rows={4}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Variables disponibles: {'{student_name}'}, {'{score}'}, {'{date}'}
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="bg_color">Couleur de fond</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="color"
+                      value={certificateForm.certificate_background_color}
+                      onChange={(e) => setCertificateForm({
+                        ...certificateForm,
+                        certificate_background_color: e.target.value
+                      })}
+                      className="w-12 h-10 p-1"
+                    />
+                    <Input
+                      value={certificateForm.certificate_background_color}
+                      onChange={(e) => setCertificateForm({
+                        ...certificateForm,
+                        certificate_background_color: e.target.value
+                      })}
+                      className="flex-1"
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="border_color">Couleur bordure</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="color"
+                      value={certificateForm.certificate_border_color}
+                      onChange={(e) => setCertificateForm({
+                        ...certificateForm,
+                        certificate_border_color: e.target.value
+                      })}
+                      className="w-12 h-10 p-1"
+                    />
+                    <Input
+                      value={certificateForm.certificate_border_color}
+                      onChange={(e) => setCertificateForm({
+                        ...certificateForm,
+                        certificate_border_color: e.target.value
+                      })}
+                      className="flex-1"
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="text_color">Couleur texte</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="color"
+                      value={certificateForm.certificate_text_color}
+                      onChange={(e) => setCertificateForm({
+                        ...certificateForm,
+                        certificate_text_color: e.target.value
+                      })}
+                      className="w-12 h-10 p-1"
+                    />
+                    <Input
+                      value={certificateForm.certificate_text_color}
+                      onChange={(e) => setCertificateForm({
+                        ...certificateForm,
+                        certificate_text_color: e.target.value
+                      })}
+                      className="flex-1"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="cert_active">Certificat actif</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Activer/désactiver ce modèle de certificat
+                  </p>
+                </div>
+                <Switch
+                  id="cert_active"
+                  checked={certificateForm.is_active}
+                  onCheckedChange={(checked) => setCertificateForm({
+                    ...certificateForm,
+                    is_active: checked
+                  })}
+                />
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => setIsCertificateDialogOpen(false)}
+            >
+              Annuler
+            </Button>
+            <Button 
+              type="button" 
+              onClick={saveCertificateTemplate}
+              disabled={!certificateForm.name.trim() || !certificateForm.difficulty_level_id}
+            >
+              {editingCertificate ? 'Modifier' : 'Créer'}
             </Button>
           </DialogFooter>
         </DialogContent>
