@@ -190,7 +190,7 @@ const Admin = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{userStats?.total_certifications || 0}</div>
-              <p className="text-xs text-muted-foreground">Certifications délivrées</p>
+              <p className="text-xs text-muted-foreground">Certifications distribuées aux utilisateurs</p>
             </CardContent>
           </Card>
 
