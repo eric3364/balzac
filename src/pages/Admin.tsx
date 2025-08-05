@@ -1497,7 +1497,7 @@ Délivré le {date}.`
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
+                               <div className="flex items-center gap-2 mb-2">
                                 <Badge variant="secondary">
                                   {question.type === 'QCM' ? 'QCM' : 
                                    question.type === 'GAP_FILL' ? 'Phrase à trous' : 
@@ -1505,6 +1505,9 @@ Délivré le {date}.`
                                 </Badge>
                                 <Badge variant="outline">
                                   Niveau {question.level}
+                                </Badge>
+                                <Badge variant="outline" className="font-mono text-xs">
+                                  ID: {question.id}
                                 </Badge>
                               </div>
                               <p className="font-medium mb-2">{question.content}</p>
