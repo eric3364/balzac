@@ -77,10 +77,10 @@ const Index = () => {
             <img 
               src={homepageAssets.bannerUrl} 
               alt={homepageAssets.bannerAlt}
-              className="w-full h-full object-cover opacity-20"
+              className="w-full h-full object-cover opacity-50"
             />
             {/* Overlay sombre pour améliorer le contraste */}
-            <div className="absolute inset-0 bg-background/60"></div>
+            <div className="absolute inset-0 bg-background/30"></div>
           </div>
         )}
         <div className="relative z-10 container mx-auto px-4 py-20 text-center">
