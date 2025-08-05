@@ -5,6 +5,23 @@ interface HomepageConfig {
   logoUrl: string;
   bannerUrl: string;
   bannerAlt: string;
+  siteTitle: string;
+  siteSubtitle: string;
+  heroTitle: string;
+  heroDescription: string;
+  heroCta_primary: string;
+  heroCta_secondary: string;
+  featuresTitle: string;
+  featuresDescription: string;
+  stat1Number: string;
+  stat1Label: string;
+  stat2Number: string;
+  stat2Label: string;
+  stat3Number: string;
+  stat3Label: string;
+  ctaTitle: string;
+  ctaDescription: string;
+  ctaButton: string;
   loading: boolean;
 }
 
@@ -13,30 +30,121 @@ export const useHomepageConfig = () => {
     logoUrl: '',
     bannerUrl: '',
     bannerAlt: 'Bandeau visuel',
+    siteTitle: 'Balzac Certification',
+    siteSubtitle: 'Excellence en français',
+    heroTitle: 'Maîtrisez le français avec excellence',
+    heroDescription: 'Une plateforme de certification complète pour valider et perfectionner vos compétences en langue française',
+    heroCta_primary: 'Commencer gratuitement',
+    heroCta_secondary: 'Découvrir nos programmes',
+    featuresTitle: 'Pourquoi choisir Balzac Certification ?',
+    featuresDescription: 'Une approche moderne et rigoureuse pour certifier vos compétences linguistiques',
+    stat1Number: '10K+',
+    stat1Label: 'Apprenants certifiés',
+    stat2Number: '95%',
+    stat2Label: 'Taux de satisfaction',
+    stat3Number: '15+',
+    stat3Label: 'Niveaux disponibles',
+    ctaTitle: 'Prêt à certifier vos compétences ?',
+    ctaDescription: 'Rejoignez des milliers d\'apprenants qui ont déjà validé leur maîtrise du français',
+    ctaButton: 'Commencer maintenant',
     loading: true,
   });
 
   useEffect(() => {
     const fetchConfig = async () => {
       try {
+        const configKeys = [
+          'homepage_logo_url', 'homepage_banner_url', 'homepage_banner_alt',
+          'site_title', 'site_subtitle', 'hero_title', 'hero_description',
+          'hero_cta_primary', 'hero_cta_secondary', 'features_title', 'features_description',
+          'stat1_number', 'stat1_label', 'stat2_number', 'stat2_label', 'stat3_number', 'stat3_label',
+          'cta_title', 'cta_description', 'cta_button'
+        ];
+        
         const { data } = await supabase
           .from('site_configuration')
           .select('config_key, config_value')
-          .in('config_key', ['homepage_logo_url', 'homepage_banner_url', 'homepage_banner_alt']);
+          .in('config_key', configKeys);
 
-        const configMap: Record<string, string> = {};
+        const configMap: any = {};
         data?.forEach(item => {
-          configMap[item.config_key] = typeof item.config_value === 'string' 
-            ? item.config_value 
-            : JSON.stringify(item.config_value).replace(/"/g, '');
+          const rawValue = item.config_value ? item.config_value : '';
+          let value = '';
+          try {
+            value = rawValue ? String(JSON.parse(String(rawValue))) : '';
+          } catch {
+            value = String(rawValue);
+          }
+          
+          switch (item.config_key) {
+            case 'homepage_logo_url':
+              configMap.logoUrl = value;
+              break;
+            case 'homepage_banner_url':
+              configMap.bannerUrl = value;
+              break;
+            case 'homepage_banner_alt':
+              configMap.bannerAlt = value;
+              break;
+            case 'site_title':
+              configMap.siteTitle = value;
+              break;
+            case 'site_subtitle':
+              configMap.siteSubtitle = value;
+              break;
+            case 'hero_title':
+              configMap.heroTitle = value;
+              break;
+            case 'hero_description':
+              configMap.heroDescription = value;
+              break;
+            case 'hero_cta_primary':
+              configMap.heroCta_primary = value;
+              break;
+            case 'hero_cta_secondary':
+              configMap.heroCta_secondary = value;
+              break;
+            case 'features_title':
+              configMap.featuresTitle = value;
+              break;
+            case 'features_description':
+              configMap.featuresDescription = value;
+              break;
+            case 'stat1_number':
+              configMap.stat1Number = value;
+              break;
+            case 'stat1_label':
+              configMap.stat1Label = value;
+              break;
+            case 'stat2_number':
+              configMap.stat2Number = value;
+              break;
+            case 'stat2_label':
+              configMap.stat2Label = value;
+              break;
+            case 'stat3_number':
+              configMap.stat3Number = value;
+              break;
+            case 'stat3_label':
+              configMap.stat3Label = value;
+              break;
+            case 'cta_title':
+              configMap.ctaTitle = value;
+              break;
+            case 'cta_description':
+              configMap.ctaDescription = value;
+              break;
+            case 'cta_button':
+              configMap.ctaButton = value;
+              break;
+          }
         });
 
-        setConfig({
-          logoUrl: configMap['homepage_logo_url'] || '',
-          bannerUrl: configMap['homepage_banner_url'] || '',
-          bannerAlt: configMap['homepage_banner_alt'] || 'Bandeau visuel',
+        setConfig(prev => ({
+          ...prev,
+          ...configMap,
           loading: false,
-        });
+        }));
       } catch (error) {
         console.error('Erreur lors de la récupération de la configuration:', error);
         setConfig(prev => ({ ...prev, loading: false }));
@@ -49,11 +157,72 @@ export const useHomepageConfig = () => {
   const updateConfig = async (updates: Partial<Omit<HomepageConfig, 'loading'>>) => {
     try {
       const configUpdates = Object.entries(updates).map(([key, value]) => {
-        const configKey = key === 'logoUrl' ? 'homepage_logo_url' 
-          : key === 'bannerUrl' ? 'homepage_banner_url'
-          : key === 'bannerAlt' ? 'homepage_banner_alt' : null;
+        let configKey = '';
         
-        if (!configKey) return null;
+        switch (key) {
+          case 'logoUrl':
+            configKey = 'homepage_logo_url';
+            break;
+          case 'bannerUrl':
+            configKey = 'homepage_banner_url';
+            break;
+          case 'bannerAlt':
+            configKey = 'homepage_banner_alt';
+            break;
+          case 'siteTitle':
+            configKey = 'site_title';
+            break;
+          case 'siteSubtitle':
+            configKey = 'site_subtitle';
+            break;
+          case 'heroTitle':
+            configKey = 'hero_title';
+            break;
+          case 'heroDescription':
+            configKey = 'hero_description';
+            break;
+          case 'heroCta_primary':
+            configKey = 'hero_cta_primary';
+            break;
+          case 'heroCta_secondary':
+            configKey = 'hero_cta_secondary';
+            break;
+          case 'featuresTitle':
+            configKey = 'features_title';
+            break;
+          case 'featuresDescription':
+            configKey = 'features_description';
+            break;
+          case 'stat1Number':
+            configKey = 'stat1_number';
+            break;
+          case 'stat1Label':
+            configKey = 'stat1_label';
+            break;
+          case 'stat2Number':
+            configKey = 'stat2_number';
+            break;
+          case 'stat2Label':
+            configKey = 'stat2_label';
+            break;
+          case 'stat3Number':
+            configKey = 'stat3_number';
+            break;
+          case 'stat3Label':
+            configKey = 'stat3_label';
+            break;
+          case 'ctaTitle':
+            configKey = 'cta_title';
+            break;
+          case 'ctaDescription':
+            configKey = 'cta_description';
+            break;
+          case 'ctaButton':
+            configKey = 'cta_button';
+            break;
+          default:
+            return null;
+        }
         
         return { config_key: configKey, config_value: JSON.stringify(value) };
       }).filter(Boolean);

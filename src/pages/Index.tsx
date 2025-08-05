@@ -49,8 +49,8 @@ const Index = () => {
               <BookOpen className="h-8 w-8 text-primary" />
             )}
             <div>
-              <h1 className="text-2xl font-bold text-primary">Balzac Certification</h1>
-              <p className="text-sm text-muted-foreground">Excellence en français</p>
+              <h1 className="text-2xl font-bold text-primary">{homepageAssets.siteTitle}</h1>
+              <p className="text-sm text-muted-foreground">{homepageAssets.siteSubtitle}</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -82,18 +82,18 @@ const Index = () => {
         <div className="relative z-10 container mx-auto px-4 py-20 text-center">
           <div className="max-w-4xl mx-auto">
             <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-              Maîtrisez le français avec excellence
+              {homepageAssets.heroTitle}
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground mb-8 leading-relaxed">
-              Une plateforme de certification complète pour valider et perfectionner vos compétences en langue française
+              {homepageAssets.heroDescription}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" className="text-lg px-8 py-4" onClick={() => navigate('/auth')}>
-                Commencer gratuitement
+                {homepageAssets.heroCta_primary}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
               <Button size="lg" variant="outline" className="text-lg px-8 py-4">
-                Découvrir nos programmes
+                {homepageAssets.heroCta_secondary}
               </Button>
             </div>
           </div>
@@ -104,9 +104,9 @@ const Index = () => {
       <section className="py-20 bg-card/30">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Pourquoi choisir Balzac Certification ?</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">{homepageAssets.featuresTitle}</h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Une approche moderne et rigoureuse pour certifier vos compétences linguistiques
+              {homepageAssets.featuresDescription}
             </p>
           </div>
           
@@ -155,16 +155,16 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-3 gap-8 text-center">
             <div>
-              <div className="text-4xl md:text-5xl font-bold text-primary mb-2">10K+</div>
-              <p className="text-lg text-muted-foreground">Apprenants certifiés</p>
+              <div className="text-4xl md:text-5xl font-bold text-primary mb-2">{homepageAssets.stat1Number}</div>
+              <p className="text-lg text-muted-foreground">{homepageAssets.stat1Label}</p>
             </div>
             <div>
-              <div className="text-4xl md:text-5xl font-bold text-primary mb-2">95%</div>
-              <p className="text-lg text-muted-foreground">Taux de satisfaction</p>
+              <div className="text-4xl md:text-5xl font-bold text-primary mb-2">{homepageAssets.stat2Number}</div>
+              <p className="text-lg text-muted-foreground">{homepageAssets.stat2Label}</p>
             </div>
             <div>
-              <div className="text-4xl md:text-5xl font-bold text-primary mb-2">15+</div>
-              <p className="text-lg text-muted-foreground">Niveaux disponibles</p>
+              <div className="text-4xl md:text-5xl font-bold text-primary mb-2">{homepageAssets.stat3Number}</div>
+              <p className="text-lg text-muted-foreground">{homepageAssets.stat3Label}</p>
             </div>
           </div>
         </div>
@@ -221,13 +221,13 @@ const Index = () => {
       <section className="py-20 bg-gradient-to-r from-primary to-primary/80">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Prêt à certifier vos compétences ?
+            {homepageAssets.ctaTitle}
           </h2>
           <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-            Rejoignez des milliers d'apprenants qui ont déjà validé leur maîtrise du français
+            {homepageAssets.ctaDescription}
           </p>
           <Button size="lg" variant="secondary" className="text-lg px-8 py-4" onClick={() => navigate('/auth')}>
-            Commencer maintenant
+            {homepageAssets.ctaButton}
             <CheckCircle className="ml-2 h-5 w-5" />
           </Button>
         </div>
