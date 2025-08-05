@@ -343,7 +343,7 @@ export default function Test() {
         .eq('user_id', user!.id)
         .eq('question_id', questionId)
         .eq('level', currentLevel)
-        .single();
+        .maybeSingle();
       
       if (existingAttempt) {
         // Update existing attempt
@@ -661,6 +661,18 @@ export default function Test() {
 
   const currentQuestion = questions[currentQuestionIndex];
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+
+  // Safety check: if currentQuestion is undefined, show loading state
+  if (!currentQuestion) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <h1 className="text-2xl font-semibold mb-2">Chargement en cours...</h1>
+          <p className="text-muted-foreground">Préparation de votre question</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
