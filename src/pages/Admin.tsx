@@ -755,6 +755,52 @@ const Admin = () => {
     document.body.removeChild(link);
   };
 
+  const importQuestions = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const csv = e.target?.result as string;
+        const lines = csv.split('\n').filter(line => line.trim());
+        const rows = lines.slice(1).map(line => {
+          const matches = line.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g);
+          return matches?.map(field => field.replace(/^"|"$/g, '').trim()) || [];
+        });
+
+        const questionsToImport = rows.map(row => ({
+          type: row[0] as 'QCM' | 'GAP_FILL' | 'ERROR_SPOT',
+          level: parseInt(row[1]),
+          content: row[2],
+          answer: row[3],
+          choices: row[0] === 'QCM' ? [row[4], row[5], row[6]].filter(c => c) : null,
+          rule: row[7] || null,
+          explanation: row[8] || null
+        })).filter(q => q.content && q.answer);
+
+        const { error } = await supabase.from('questions').insert(questionsToImport);
+        if (error) throw error;
+
+        toast({
+          title: "Import réussi",
+          description: `${questionsToImport.length} questions ont été importées avec succès`
+        });
+        
+        await loadQuestions();
+        event.target.value = '';
+      } catch (error) {
+        console.error('Erreur lors de l\'import:', error);
+        toast({
+          title: "Erreur d'import",
+          description: "Impossible d'importer les questions. Vérifiez le format du fichier.",
+          variant: "destructive"
+        });
+      }
+    };
+    reader.readAsText(file);
+  };
+
   const openCertificateDialog = (certificate?: CertificateTemplate, preselectedLevel?: DifficultyLevel) => {
     if (certificate) {
       setEditingCertificate(certificate);
@@ -1398,6 +1444,20 @@ Délivré le {date}.`
                   <Download className="h-4 w-4 mr-2" />
                   Exporter
                 </Button>
+                <Button
+                  onClick={() => document.getElementById('import-csv')?.click()}
+                  variant="outline"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Importer
+                </Button>
+                <input
+                  id="import-csv"
+                  type="file"
+                  accept=".csv"
+                  onChange={importQuestions}
+                  style={{ display: 'none' }}
+                />
                 <Button onClick={() => openQuestionDialog()}>
                   <Plus className="h-4 w-4 mr-2" />
                   Nouvelle question
