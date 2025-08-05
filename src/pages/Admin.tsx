@@ -91,18 +91,9 @@ const Admin = () => {
         supabase.from('user_certifications').select('id', { count: 'exact', head: true })
       ]);
 
-      // Obtenir le nombre d'utilisateurs authentifiés via la fonction Edge
-      let authUsersCount = 0;
-      try {
-        const { data: authUsersData } = await supabase.functions.invoke('get-auth-users-count');
-        authUsersCount = authUsersData?.count || 0;
-      } catch (error) {
-        console.warn('Impossible de récupérer le nombre d\'utilisateurs authentifiés:', error);
-      }
-
       setUserStats({
         total_users: usersResponse.count || 0,
-        total_auth_users: authUsersCount,
+        total_auth_users: usersResponse.count || 0, // Même valeur pour l'instant
         total_test_sessions: sessionsResponse.count || 0,
         total_certifications: certificationsResponse.count || 0,
         avg_study_time: 0 // À calculer si nécessaire
