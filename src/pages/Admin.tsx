@@ -135,6 +135,28 @@ const Admin = () => {
     is_active: true
   });
 
+  // État pour la configuration de la page d'accueil
+  const [homepageConfig, setHomepageConfig] = useState({
+    site_title: 'Balzac Certification',
+    site_subtitle: 'Excellence en français',
+    hero_title: 'Maîtrisez le français avec excellence',
+    hero_description: 'Une plateforme de certification complète pour valider et perfectionner vos compétences en langue française',
+    hero_cta_primary: 'Commencer gratuitement',
+    hero_cta_secondary: 'Découvrir nos programmes',
+    features_title: 'Pourquoi choisir Balzac Certification ?',
+    features_description: 'Une approche moderne et rigoureuse pour certifier vos compétences linguistiques',
+    stat1_number: '10K+',
+    stat1_label: 'Apprenants certifiés',
+    stat2_number: '95%',
+    stat2_label: 'Taux de satisfaction',
+    stat3_number: '15+',
+    stat3_label: 'Niveaux disponibles',
+    cta_title: 'Prêt à certifier vos compétences ?',
+    cta_description: 'Rejoignez des milliers d\'apprenants qui ont déjà validé leur maîtrise du français',
+    cta_button: 'Commencer maintenant'
+  });
+  const [savingHomepageConfig, setSavingHomepageConfig] = useState(false);
+
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
@@ -167,57 +189,69 @@ const Admin = () => {
       }
 
       setIsAdmin(true);
-      await loadAdminData();
+      loadAdministrators();
+      loadUserStats();
+      loadDifficultyLevels();
+      loadCertificateTemplates();
+      loadTestConfig();
+      loadHomepageConfig();
     } catch (error) {
-      console.error('Erreur:', error);
+      console.error('Erreur lors de la vérification admin:', error);
       navigate('/dashboard');
     }
   };
 
-  const loadAdminData = async () => {
+  const loadAdministrators = async () => {
     try {
-      // Charger la liste des administrateurs
-      const { data: admins, error: adminError } = await supabase
+      const { data, error } = await supabase
         .from('administrators')
         .select('*')
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: false });
 
-      if (adminError) throw adminError;
-      setAdministrators(admins || []);
+      if (error) throw error;
+      setAdministrators(data || []);
+    } catch (error) {
+      console.error('Erreur lors du chargement des administrateurs:', error);
+    }
+  };
 
-      // Charger les statistiques générales
-      const [usersResponse, sessionsResponse, questionsResponse, certificationsResponse] = await Promise.all([
-        supabase.from('users').select('id', { count: 'exact', head: true }),
-        supabase.from('test_sessions').select('id', { count: 'exact', head: true }),
-        supabase.from('questions').select('id', { count: 'exact', head: true }),
-        supabase.from('user_certifications').select('id', { count: 'exact', head: true })
-      ]);
+  const loadUserStats = async () => {
+    try {
+      setLoadingData(true);
+
+      // Récupération des statistiques depuis la base de données
+      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+      
+      const { data: users, error: usersError } = await supabase
+        .from('users')
+        .select('id');
+      
+      const { data: sessions, error: sessionsError } = await supabase
+        .from('test_sessions')
+        .select('id');
+      
+      const { data: questions, error: questionsError } = await supabase
+        .from('questions')
+        .select('id');
+      
+      const { data: certifications, error: certificationsError } = await supabase
+        .from('user_certifications')
+        .select('id');
+
+      if (usersError || sessionsError || questionsError || certificationsError) {
+        throw new Error('Erreur lors du chargement des statistiques');
+      }
 
       setUserStats({
-        total_users: usersResponse.count || 0,
-        total_auth_users: usersResponse.count || 0, // Même valeur pour l'instant
-        total_test_sessions: sessionsResponse.count || 0,
-        total_questions: questionsResponse.count || 0,
-        total_certifications: certificationsResponse.count || 0,
-        avg_study_time: 0 // À calculer si nécessaire
+        total_users: users?.length || 0,
+        total_auth_users: authUsers?.users?.length || 0,
+        total_test_sessions: sessions?.length || 0,
+        total_questions: questions?.length || 0,
+        total_certifications: certifications?.length || 0,
+        avg_study_time: 0
       });
-
-      // Charger la configuration des tests
-      await loadTestConfig();
-      
-      // Charger les niveaux de difficulté
-      await loadDifficultyLevels();
-      
-      // Charger les modèles de certificats
-      await loadCertificateTemplates();
-
     } catch (error) {
-      console.error('Erreur lors du chargement des données:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de charger les données d'administration",
-        variant: "destructive"
-      });
+      console.error('Erreur lors du chargement des statistiques:', error);
     } finally {
       setLoadingData(false);
     }
@@ -440,12 +474,79 @@ const Admin = () => {
             color
           )
         `)
-        .order('difficulty_levels(level_number)', { ascending: true });
+        .order('difficulty_levels.level_number', { ascending: true });
 
       if (error) throw error;
       setCertificateTemplates(templates as any || []);
     } catch (error) {
       console.error('Erreur lors du chargement des certificats:', error);
+    }
+  };
+
+  const loadHomepageConfig = async () => {
+    try {
+      const { data: configs, error } = await supabase
+        .from('site_configuration')
+        .select('config_key, config_value')
+        .in('config_key', [
+          'site_title', 'site_subtitle', 'hero_title', 'hero_description',
+          'hero_cta_primary', 'hero_cta_secondary', 'features_title', 'features_description',
+          'stat1_number', 'stat1_label', 'stat2_number', 'stat2_label',
+          'stat3_number', 'stat3_label', 'cta_title', 'cta_description', 'cta_button'
+        ]);
+
+      if (error) throw error;
+
+      if (configs && configs.length > 0) {
+        const configObj = configs.reduce((acc, config) => {
+          acc[config.config_key] = config.config_value;
+          return acc;
+        }, {} as any);
+
+        setHomepageConfig(prev => ({
+          ...prev,
+          ...configObj
+        }));
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement de la configuration de la page d\'accueil:', error);
+    }
+  };
+
+  const saveHomepageConfig = async () => {
+    setSavingHomepageConfig(true);
+    try {
+      const configEntries = Object.entries(homepageConfig).map(([key, value]) => ({
+        config_key: key,
+        config_value: value
+      }));
+
+      for (const entry of configEntries) {
+        const { error } = await supabase
+          .from('site_configuration')
+          .upsert({
+            ...entry,
+            updated_by: user?.id
+          }, {
+            onConflict: 'config_key'
+          });
+
+        if (error) throw error;
+      }
+
+      toast({
+        title: "Configuration sauvegardée",
+        description: "La configuration de la page d'accueil a été mise à jour avec succès"
+      });
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de sauvegarder la configuration",
+        variant: "destructive"
+      });
+    } finally {
+      setSavingHomepageConfig(false);
     }
   };
 
@@ -514,14 +615,14 @@ const Admin = () => {
             certificate_subtitle: certificateForm.certificate_subtitle || null,
             certificate_text: certificateForm.certificate_text,
             certificate_background_color: certificateForm.certificate_background_color,
-        certificate_border_color: certificateForm.certificate_border_color,
-        certificate_text_color: certificateForm.certificate_text_color,
-        badge_icon: certificateForm.badge_icon,
-        badge_color: certificateForm.badge_color,
-        badge_background_color: certificateForm.badge_background_color,
-        badge_size: certificateForm.badge_size,
-        custom_badge_url: certificateForm.custom_badge_url,
-        is_active: certificateForm.is_active
+            certificate_border_color: certificateForm.certificate_border_color,
+            certificate_text_color: certificateForm.certificate_text_color,
+            badge_icon: certificateForm.badge_icon,
+            badge_color: certificateForm.badge_color,
+            badge_background_color: certificateForm.badge_background_color,
+            badge_size: certificateForm.badge_size,
+            custom_badge_url: certificateForm.custom_badge_url,
+            is_active: certificateForm.is_active
           })
           .eq('id', editingCertificate.id);
 
@@ -646,95 +747,389 @@ const Admin = () => {
       </header>
 
       <div className="container mx-auto px-4 py-8">
-        {/* Statistiques générales */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Utilisateurs</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{userStats?.total_auth_users || 0}</div>
-              <p className="text-xs text-muted-foreground">
-                Utilisateurs authentifiés ({userStats?.total_users || 0} profils)
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Tests</CardTitle>
-              <BarChart3 className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{userStats?.total_questions || 0}</div>
-              <p className="text-xs text-muted-foreground">
-                Questions disponibles ({userStats?.total_test_sessions || 0} sessions)
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Certifications</CardTitle>
-              <Shield className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{userStats?.total_certifications || 0}</div>
-              <p className="text-xs text-muted-foreground">Certifications distribuées aux utilisateurs</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Administrateurs</CardTitle>
-              <Settings className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{administrators.length}</div>
-              <p className="text-xs text-muted-foreground">Comptes administrateurs</p>
-            </CardContent>
-          </Card>
-        </div>
-
         {/* Onglets d'administration */}
-        <Tabs defaultValue="administrators" className="space-y-6">
-          <TabsList className="grid w-full lg:w-[400px] grid-cols-2">
-            <TabsTrigger value="administrators">Administrateurs</TabsTrigger>
-            <TabsTrigger value="settings">Configuration</TabsTrigger>
+        <Tabs defaultValue="stats" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="stats">Statistiques</TabsTrigger>
+            <TabsTrigger value="homepage">Page d'accueil</TabsTrigger>
+            <TabsTrigger value="certificates">Certifications</TabsTrigger>
+            <TabsTrigger value="levels">Niveaux</TabsTrigger>
+            <TabsTrigger value="settings">Paramètres</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="administrators" className="space-y-6">
+          <TabsContent value="stats" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Administrateurs du système</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Statistiques générales
+                </CardTitle>
                 <CardDescription>
-                  Gérez les comptes administrateurs et leurs permissions
+                  Vue d'ensemble de l'activité de la plateforme
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loadingData ? (
+                  <div className="text-center py-8">
+                    <p>Chargement des statistiques...</p>
+                  </div>
+                ) : userStats ? (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="text-center p-4 border rounded-lg">
+                      <div className="text-2xl font-bold text-primary">{userStats.total_auth_users}</div>
+                      <p className="text-sm text-muted-foreground">Utilisateurs inscrits</p>
+                    </div>
+                    <div className="text-center p-4 border rounded-lg">
+                      <div className="text-2xl font-bold text-primary">{userStats.total_test_sessions}</div>
+                      <p className="text-sm text-muted-foreground">Sessions de test</p>
+                    </div>
+                    <div className="text-center p-4 border rounded-lg">
+                      <div className="text-2xl font-bold text-primary">{userStats.total_certifications}</div>
+                      <p className="text-sm text-muted-foreground">Certifications délivrées</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p>Impossible de charger les statistiques</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="homepage" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Configuration de la page d'accueil</CardTitle>
+                <CardDescription>
+                  Paramétrez les visuels et textes affichés sur la page d'accueil
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {administrators.map((admin) => (
-                    <div
-                      key={admin.id}
-                      className="flex items-center justify-between p-4 border rounded-lg"
+                  <div className="space-y-2">
+                    <Label htmlFor="site_title">Titre du site</Label>
+                    <Input
+                      id="site_title"
+                      value={homepageConfig.site_title}
+                      onChange={(e) => setHomepageConfig(prev => ({ ...prev, site_title: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="site_subtitle">Sous-titre du site</Label>
+                    <Input
+                      id="site_subtitle"
+                      value={homepageConfig.site_subtitle}
+                      onChange={(e) => setHomepageConfig(prev => ({ ...prev, site_subtitle: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="hero_title">Titre principal (Hero)</Label>
+                    <Input
+                      id="hero_title"
+                      value={homepageConfig.hero_title}
+                      onChange={(e) => setHomepageConfig(prev => ({ ...prev, hero_title: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="hero_description">Description principale (Hero)</Label>
+                    <Textarea
+                      id="hero_description"
+                      value={homepageConfig.hero_description}
+                      onChange={(e) => setHomepageConfig(prev => ({ ...prev, hero_description: e.target.value }))}
+                      rows={3}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="hero_cta_primary">Texte bouton principal (Hero)</Label>
+                      <Input
+                        id="hero_cta_primary"
+                        value={homepageConfig.hero_cta_primary}
+                        onChange={(e) => setHomepageConfig(prev => ({ ...prev, hero_cta_primary: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="hero_cta_secondary">Texte bouton secondaire (Hero)</Label>
+                      <Input
+                        id="hero_cta_secondary"
+                        value={homepageConfig.hero_cta_secondary}
+                        onChange={(e) => setHomepageConfig(prev => ({ ...prev, hero_cta_secondary: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="features_title">Titre section avantages</Label>
+                    <Input
+                      id="features_title"
+                      value={homepageConfig.features_title}
+                      onChange={(e) => setHomepageConfig(prev => ({ ...prev, features_title: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="features_description">Description section avantages</Label>
+                    <Textarea
+                      id="features_description"
+                      value={homepageConfig.features_description}
+                      onChange={(e) => setHomepageConfig(prev => ({ ...prev, features_description: e.target.value }))}
+                      rows={3}
+                    />
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="stat1_number">Statistique 1 - Nombre</Label>
+                      <Input
+                        id="stat1_number"
+                        value={homepageConfig.stat1_number}
+                        onChange={(e) => setHomepageConfig(prev => ({ ...prev, stat1_number: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="stat1_label">Statistique 1 - Label</Label>
+                      <Input
+                        id="stat1_label"
+                        value={homepageConfig.stat1_label}
+                        onChange={(e) => setHomepageConfig(prev => ({ ...prev, stat1_label: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="stat2_number">Statistique 2 - Nombre</Label>
+                      <Input
+                        id="stat2_number"
+                        value={homepageConfig.stat2_number}
+                        onChange={(e) => setHomepageConfig(prev => ({ ...prev, stat2_number: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="stat2_label">Statistique 2 - Label</Label>
+                      <Input
+                        id="stat2_label"
+                        value={homepageConfig.stat2_label}
+                        onChange={(e) => setHomepageConfig(prev => ({ ...prev, stat2_label: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="stat3_number">Statistique 3 - Nombre</Label>
+                      <Input
+                        id="stat3_number"
+                        value={homepageConfig.stat3_number}
+                        onChange={(e) => setHomepageConfig(prev => ({ ...prev, stat3_number: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="stat3_label">Statistique 3 - Label</Label>
+                      <Input
+                        id="stat3_label"
+                        value={homepageConfig.stat3_label}
+                        onChange={(e) => setHomepageConfig(prev => ({ ...prev, stat3_label: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="cta_title">Titre Call to Action</Label>
+                    <Input
+                      id="cta_title"
+                      value={homepageConfig.cta_title}
+                      onChange={(e) => setHomepageConfig(prev => ({ ...prev, cta_title: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="cta_description">Description Call to Action</Label>
+                    <Textarea
+                      id="cta_description"
+                      value={homepageConfig.cta_description}
+                      onChange={(e) => setHomepageConfig(prev => ({ ...prev, cta_description: e.target.value }))}
+                      rows={3}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="cta_button">Texte bouton Call to Action</Label>
+                    <Input
+                      id="cta_button"
+                      value={homepageConfig.cta_button}
+                      onChange={(e) => setHomepageConfig(prev => ({ ...prev, cta_button: e.target.value }))}
+                    />
+                  </div>
+                  <div className="pt-4 border-t">
+                    <Button 
+                      onClick={saveHomepageConfig} 
+                      disabled={savingHomepageConfig}
+                      className="w-full md:w-auto"
                     >
-                      <div className="flex flex-col">
-                        <span className="font-medium">{admin.email}</span>
-                        <span className="text-sm text-muted-foreground">
-                          Créé le {new Date(admin.created_at).toLocaleDateString('fr-FR')}
-                        </span>
+                      <Save className="h-4 w-4 mr-2" />
+                      {savingHomepageConfig ? 'Sauvegarde...' : 'Sauvegarder la configuration'}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="certificates" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Award className="h-5 w-5" />
+                  Gestion des certifications
+                </CardTitle>
+                <CardDescription>
+                  Critères de validation et modèles de certificats associés aux niveaux de difficulté
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">Modèles de certificats</h4>
+                    <p className="text-xs text-muted-foreground">
+                      Chaque niveau de difficulté doit avoir un certificat associé
+                    </p>
+                  </div>
+                  <Button onClick={() => openCertificateDialog()} size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nouveau certificat
+                  </Button>
+                </div>
+
+                <div className="grid gap-4">
+                  {certificateTemplates.map((certificate: any) => (
+                    <div
+                      key={certificate.id}
+                      className="p-4 border rounded-lg space-y-3"
+                      style={{ borderColor: certificate.certificate_border_color }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <BadgePreview
+                            icon={certificate.badge_icon || 'award'}
+                            color={certificate.badge_color || '#6366f1'}
+                            backgroundColor={certificate.badge_background_color || '#ffffff'}
+                            size="medium"
+                          />
+                          <div>
+                            <h5 className="font-medium">{certificate.name}</h5>
+                            <p className="text-xs text-muted-foreground">
+                              Niveau {certificate.difficulty_levels?.name} - Score minimum: {certificate.min_score_required}%
+                            </p>
+                          </div>
+                          {!certificate.is_active && (
+                            <Badge variant="secondary" className="text-xs">
+                              Inactif
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => openCertificateDialog(certificate)}
+                            size="sm"
+                            variant="outline"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            onClick={() => deleteCertificateTemplate(certificate.id)}
+                            size="sm"
+                            variant="outline"
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        {admin.is_super_admin && (
-                          <Badge variant="default">Super Admin</Badge>
+                      
+                      <div className="bg-muted/30 p-3 rounded text-xs">
+                        <p><strong>Titre:</strong> {certificate.certificate_title}</p>
+                        {certificate.certificate_subtitle && (
+                          <p><strong>Sous-titre:</strong> {certificate.certificate_subtitle}</p>
                         )}
-                        {!admin.user_id && (
-                          <Badge variant="outline">Non connecté</Badge>
-                        )}
+                        <p className="mt-1 text-muted-foreground">
+                          <strong>Texte:</strong> {certificate.certificate_text.substring(0, 100)}...
+                        </p>
                       </div>
                     </div>
                   ))}
+                  
+                  {certificateTemplates.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Award className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                      <p>Aucun modèle de certificat configuré</p>
+                      <p className="text-xs">Cliquez sur "Nouveau certificat" pour commencer</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="levels" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Niveaux de difficulté</CardTitle>
+                <CardDescription>
+                  Gérez les niveaux de difficulté personnalisés avec noms et descriptions
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between mb-4">
+                  <Button onClick={() => openLevelDialog()} size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Ajouter un niveau
+                  </Button>
+                </div>
+                <div className="grid gap-3">
+                  {difficultyLevels.map((level) => (
+                    <div
+                      key={level.id}
+                      className="flex items-center justify-between p-3 border rounded-lg"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-4 h-4 rounded"
+                          style={{ backgroundColor: level.color }}
+                        />
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">
+                              Niveau {level.level_number}: {level.name}
+                            </span>
+                            {!level.is_active && (
+                              <Badge variant="secondary" className="text-xs">
+                                Inactif
+                              </Badge>
+                            )}
+                          </div>
+                          {level.description && (
+                            <p className="text-xs text-muted-foreground">
+                              {level.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => openLevelDialog(level)}
+                          size="sm"
+                          variant="outline"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          onClick={() => deleteDifficultyLevel(level.id)}
+                          size="sm"
+                          variant="outline"
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {difficultyLevels.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <p>Aucun niveau de difficulté configuré</p>
+                      <p className="text-xs">Cliquez sur "Ajouter un niveau" pour commencer</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -767,79 +1162,6 @@ const Admin = () => {
                     <p className="text-xs text-muted-foreground">
                       Nombre de questions à afficher dans chaque test
                     </p>
-                  </div>
-
-                  {/* Gestion des niveaux de difficulté */}
-                  <div className="md:col-span-2 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label>Niveaux de difficulté</Label>
-                        <p className="text-xs text-muted-foreground">
-                          Gérez les niveaux de difficulté personnalisés avec noms et descriptions
-                        </p>
-                      </div>
-                      <Button onClick={() => openLevelDialog()} size="sm">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Ajouter un niveau
-                      </Button>
-                    </div>
-                    
-                    <div className="grid gap-3">
-                      {difficultyLevels.map((level) => (
-                        <div
-                          key={level.id}
-                          className="flex items-center justify-between p-3 border rounded-lg"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div
-                              className="w-4 h-4 rounded"
-                              style={{ backgroundColor: level.color }}
-                            />
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium">
-                                  Niveau {level.level_number}: {level.name}
-                                </span>
-                                {!level.is_active && (
-                                  <Badge variant="secondary" className="text-xs">
-                                    Inactif
-                                  </Badge>
-                                )}
-                              </div>
-                              {level.description && (
-                                <p className="text-xs text-muted-foreground">
-                                  {level.description}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              onClick={() => openLevelDialog(level)}
-                              size="sm"
-                              variant="outline"
-                            >
-                              <Edit2 className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              onClick={() => deleteDifficultyLevel(level.id)}
-                              size="sm"
-                              variant="outline"
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                      
-                      {difficultyLevels.length === 0 && (
-                        <div className="text-center py-8 text-muted-foreground">
-                          <p>Aucun niveau de difficulté configuré</p>
-                          <p className="text-xs">Cliquez sur "Ajouter un niveau" pour commencer</p>
-                        </div>
-                      )}
-                    </div>
                   </div>
 
                   {/* Score minimum de réussite */}
@@ -947,99 +1269,6 @@ const Admin = () => {
                     <Save className="h-4 w-4 mr-2" />
                     {savingConfig ? 'Sauvegarde...' : 'Sauvegarder la configuration'}
                   </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Award className="h-5 w-5" />
-                  Gestion des certifications
-                </CardTitle>
-                <CardDescription>
-                  Critères de validation et modèles de certificats associés aux niveaux de difficulté
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Modèles de certificats</h4>
-                    <p className="text-xs text-muted-foreground">
-                      Chaque niveau de difficulté doit avoir un certificat associé
-                    </p>
-                  </div>
-                  <Button onClick={() => openCertificateDialog()} size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Nouveau certificat
-                  </Button>
-                </div>
-
-                <div className="grid gap-4">
-                  {certificateTemplates.map((certificate: any) => (
-                    <div
-                      key={certificate.id}
-                      className="p-4 border rounded-lg space-y-3"
-                      style={{ borderColor: certificate.certificate_border_color }}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <BadgePreview
-                            icon={certificate.badge_icon || 'award'}
-                            color={certificate.badge_color || '#6366f1'}
-                            backgroundColor={certificate.badge_background_color || '#ffffff'}
-                            size="medium"
-                          />
-                          <div>
-                            <h5 className="font-medium">{certificate.name}</h5>
-                            <p className="text-xs text-muted-foreground">
-                              Niveau {certificate.difficulty_levels?.name} - Score minimum: {certificate.min_score_required}%
-                            </p>
-                          </div>
-                          {!certificate.is_active && (
-                            <Badge variant="secondary" className="text-xs">
-                              Inactif
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            onClick={() => openCertificateDialog(certificate)}
-                            size="sm"
-                            variant="outline"
-                          >
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            onClick={() => deleteCertificateTemplate(certificate.id)}
-                            size="sm"
-                            variant="outline"
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                      
-                      <div className="bg-muted/30 p-3 rounded text-xs">
-                        <p><strong>Titre:</strong> {certificate.certificate_title}</p>
-                        {certificate.certificate_subtitle && (
-                          <p><strong>Sous-titre:</strong> {certificate.certificate_subtitle}</p>
-                        )}
-                        <p className="mt-1 text-muted-foreground">
-                          <strong>Texte:</strong> {certificate.certificate_text.substring(0, 100)}...
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                  
-                  {certificateTemplates.length === 0 && (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <Award className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                      <p>Aucun modèle de certificat configuré</p>
-                      <p className="text-xs">Cliquez sur "Nouveau certificat" pour commencer</p>
-                    </div>
-                  )}
                 </div>
               </CardContent>
             </Card>
