@@ -46,11 +46,16 @@ export const SessionProgressComponent: React.FC<SessionProgressProps> = ({
       return 'locked';
     }
     
-    if (session.sessionNumber < progress.currentSessionNumber) {
+    // Calculer l'index de la session (0, 1, 2, etc.)
+    const sessionIndex = Math.floor((session.sessionNumber - progress.level) * 10);
+    
+    // Une session est complétée si son index est inférieur au nombre de sessions complétées
+    if (sessionIndex < progress.completedSessions) {
       return 'completed';
     }
     
-    if (session.sessionNumber === progress.currentSessionNumber) {
+    // La session courante est celle qui correspond au nombre de sessions complétées
+    if (sessionIndex === progress.completedSessions && sessionIndex < progress.totalSessionsForLevel) {
       return 'current';
     }
     

@@ -180,12 +180,14 @@ export const useSessionProgress = (level: number) => {
             .eq('level', level);
         } else {
           // Session régulière complétée
-          const nextSessionIndex = Math.floor((sessionNumber - level) * 10) + 1;
+          const sessionIndex = Math.floor((sessionNumber - level) * 10);
           
-          if (nextSessionIndex < progress.totalSessionsForLevel) {
+          // Mettre à jour le nombre de sessions complétées et passer à la suivante
+          updates.completed_sessions = sessionIndex + 1;
+          
+          if (sessionIndex + 1 < progress.totalSessionsForLevel) {
             // Passer à la session suivante
-            updates.current_session_number = parseFloat(`${level}.${nextSessionIndex + 1}`);
-            updates.completed_sessions = progress.completedSessions + 1;
+            updates.current_session_number = parseFloat(`${level}.${sessionIndex + 1}`);
           } else {
             // Toutes les sessions régulières complétées
             updates.completed_sessions = progress.totalSessionsForLevel;
