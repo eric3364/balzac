@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSessionProgress } from '@/hooks/useSessionProgress';
+import { useUserStats } from '@/hooks/useUserStats';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -41,6 +42,7 @@ const SessionTest = () => {
   const sessionType = (searchParams.get('type') || 'regular') as 'regular' | 'remedial';
   
   const { progress, updateProgress, recordFailedQuestion } = useSessionProgress(sessionLevel);
+  const { refetchStats } = useUserStats();
 
   // États du test
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -308,6 +310,9 @@ const SessionTest = () => {
       if (passed) {
         await updateProgress(sessionNumber, true);
       }
+
+      // Mettre à jour les statistiques utilisateur
+      await refetchStats();
 
       setSessionResults({
         score,

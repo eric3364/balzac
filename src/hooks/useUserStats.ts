@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
@@ -30,11 +30,10 @@ export const useUserStats = () => {
     loading: true,
   });
 
-  useEffect(() => {
+  const fetchUserStats = useCallback(async () => {
     if (!user) return;
-
-    const fetchUserStats = async () => {
-      try {
+    
+    try {
         setStats(prev => ({ ...prev, loading: true }));
 
         // Récupérer les tentatives de questions
@@ -125,10 +124,12 @@ export const useUserStats = () => {
         console.error('Erreur lors de la récupération des statistiques:', error);
         setStats(prev => ({ ...prev, loading: false }));
       }
-    };
-
-    fetchUserStats();
   }, [user]);
 
-  return stats;
+  useEffect(() => {
+    if (!user) return;
+    fetchUserStats();
+  }, [user, fetchUserStats]);
+
+  return { ...stats, refetchStats: fetchUserStats };
 };
