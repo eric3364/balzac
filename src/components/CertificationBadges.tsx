@@ -278,27 +278,6 @@ const CertificationBadges = () => {
             );
           })}
         </div>
-
-        {/* Progress Indicator */}
-        <div className="mt-6 pt-4 border-t">
-          <div className="flex justify-between items-center text-sm text-muted-foreground">
-            <span>Progression des niveaux</span>
-            <span>
-              {certifications.length > 0 
-                ? `Niveau ${Math.max(...certifications.map(c => c.level))} atteint`
-                : 'Aucun niveau complété'
-              }
-            </span>
-          </div>
-          <div className="mt-2 h-2 bg-muted rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-gradient-to-r from-primary to-primary/80 transition-all duration-500"
-              style={{ 
-                width: `${certifications.length > 0 && difficultyLevels.length > 0 ? (Math.max(...certifications.map(c => c.level)) / difficultyLevels.length) * 100 : 0}%` 
-              }}
-            />
-          </div>
-        </div>
       </CardContent>
     </Card>
   );
