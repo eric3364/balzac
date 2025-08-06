@@ -1688,22 +1688,27 @@ Délivré le {date}.`
                     </p>
                   </div>
 
-                  {/* Pourcentage de questions par niveau */}
+                  {/* Division des niveaux en sessions */}
                   <div className="space-y-2">
-                    <Label htmlFor="questions_percentage">Pourcentage de questions par niveau (%)</Label>
-                    <Input
-                      id="questions_percentage"
-                      type="number"
-                      min="10"
-                      max="100"
-                      value={testConfig.questions_percentage_per_level}
-                      onChange={(e) => setTestConfig({
+                    <Label htmlFor="questions_percentage">Division des niveaux en sessions</Label>
+                    <Select
+                      value={testConfig.questions_percentage_per_level?.toString() || "20"}
+                      onValueChange={(value) => setTestConfig({
                         ...testConfig,
-                        questions_percentage_per_level: parseInt(e.target.value) || 80
+                        questions_percentage_per_level: parseInt(value)
                       })}
-                    />
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner le pourcentage" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="10">10% - 10 sessions par niveau</SelectItem>
+                        <SelectItem value="20">20% - 5 sessions par niveau</SelectItem>
+                        <SelectItem value="25">25% - 4 sessions par niveau</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <p className="text-xs text-muted-foreground">
-                      Pourcentage du total des questions d'un niveau utilisé dans une session
+                      Détermine le nombre de questions par session d'examen. Par exemple : 20% sur 100 questions = 20 questions par session, numérotées 1.1, 1.2, 1.3, etc.
                     </p>
                   </div>
                 </div>
