@@ -8,6 +8,8 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Test from "./pages/Test";
+import SessionTest from "./pages/SessionTest";
+import SessionProgress from "./pages/SessionProgress";
 import Admin from "./pages/Admin";
 import AdminAuth from "./pages/AdminAuth";
 import NotFound from "./pages/NotFound";
@@ -26,6 +28,8 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/test" element={<Test />} />
+            <Route path="/session-test" element={<SessionTest />} />
+            <Route path="/session-progress" element={<SessionProgress />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/admin-auth" element={<AdminAuth />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

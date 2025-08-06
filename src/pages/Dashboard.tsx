@@ -215,15 +215,40 @@ const Dashboard = () => {
         <div className="mt-8">
           <Card>
             <CardHeader>
-              <CardTitle>Commencer un test</CardTitle>
+              <CardTitle>Sessions de formation</CardTitle>
               <CardDescription>
-                Testez vos connaissances et progressez dans votre apprentissage
+                Choisissez un niveau pour commencer votre formation par sessions progressives
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <Button className="w-full sm:w-auto" onClick={() => navigate('/test')}>
-                Démarrer un nouveau test
-              </Button>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-3">
+                {[1, 2, 3, 4, 5].map((level) => (
+                  <Button
+                    key={level}
+                    variant="outline"
+                    className="h-20 flex flex-col items-center justify-center"
+                    onClick={() => navigate(`/session-progress?level=${level}`)}
+                  >
+                    <span className="text-lg font-semibold">Niveau {level}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {level === 1 ? 'Élémentaire' :
+                       level === 2 ? 'Intermédiaire' :
+                       level === 3 ? 'Avancé' :
+                       level === 4 ? 'Expert' : 'Maître'}
+                    </span>
+                  </Button>
+                ))}
+              </div>
+              
+              <div className="pt-4 border-t">
+                <Button 
+                  variant="default" 
+                  className="w-full sm:w-auto" 
+                  onClick={() => navigate('/test')}
+                >
+                  Mode test libre (ancien système)
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>

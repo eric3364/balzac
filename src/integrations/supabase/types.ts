@@ -157,6 +157,36 @@ export type Database = {
         }
         Relationships: []
       }
+      failed_questions: {
+        Row: {
+          created_at: string
+          failed_at: string
+          id: string
+          is_remediated: boolean | null
+          level: number
+          question_id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          failed_at?: string
+          id?: string
+          is_remediated?: boolean | null
+          level: number
+          question_id: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          failed_at?: string
+          id?: string
+          is_remediated?: boolean | null
+          level?: number
+          question_id?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -270,6 +300,42 @@ export type Database = {
         }
         Relationships: []
       }
+      session_progress: {
+        Row: {
+          completed_sessions: number | null
+          created_at: string
+          current_session_number: number | null
+          id: string
+          is_level_completed: boolean | null
+          level: number
+          total_sessions_for_level: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_sessions?: number | null
+          created_at?: string
+          current_session_number?: number | null
+          id?: string
+          is_level_completed?: boolean | null
+          level: number
+          total_sessions_for_level?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_sessions?: number | null
+          created_at?: string
+          current_session_number?: number | null
+          id?: string
+          is_level_completed?: boolean | null
+          level?: number
+          total_sessions_for_level?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       site_configuration: {
         Row: {
           config_key: string
@@ -366,9 +432,13 @@ export type Database = {
           deleted_at: string | null
           ended_at: string | null
           id: string
+          is_session_validated: boolean | null
           level: number | null
           questions_mastered: number | null
+          required_score_percentage: number | null
           score: number | null
+          session_number: number | null
+          session_type: string | null
           started_at: string | null
           status: string | null
           total_questions: number | null
@@ -382,9 +452,13 @@ export type Database = {
           deleted_at?: string | null
           ended_at?: string | null
           id?: string
+          is_session_validated?: boolean | null
           level?: number | null
           questions_mastered?: number | null
+          required_score_percentage?: number | null
           score?: number | null
+          session_number?: number | null
+          session_type?: string | null
           started_at?: string | null
           status?: string | null
           total_questions?: number | null
@@ -398,9 +472,13 @@ export type Database = {
           deleted_at?: string | null
           ended_at?: string | null
           id?: string
+          is_session_validated?: boolean | null
           level?: number | null
           questions_mastered?: number | null
+          required_score_percentage?: number | null
           score?: number | null
+          session_number?: number | null
+          session_type?: string | null
           started_at?: string | null
           status?: string | null
           total_questions?: number | null
@@ -476,6 +554,28 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_total_sessions_for_level: {
+        Args: { level_num: number; questions_percentage?: number }
+        Returns: number
+      }
+      get_session_questions: {
+        Args: {
+          user_uuid: string
+          level_num: number
+          session_num: number
+          questions_percentage?: number
+        }
+        Returns: {
+          id: number
+          content: string
+          type: string
+          level: number
+          rule: string
+          answer: string
+          choices: string[]
+          explanation: string
+        }[]
+      }
       get_user_max_level: {
         Args: { user_uuid?: string }
         Returns: number
