@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSessionProgress } from '@/hooks/useSessionProgress';
@@ -57,6 +57,7 @@ const SessionTest = () => {
     passed: boolean;
   } | null>(null);
   const [isCompletingSession, setIsCompletingSession] = useState(false);
+  const completionRef = useRef(false);
 
   // Charger les questions de la session
   const loadSessionQuestions = useCallback(async () => {
@@ -202,8 +203,9 @@ const SessionTest = () => {
 
   // Terminer la session
   const completeSession = useCallback(async () => {
-    if (!user || isCompletingSession) return;
+    if (!user || completionRef.current) return;
     
+    completionRef.current = true;
     setIsCompletingSession(true);
 
     console.log('=== DÉBUT COMPLETION SESSION ===');
@@ -344,10 +346,10 @@ const SessionTest = () => {
 
   // Déclencher completeSession quand testCompleted devient true
   useEffect(() => {
-    if (testCompleted && !sessionResults) {
+    if (testCompleted && !sessionResults && !completionRef.current) {
       completeSession();
     }
-  }, [testCompleted, sessionResults, completeSession]);
+  }, [testCompleted, sessionResults]);
 
   if (isLoading) {
     return (
