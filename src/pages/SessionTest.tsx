@@ -169,7 +169,25 @@ const SessionTest = () => {
       recordFailedQuestion(currentQuestion.id);
     }
 
-    setShowExplanation(true);
+    // Si correct, passer directement à la question suivante
+    // Si incorrect, afficher l'explication
+    if (isCorrect) {
+      // Petite pause pour que l'utilisateur voie que c'est correct
+      setTimeout(() => {
+        if (currentQuestionIndex < questions.length - 1) {
+          setCurrentQuestionIndex(prev => prev + 1);
+          setCurrentAnswer('');
+          setShowExplanation(false);
+        } else {
+          // Déclencher la complétion de session
+          setTimeout(() => {
+            completeSession();
+          }, 100);
+        }
+      }, 500);
+    } else {
+      setShowExplanation(true);
+    }
   }, [currentAnswer, questions, currentQuestionIndex, recordFailedQuestion]);
 
   // Passer à la question suivante
