@@ -1669,44 +1669,6 @@ Délivré le {date}.`
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Questions par test */}
-                  <div className="space-y-2">
-                    <Label htmlFor="questions_per_test">Nombre de questions par test</Label>
-                    <Input
-                      id="questions_per_test"
-                      type="number"
-                      min="5"
-                      max="100"
-                      value={testConfig.questions_per_test}
-                      onChange={(e) => setTestConfig({
-                        ...testConfig,
-                        questions_per_test: parseInt(e.target.value) || 30
-                      })}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Nombre de questions à afficher dans chaque test
-                    </p>
-                  </div>
-
-                  {/* Score minimum de réussite */}
-                  <div className="space-y-2">
-                    <Label htmlFor="min_passing_score">Score minimum de réussite (%)</Label>
-                    <Input
-                      id="min_passing_score"
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={testConfig.min_passing_score}
-                      onChange={(e) => setTestConfig({
-                        ...testConfig,
-                        min_passing_score: parseInt(e.target.value) || 70
-                      })}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Pourcentage minimum requis pour réussir un test
-                    </p>
-                  </div>
-
                   {/* Temps limite */}
                   <div className="space-y-2">
                     <Label htmlFor="time_limit">Temps limite (minutes)</Label>
