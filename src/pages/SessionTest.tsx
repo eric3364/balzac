@@ -193,10 +193,10 @@ const SessionTest = () => {
       const score = Math.round((correctAnswers / totalQuestions) * 100);
       const passed = score >= 75; // Seuil de réussite
 
-      // Créer la session de test dans la base (sans ID car il est auto-généré)
+      // Créer ou mettre à jour la session de test dans la base
       const { data: sessionData, error: sessionError } = await supabase
         .from('test_sessions')
-        .insert({
+        .upsert({
           user_id: user.id,
           level: sessionLevel,
           session_number: sessionNumber,
@@ -208,6 +208,8 @@ const SessionTest = () => {
           ended_at: new Date().toISOString(),
           is_session_validated: passed,
           required_score_percentage: 75
+        }, {
+          onConflict: 'user_id,level,session_number,session_type'
         })
         .select()
         .single();
