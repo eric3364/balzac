@@ -64,7 +64,7 @@ export const useSessionProgress = (level: number) => {
           .insert({
             user_id: user.id,
             level: level,
-            current_session_number: parseFloat(`${level}.1`),
+            current_session_number: parseFloat(`${level}.0`), // Commencer à .0
             total_sessions_for_level: correctTotalSessions,
             completed_sessions: 0,
             is_level_completed: false
@@ -120,10 +120,10 @@ export const useSessionProgress = (level: number) => {
       // Générer la liste des sessions disponibles avec prérequis
       const sessions: SessionInfo[] = [];
       
-      // Sessions régulières
-      for (let i = 1; i <= progressData.total_sessions_for_level; i++) {
+      // Sessions régulières (commencer à .0 pour éviter les doublons avec .10)
+      for (let i = 0; i < progressData.total_sessions_for_level; i++) {
         const sessionNumber = parseFloat(`${level}.${i}`);
-        const isFirstSession = i === 1;
+        const isFirstSession = i === 0;
         const previousSessionNumber = parseFloat(`${level}.${i - 1}`);
         
         // Une session est disponible si :
@@ -131,7 +131,7 @@ export const useSessionProgress = (level: number) => {
         // - La session précédente a été complétée avec succès
         const isAvailable = isFirstSession || sessionNumber <= progressData.current_session_number;
         const isCompleted = sessionNumber < progressData.current_session_number || 
-                           (sessionNumber === progressData.current_session_number && progressData.completed_sessions >= i);
+                           (sessionNumber === progressData.current_session_number && progressData.completed_sessions > i);
         
         sessions.push({
           sessionNumber,
