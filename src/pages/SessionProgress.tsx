@@ -55,7 +55,7 @@ const SessionProgress = () => {
     
     const sessionParams = new URLSearchParams({
       level: level.toString(),
-      session: sessionNumber.toString(),
+      session: sessionNumber.toFixed(1), // Force le format avec une décimale
       type: sessionType
     });
     
