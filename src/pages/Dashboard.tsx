@@ -74,6 +74,89 @@ const Dashboard = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Section des badges de certification */}
         <CertificationBadges />
+
+        {/* Sessions de formation */}
+        <div className="mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Sessions de formation</CardTitle>
+              <CardDescription>
+                Choisissez un niveau pour commencer votre formation par sessions progressives
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {levelsLoading ? (
+                <div className="grid gap-4 md:grid-cols-3">
+                  {[1, 2, 3, 4].map((level) => (
+                    <div key={level} className="h-20 bg-muted animate-pulse rounded-lg" />
+                  ))}
+                </div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-3">
+                  {difficultyLevels.map((difficultyLevel) => {
+                    const level = difficultyLevel.level_number;
+                    const levelInfo = levelAccess.find(l => l.level === level);
+                    const isUnlocked = levelInfo?.isUnlocked || level === 1;
+                    const isCompleted = levelInfo?.isCompleted || false;
+                    
+                    return (
+                      <Button
+                        key={level}
+                        variant={isCompleted ? "default" : isUnlocked ? "outline" : "secondary"}
+                        className={`h-20 flex flex-col items-center justify-center relative ${
+                          !isUnlocked ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
+                        onClick={() => {
+                          if (isUnlocked) {
+                            navigate(`/session-progress?level=${level}`);
+                          }
+                        }}
+                        disabled={!isUnlocked}
+                        title={!isUnlocked ? `Vous devez d'abord valider le niveau ${level - 1}` : ''}
+                      >
+                        {!isUnlocked && (
+                          <Lock className="absolute top-2 right-2 h-4 w-4 text-muted-foreground" />
+                        )}
+                        <span className="text-lg font-semibold">Niveau {level}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {difficultyLevel.name}
+                        </span>
+                        {isCompleted && (
+                          <span className="text-xs text-green-600 font-medium">✓ Validé</span>
+                        )}
+                      </Button>
+                    );
+                  })}
+                </div>
+              )}
+              
+              {!levelsLoading && difficultyLevels.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>Aucun niveau de difficulté configuré.</p>
+                  {isAdmin && (
+                    <Button 
+                      variant="outline" 
+                      className="mt-2" 
+                      onClick={() => navigate('/admin')}
+                    >
+                      Configurer les niveaux
+                    </Button>
+                  )}
+                </div>
+              )}
+              
+              <div className="pt-4 border-t">
+                <Button 
+                  variant="default" 
+                  className="w-full sm:w-auto" 
+                  onClick={() => navigate('/test')}
+                >
+                  Mode test libre (ancien système)
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
         
         {/* Cartes de statistiques principales */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
@@ -196,88 +279,6 @@ const Dashboard = () => {
               <p className="text-xs text-muted-foreground">
                 Niveau {userStats.loading ? '1' : userStats.currentLevel}
               </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="mt-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Sessions de formation</CardTitle>
-              <CardDescription>
-                Choisissez un niveau pour commencer votre formation par sessions progressives
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {levelsLoading ? (
-                <div className="grid gap-4 md:grid-cols-3">
-                  {[1, 2, 3, 4].map((level) => (
-                    <div key={level} className="h-20 bg-muted animate-pulse rounded-lg" />
-                  ))}
-                </div>
-              ) : (
-                <div className="grid gap-4 md:grid-cols-3">
-                  {difficultyLevels.map((difficultyLevel) => {
-                    const level = difficultyLevel.level_number;
-                    const levelInfo = levelAccess.find(l => l.level === level);
-                    const isUnlocked = levelInfo?.isUnlocked || level === 1;
-                    const isCompleted = levelInfo?.isCompleted || false;
-                    
-                    return (
-                      <Button
-                        key={level}
-                        variant={isCompleted ? "default" : isUnlocked ? "outline" : "secondary"}
-                        className={`h-20 flex flex-col items-center justify-center relative ${
-                          !isUnlocked ? 'opacity-50 cursor-not-allowed' : ''
-                        }`}
-                        onClick={() => {
-                          if (isUnlocked) {
-                            navigate(`/session-progress?level=${level}`);
-                          }
-                        }}
-                        disabled={!isUnlocked}
-                        title={!isUnlocked ? `Vous devez d'abord valider le niveau ${level - 1}` : ''}
-                      >
-                        {!isUnlocked && (
-                          <Lock className="absolute top-2 right-2 h-4 w-4 text-muted-foreground" />
-                        )}
-                        <span className="text-lg font-semibold">Niveau {level}</span>
-                        <span className="text-sm text-muted-foreground">
-                          {difficultyLevel.name}
-                        </span>
-                        {isCompleted && (
-                          <span className="text-xs text-green-600 font-medium">✓ Validé</span>
-                        )}
-                      </Button>
-                    );
-                  })}
-                </div>
-              )}
-              
-              {!levelsLoading && difficultyLevels.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p>Aucun niveau de difficulté configuré.</p>
-                  {isAdmin && (
-                    <Button 
-                      variant="outline" 
-                      className="mt-2" 
-                      onClick={() => navigate('/admin')}
-                    >
-                      Configurer les niveaux
-                    </Button>
-                  )}
-                </div>
-              )}
-              
-              <div className="pt-4 border-t">
-                <Button 
-                  variant="default" 
-                  className="w-full sm:w-auto" 
-                  onClick={() => navigate('/test')}
-                >
-                  Mode test libre (ancien système)
-                </Button>
-              </div>
             </CardContent>
           </Card>
         </div>
