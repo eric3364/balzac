@@ -30,6 +30,21 @@ export const useSessionProgress = (level: number) => {
     try {
       setLoading(true);
 
+      // D'abord récupérer le pourcentage de questions configuré
+      const { data: configData } = await supabase
+        .from('site_configuration')
+        .select('config_value')
+        .eq('config_key', 'questions_percentage_per_level')
+        .single();
+
+      const questionsPercentage = parseInt(configData?.config_value as string) || 20;
+
+      // Calculer le nombre total de sessions pour ce niveau
+      // Si 20% par session : 100/20 = 5 sessions
+      // Si 25% par session : 100/25 = 4 sessions  
+      // Si 10% par session : 100/10 = 10 sessions
+      const correctTotalSessions = Math.ceil(100 / questionsPercentage);
+
       // Récupérer ou créer la progression pour ce niveau
       const { data: existingProgress } = await supabase
         .from('session_progress')
@@ -41,29 +56,14 @@ export const useSessionProgress = (level: number) => {
       let progressData = existingProgress;
 
       if (!existingProgress) {
-        // Récupérer le pourcentage de questions configuré
-        const { data: configData } = await supabase
-          .from('site_configuration')
-          .select('config_value')
-          .eq('config_key', 'questions_percentage_per_level')
-          .single();
-
-        const questionsPercentage = parseInt(configData?.config_value as string) || 20;
-
-        // Calculer le nombre total de sessions pour ce niveau
-        // Si 20% par session : 100/20 = 5 sessions
-        // Si 25% par session : 100/25 = 4 sessions  
-        // Si 10% par session : 100/10 = 10 sessions
-        const totalSessionsForLevel = Math.ceil(100 / questionsPercentage);
-
-        // Créer une nouvelle progression
+        // Créer une nouvelle progression avec le bon nombre de sessions
         const { data: newProgress, error } = await supabase
           .from('session_progress')
           .insert({
             user_id: user.id,
             level: level,
             current_session_number: parseFloat(`${level}.1`),
-            total_sessions_for_level: totalSessionsForLevel,
+            total_sessions_for_level: correctTotalSessions,
             completed_sessions: 0,
             is_level_completed: false
           })
@@ -72,6 +72,27 @@ export const useSessionProgress = (level: number) => {
 
         if (error) throw error;
         progressData = newProgress;
+      } else {
+        // Mettre à jour le nombre total de sessions si nécessaire
+        if (existingProgress.total_sessions_for_level !== correctTotalSessions) {
+          const { data: updatedProgress, error } = await supabase
+            .from('session_progress')
+            .update({ 
+              total_sessions_for_level: correctTotalSessions,
+              // Réajuster la progression si nécessaire
+              completed_sessions: Math.min(existingProgress.completed_sessions, correctTotalSessions),
+              current_session_number: existingProgress.current_session_number > parseFloat(`${level}.${correctTotalSessions}`) 
+                ? parseFloat(`${level}.${correctTotalSessions}`)
+                : existingProgress.current_session_number
+            })
+            .eq('user_id', user.id)
+            .eq('level', level)
+            .select()
+            .single();
+
+          if (error) throw error;
+          progressData = updatedProgress;
+        }
       }
 
       // Récupérer le nombre de questions échouées pour ce niveau
