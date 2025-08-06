@@ -306,6 +306,26 @@ const SessionTest = () => {
 
       console.log('=== SAUVEGARDE RÉPONSES RÉUSSIE ===');
 
+      // Sauvegarder aussi dans question_attempts pour les statistiques
+      const questionAttemptsData = userAnswers.map(answer => ({
+        user_id: user.id,
+        question_id: answer.question_id,
+        level: sessionLevel,
+        is_correct: answer.is_correct,
+        attempts_count: 1,
+        last_attempt_at: new Date().toISOString()
+      }));
+
+      // Upsert dans question_attempts (mise à jour ou insertion)
+      for (const attempt of questionAttemptsData) {
+        await supabase
+          .from('question_attempts')
+          .upsert(attempt, { 
+            onConflict: 'user_id,question_id',
+            ignoreDuplicates: false 
+          });
+      }
+
       // Mettre à jour la progression si la session est réussie
       if (passed) {
         await updateProgress(sessionNumber, true);
