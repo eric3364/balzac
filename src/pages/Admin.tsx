@@ -44,6 +44,7 @@ interface TestConfig {
   allow_retake: boolean;
   shuffle_questions: boolean;
   show_immediate_feedback: boolean;
+  questions_percentage_per_level: number;
 }
 
 interface DifficultyLevel {
@@ -110,7 +111,8 @@ const Admin = () => {
     time_limit_minutes: 60,
     allow_retake: true,
     shuffle_questions: true,
-    show_immediate_feedback: false
+    show_immediate_feedback: false,
+    questions_percentage_per_level: 80
   });
   const [savingConfig, setSavingConfig] = useState(false);
   
@@ -305,7 +307,8 @@ const Admin = () => {
           'time_limit_minutes',
           'allow_retake',
           'shuffle_questions',
-          'show_immediate_feedback'
+          'show_immediate_feedback',
+          'questions_percentage_per_level'
         ]);
 
       if (error) throw error;
@@ -323,7 +326,8 @@ const Admin = () => {
           time_limit_minutes: configObj.time_limit_minutes || 60,
           allow_retake: configObj.allow_retake !== false,
           shuffle_questions: configObj.shuffle_questions !== false,
-          show_immediate_feedback: configObj.show_immediate_feedback || false
+          show_immediate_feedback: configObj.show_immediate_feedback || false,
+          questions_percentage_per_level: configObj.questions_percentage_per_level || 80
         });
       }
     } catch (error) {
@@ -341,7 +345,8 @@ const Admin = () => {
         { config_key: 'time_limit_minutes', config_value: testConfig.time_limit_minutes },
         { config_key: 'allow_retake', config_value: testConfig.allow_retake },
         { config_key: 'shuffle_questions', config_value: testConfig.shuffle_questions },
-        { config_key: 'show_immediate_feedback', config_value: testConfig.show_immediate_feedback }
+        { config_key: 'show_immediate_feedback', config_value: testConfig.show_immediate_feedback },
+        { config_key: 'questions_percentage_per_level', config_value: testConfig.questions_percentage_per_level }
       ];
 
       for (const entry of configEntries) {
@@ -1718,6 +1723,25 @@ Délivré le {date}.`
                     />
                     <p className="text-xs text-muted-foreground">
                       Durée maximale allouée pour compléter un test
+                    </p>
+                  </div>
+
+                  {/* Pourcentage de questions par niveau */}
+                  <div className="space-y-2">
+                    <Label htmlFor="questions_percentage">Pourcentage de questions par niveau (%)</Label>
+                    <Input
+                      id="questions_percentage"
+                      type="number"
+                      min="10"
+                      max="100"
+                      value={testConfig.questions_percentage_per_level}
+                      onChange={(e) => setTestConfig({
+                        ...testConfig,
+                        questions_percentage_per_level: parseInt(e.target.value) || 80
+                      })}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Pourcentage du total des questions d'un niveau utilisé dans une session
                     </p>
                   </div>
                 </div>
