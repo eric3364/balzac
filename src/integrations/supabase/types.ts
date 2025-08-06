@@ -187,6 +187,39 @@ export type Database = {
         }
         Relationships: []
       }
+      level_pricing: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          free_sessions: number
+          id: string
+          is_active: boolean
+          level: number
+          price_euros: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          free_sessions?: number
+          id?: string
+          is_active?: boolean
+          level: number
+          price_euros?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          free_sessions?: number
+          id?: string
+          is_active?: boolean
+          level?: number
+          price_euros?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -513,6 +546,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_level_purchases: {
+        Row: {
+          created_at: string
+          id: string
+          level: number
+          price_paid: number
+          purchased_at: string
+          status: string
+          stripe_payment_intent_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          level: number
+          price_paid: number
+          purchased_at?: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          level?: number
+          price_paid?: number
+          purchased_at?: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           class_name: string | null
@@ -558,6 +624,10 @@ export type Database = {
         Args: { level_num: number; questions_percentage?: number }
         Returns: number
       }
+      get_free_sessions_for_level: {
+        Args: { level_num: number }
+        Returns: number
+      }
       get_session_questions: {
         Args: {
           user_uuid: string
@@ -582,6 +652,10 @@ export type Database = {
       }
       is_super_admin: {
         Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      user_has_purchased_level: {
+        Args: { user_uuid: string; level_num: number }
         Returns: boolean
       }
     }
