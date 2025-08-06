@@ -162,19 +162,18 @@ const CertificationBadges = () => {
     );
   }
 
-  if (certifications.length === 0) {
-    return (
-      <Card className="mb-8">
-        <CardContent className="p-6 text-center">
-          <Award className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Aucune certification obtenue</h3>
-          <p className="text-muted-foreground">
-            Commencez un test pour obtenir votre première certification !
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
+  // Créer une liste de tous les niveaux possibles (1-5) avec le statut obtenu/non obtenu
+  const allLevels = [1, 2, 3, 4, 5].map(level => {
+    const certification = certifications.find(cert => cert.level === level);
+    const template = templates.find(t => t.difficulty_levels?.level_number === level);
+    
+    return {
+      level,
+      certification,
+      template,
+      isObtained: !!certification
+    };
+  });
 
   return (
     <Card className="mb-8 bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
@@ -183,69 +182,87 @@ const CertificationBadges = () => {
           <Trophy className="h-6 w-6 text-primary" />
           <h2 className="text-xl font-bold">Mes Certifications</h2>
           <Badge variant="secondary" className="ml-2">
-            {certifications.length} obtenue{certifications.length > 1 ? 's' : ''}
+            {certifications.length} / 5 obtenue{certifications.length > 1 ? 's' : ''}
           </Badge>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {certifications.map((cert) => {
-            // Trouver le template correspondant au niveau
-            const template = templates.find(t => 
-              t.difficulty_levels?.level_number === cert.level
-            );
-            
+          {allLevels.map((levelData) => {
+            const { level, certification, template, isObtained } = levelData;
             const IconComponent = getIconComponent(template?.badge_icon || 'award');
             const badgeColor = template?.badge_color || '#6366f1';
             const backgroundColor = template?.badge_background_color || '#ffffff';
             
             return (
               <div
-                key={cert.id}
-                className="flex flex-col items-center p-4 rounded-lg border bg-card hover:shadow-lg transition-shadow duration-200"
+                key={level}
+                className={`flex flex-col items-center p-4 rounded-lg border transition-all duration-200 ${
+                  isObtained 
+                    ? 'bg-card hover:shadow-lg' 
+                    : 'bg-muted/50 opacity-60 hover:opacity-80'
+                }`}
               >
                 {/* Badge Icon */}
                 <div 
-                  className="w-16 h-16 rounded-full flex items-center justify-center mb-3 shadow-md"
+                  className={`w-16 h-16 rounded-full flex items-center justify-center mb-3 shadow-md ${
+                    isObtained ? '' : 'grayscale'
+                  }`}
                   style={{ 
-                    backgroundColor: backgroundColor,
-                    border: `2px solid ${badgeColor}`
+                    backgroundColor: isObtained ? backgroundColor : '#f1f5f9',
+                    border: `2px solid ${isObtained ? badgeColor : '#94a3b8'}`
                   }}
                 >
                   <IconComponent 
                     className="h-8 w-8" 
-                    style={{ color: badgeColor }}
+                    style={{ color: isObtained ? badgeColor : '#94a3b8' }}
                   />
                 </div>
 
                 {/* Level Name */}
-                <h3 className="font-semibold text-sm text-center mb-1">
-                  {template?.difficulty_levels?.name || getLevelName(cert.level)}
+                <h3 className={`font-semibold text-sm text-center mb-1 ${
+                  isObtained ? '' : 'text-muted-foreground'
+                }`}>
+                  {template?.difficulty_levels?.name || getLevelName(level)}
                 </h3>
 
-                {/* Score */}
-                <div className={`text-lg font-bold mb-2 ${getScoreColor(cert.score)}`}>
-                  {cert.score}%
-                </div>
+                {isObtained && certification ? (
+                  <>
+                    {/* Score */}
+                    <div className={`text-lg font-bold mb-2 ${getScoreColor(certification.score)}`}>
+                      {certification.score}%
+                    </div>
 
-                {/* Study Time */}
-                <div className="flex items-center gap-1 mb-2 text-xs text-muted-foreground">
-                  <Clock className="h-3 w-3" />
-                  <span>{formatStudyTime(cert.timeSpent || 0)}</span>
-                </div>
+                    {/* Study Time */}
+                    <div className="flex items-center gap-1 mb-2 text-xs text-muted-foreground">
+                      <Clock className="h-3 w-3" />
+                      <span>{formatStudyTime(certification.timeSpent || 0)}</span>
+                    </div>
 
-                {/* Date */}
-                <div className="text-xs text-muted-foreground text-center">
-                  {format(new Date(cert.certified_at), 'dd MMM yyyy', { locale: fr })}
-                </div>
+                    {/* Date */}
+                    <div className="text-xs text-muted-foreground text-center">
+                      {format(new Date(certification.certified_at), 'dd MMM yyyy', { locale: fr })}
+                    </div>
 
-                {/* Perfect Score Indicator */}
-                {cert.score === 100 && (
-                  <div className="mt-2">
-                    <Badge variant="default" className="text-xs bg-yellow-500 hover:bg-yellow-600">
-                      <Star className="h-3 w-3 mr-1" />
-                      Parfait !
-                    </Badge>
-                  </div>
+                    {/* Perfect Score Indicator */}
+                    {certification.score === 100 && (
+                      <div className="mt-2">
+                        <Badge variant="default" className="text-xs bg-yellow-500 hover:bg-yellow-600">
+                          <Star className="h-3 w-3 mr-1" />
+                          Parfait !
+                        </Badge>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {/* Non obtained status */}
+                    <div className="text-sm font-medium mb-2 text-muted-foreground">
+                      À débloquer
+                    </div>
+                    <div className="text-xs text-muted-foreground text-center">
+                      Complétez le niveau {level - 1 > 0 ? level - 1 : 1} d'abord
+                    </div>
+                  </>
                 )}
               </div>
             );
@@ -257,14 +274,17 @@ const CertificationBadges = () => {
           <div className="flex justify-between items-center text-sm text-muted-foreground">
             <span>Progression des niveaux</span>
             <span>
-              Niveau {Math.max(...certifications.map(c => c.level))} atteint
+              {certifications.length > 0 
+                ? `Niveau ${Math.max(...certifications.map(c => c.level))} atteint`
+                : 'Aucun niveau complété'
+              }
             </span>
           </div>
           <div className="mt-2 h-2 bg-muted rounded-full overflow-hidden">
             <div 
               className="h-full bg-gradient-to-r from-primary to-primary/80 transition-all duration-500"
               style={{ 
-                width: `${(Math.max(...certifications.map(c => c.level)) / 5) * 100}%` 
+                width: `${certifications.length > 0 ? (Math.max(...certifications.map(c => c.level)) / 5) * 100 : 0}%` 
               }}
             />
           </div>
