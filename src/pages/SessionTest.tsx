@@ -259,7 +259,8 @@ const SessionTest = () => {
       const { error: answersError } = await supabase
         .from('test_answers')
         .upsert(answersToInsert, {
-          onConflict: 'user_id,session_id,question_id'
+          onConflict: 'user_id,session_id,question_id',
+          ignoreDuplicates: false
         });
 
       if (answersError) {
