@@ -34,6 +34,7 @@ const CertificationBadges = () => {
   const { user } = useAuth();
   const [certifications, setCertifications] = useState<Certification[]>([]);
   const [templates, setTemplates] = useState<CertificateTemplate[]>([]);
+  const [difficultyLevels, setDifficultyLevels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -53,6 +54,13 @@ const CertificationBadges = () => {
           .from('test_sessions')
           .select('*')
           .eq('user_id', user.id);
+
+        // Récupérer les niveaux de difficulté actifs
+        const { data: difficultyLevels } = await supabase
+          .from('difficulty_levels')
+          .select('*')
+          .eq('is_active', true)
+          .order('level_number', { ascending: true });
 
         // Récupérer les modèles de certificats avec les niveaux de difficulté
         const { data: certificateTemplates } = await supabase
@@ -97,6 +105,7 @@ const CertificationBadges = () => {
 
         setCertifications(certificationsWithTime);
         setTemplates(certificateTemplates || []);
+        setDifficultyLevels(difficultyLevels || []);
       } catch (error) {
         console.error('Erreur lors du chargement des certifications:', error);
       } finally {
@@ -162,13 +171,14 @@ const CertificationBadges = () => {
     );
   }
 
-  // Créer une liste de tous les niveaux possibles (1-5) avec le statut obtenu/non obtenu
-  const allLevels = [1, 2, 3, 4, 5].map(level => {
-    const certification = certifications.find(cert => cert.level === level);
-    const template = templates.find(t => t.difficulty_levels?.level_number === level);
+  // Créer une liste de tous les niveaux configurés avec le statut obtenu/non obtenu
+  const allLevels = difficultyLevels.map(diffLevel => {
+    const certification = certifications.find(cert => cert.level === diffLevel.level_number);
+    const template = templates.find(t => t.difficulty_levels?.level_number === diffLevel.level_number);
     
     return {
-      level,
+      level: diffLevel.level_number,
+      difficultyLevel: diffLevel,
       certification,
       template,
       isObtained: !!certification
@@ -182,13 +192,13 @@ const CertificationBadges = () => {
           <Trophy className="h-6 w-6 text-primary" />
           <h2 className="text-xl font-bold">Mes Certifications</h2>
           <Badge variant="secondary" className="ml-2">
-            {certifications.length} / 5 obtenue{certifications.length > 1 ? 's' : ''}
+            {certifications.length} / {difficultyLevels.length} obtenue{certifications.length > 1 ? 's' : ''}
           </Badge>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {allLevels.map((levelData) => {
-            const { level, certification, template, isObtained } = levelData;
+            const { level, difficultyLevel, certification, template, isObtained } = levelData;
             const IconComponent = getIconComponent(template?.badge_icon || 'award');
             const badgeColor = template?.badge_color || '#6366f1';
             const backgroundColor = template?.badge_background_color || '#ffffff';
@@ -222,7 +232,7 @@ const CertificationBadges = () => {
                 <h3 className={`font-semibold text-sm text-center mb-1 ${
                   isObtained ? '' : 'text-muted-foreground'
                 }`}>
-                  {template?.difficulty_levels?.name || getLevelName(level)}
+                  {difficultyLevel.name || template?.difficulty_levels?.name || getLevelName(level)}
                 </h3>
 
                 {isObtained && certification ? (
@@ -260,7 +270,7 @@ const CertificationBadges = () => {
                       À débloquer
                     </div>
                     <div className="text-xs text-muted-foreground text-center">
-                      Complétez le niveau {level - 1 > 0 ? level - 1 : 1} d'abord
+                      {level === 1 ? 'Commencez votre apprentissage' : `Complétez le niveau ${level - 1} d'abord`}
                     </div>
                   </>
                 )}
@@ -284,7 +294,7 @@ const CertificationBadges = () => {
             <div 
               className="h-full bg-gradient-to-r from-primary to-primary/80 transition-all duration-500"
               style={{ 
-                width: `${certifications.length > 0 ? (Math.max(...certifications.map(c => c.level)) / 5) * 100 : 0}%` 
+                width: `${certifications.length > 0 && difficultyLevels.length > 0 ? (Math.max(...certifications.map(c => c.level)) / difficultyLevels.length) * 100 : 0}%` 
               }}
             />
           </div>
