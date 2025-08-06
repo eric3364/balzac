@@ -187,11 +187,18 @@ const SessionTest = () => {
   const completeSession = useCallback(async () => {
     if (!user) return;
 
+    console.log('=== DÉBUT COMPLETION SESSION ===');
+    console.log('User:', user?.id);
+    console.log('Session params:', { sessionLevel, sessionNumber, sessionType });
+    console.log('User answers:', userAnswers);
+
     try {
       const correctAnswers = userAnswers.filter(a => a.is_correct).length;
       const totalQuestions = questions.length;
       const score = Math.round((correctAnswers / totalQuestions) * 100);
       const passed = score >= 75; // Seuil de réussite
+
+      console.log('Calculs:', { correctAnswers, totalQuestions, score, passed });
 
       // Créer ou mettre à jour la session de test dans la base
       const { data: sessionData, error: sessionError } = await supabase
