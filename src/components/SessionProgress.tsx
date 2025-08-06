@@ -54,9 +54,15 @@ export const SessionProgressComponent: React.FC<SessionProgressProps> = ({
       return 'completed';
     }
     
-    // La session courante est celle qui correspond au nombre de sessions complétées
-    if (sessionIndex === progress.completedSessions && sessionIndex < progress.totalSessionsForLevel) {
+    // Vérifier si c'est la session actuelle basée sur current_session_number
+    const currentSessionIndex = Math.floor((progress.currentSessionNumber - progress.level) * 10);
+    
+    if (sessionIndex === currentSessionIndex) {
       return 'current';
+    }
+    
+    if (sessionIndex < currentSessionIndex) {
+      return 'completed';
     }
     
     return 'available';
@@ -64,7 +70,14 @@ export const SessionProgressComponent: React.FC<SessionProgressProps> = ({
 
   const getProgressPercentage = () => {
     if (progress.isLevelCompleted) return 100;
-    return Math.round((progress.completedSessions / progress.totalSessionsForLevel) * 100);
+    
+    // Calculer le pourcentage basé sur la session courante
+    const currentSessionIndex = Math.floor((progress.currentSessionNumber - progress.level) * 10);
+    const progressBasedOnCurrentSession = Math.round((currentSessionIndex / progress.totalSessionsForLevel) * 100);
+    const progressBasedOnCompleted = Math.round((progress.completedSessions / progress.totalSessionsForLevel) * 100);
+    
+    // Prendre le maximum entre les deux pour refléter qu'une session est en cours
+    return Math.max(progressBasedOnCurrentSession, progressBasedOnCompleted);
   };
 
   const getStatusIcon = (status: string) => {
