@@ -351,6 +351,119 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Pricing Preview Section */}
+      <section className="py-20 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+              <span className="bg-gradient-to-r from-primary via-purple-600 to-primary bg-clip-text text-transparent">
+                Tarifs transparents
+              </span>
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Démarrez gratuitement puis débloquez chaque niveau à votre rythme
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {/* Niveau 1 */}
+            <div className="bg-card p-8 rounded-2xl border-2 border-green-200 relative">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <span className="bg-green-500 text-white px-4 py-1 rounded-full text-sm font-semibold">
+                  GRATUIT
+                </span>
+              </div>
+              <div className="text-center">
+                <h3 className="text-2xl font-bold mb-2">Niveau 1</h3>
+                <div className="text-3xl font-bold text-green-600 mb-4">0€</div>
+                <p className="text-muted-foreground mb-6">Découverte complète</p>
+                <ul className="space-y-2 text-left">
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full" />
+                    <span>Accès complet gratuit</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full" />
+                    <span>Toutes les sessions</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full" />
+                    <span>Certification incluse</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Niveaux 2-4 */}
+            <div className="bg-card p-8 rounded-2xl border-2 border-primary/20 relative">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <span className="bg-primary text-white px-4 py-1 rounded-full text-sm font-semibold">
+                  POPULAIRE
+                </span>
+              </div>
+              <div className="text-center">
+                <h3 className="text-2xl font-bold mb-2">Niveaux 2-4</h3>
+                <div className="text-3xl font-bold text-primary mb-4">10€</div>
+                <p className="text-muted-foreground mb-6">Par niveau</p>
+                <ul className="space-y-2 text-left">
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-primary rounded-full" />
+                    <span>3 sessions d'essai gratuites</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-primary rounded-full" />
+                    <span>Accès complet après achat</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-primary rounded-full" />
+                    <span>Certification niveau</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Niveau 5 */}
+            <div className="bg-card p-8 rounded-2xl border-2 border-purple-200 relative">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <span className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
+                  PREMIUM
+                </span>
+              </div>
+              <div className="text-center">
+                <h3 className="text-2xl font-bold mb-2">Niveau 5</h3>
+                <div className="text-3xl font-bold bg-gradient-to-r from-purple-500 to-purple-600 bg-clip-text text-transparent mb-4">10€</div>
+                <p className="text-muted-foreground mb-6">Niveau expert</p>
+                <ul className="space-y-2 text-left">
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full" />
+                    <span>3 sessions d'essai gratuites</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full" />
+                    <span>Contenu expert</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full" />
+                    <span>Certification maître</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          
+          <div className="text-center mt-12">
+            <Button 
+              size="lg" 
+              onClick={() => navigate('/pricing')}
+              variant="outline"
+              className="border-2 hover:bg-accent/50 px-8 py-6 text-lg font-semibold rounded-xl"
+            >
+              Voir tous les tarifs
+            </Button>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-24 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/90 to-primary/80"></div>
@@ -371,7 +484,7 @@ const Index = () => {
               {homepageAssets.ctaTitle}
             </h2>
             <p className="text-xl text-white/90 mb-10 max-w-3xl mx-auto leading-relaxed">
-              {homepageAssets.ctaDescription}
+              Démarrez gratuitement avec le niveau 1 puis progressez à votre rythme
             </p>
             
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
@@ -385,9 +498,10 @@ const Index = () => {
               </Button>
               <Button size="lg" 
                       variant="outline" 
-                      className="text-lg px-10 py-6 border-2 border-white/30 text-white hover:bg-white/10 transform hover:scale-105 transition-all duration-300">
+                      className="text-lg px-10 py-6 border-2 border-white/30 text-white hover:bg-white/10 transform hover:scale-105 transition-all duration-300"
+                      onClick={() => navigate('/pricing')}>
                 <BookOpen className="mr-2 h-5 w-5" />
-                En savoir plus
+                Voir les tarifs
               </Button>
             </div>
           </div>

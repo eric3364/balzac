@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import Pricing from "./pages/Pricing";
 import Test from "./pages/Test";
 import SessionTest from "./pages/SessionTest";
 import SessionProgress from "./pages/SessionProgress";
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/pricing" element={<Pricing />} />
             <Route path="/test" element={<Test />} />
             <Route path="/session-test" element={<SessionTest />} />
             <Route path="/session-progress" element={<SessionProgress />} />
