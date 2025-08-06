@@ -179,10 +179,8 @@ const SessionTest = () => {
           setCurrentAnswer('');
           setShowExplanation(false);
         } else {
-          // Déclencher la complétion de session
-          setTimeout(() => {
-            completeSession();
-          }, 100);
+          // Déclencher la complétion via un state
+          setTestCompleted(true);
         }
       }, 500);
     } else {
@@ -255,6 +253,9 @@ const SessionTest = () => {
         created_at: new Date().toISOString()
       }));
 
+      console.log('Answers to insert:', answersToInsert);
+      console.log('Session ID:', sessionData.id);
+
       const { error: answersError } = await supabase
         .from('test_answers')
         .insert(answersToInsert);
@@ -313,6 +314,13 @@ const SessionTest = () => {
       navigate('/auth');
     }
   }, [user, navigate]);
+
+  // Déclencher completeSession quand testCompleted devient true
+  useEffect(() => {
+    if (testCompleted && !sessionResults) {
+      completeSession();
+    }
+  }, [testCompleted, sessionResults, completeSession]);
 
   if (isLoading) {
     return (
