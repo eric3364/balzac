@@ -1702,6 +1702,7 @@ Délivré le {date}.`
                         <SelectValue placeholder="Sélectionner le pourcentage" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="5">5% - 20 sessions par niveau</SelectItem>
                         <SelectItem value="10">10% - 10 sessions par niveau</SelectItem>
                         <SelectItem value="20">20% - 5 sessions par niveau</SelectItem>
                         <SelectItem value="25">25% - 4 sessions par niveau</SelectItem>
