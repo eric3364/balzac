@@ -63,24 +63,58 @@ const SessionTest = () => {
 
     try {
       setIsLoading(true);
+      console.log('Loading session questions for:', { sessionLevel, sessionNumber, sessionType });
 
       // Récupérer le pourcentage de questions configuré
-      const { data: configData } = await supabase
+      const { data: configData, error: configError } = await supabase
         .from('site_configuration')
         .select('config_value')
         .eq('config_key', 'questions_percentage_per_level')
         .single();
 
-      const questionsPercentage = parseInt(configData?.config_value as string) || 20;
+      console.log('Config data:', configData, 'Error:', configError);
 
-      // Utiliser la fonction pour obtenir les questions de la session
-      const { data: sessionQuestions, error } = await supabase
-        .rpc('get_session_questions', {
-          user_uuid: user.id,
-          level_num: sessionLevel,
-          session_num: sessionNumber,
-          questions_percentage: questionsPercentage
+      const questionsPercentage = parseInt(configData?.config_value as string) || 20;
+      console.log('Questions percentage:', questionsPercentage);
+
+      // Vérifier d'abord s'il y a des questions pour ce niveau
+      const { data: questionsCount, error: countError } = await supabase
+        .from('questions')
+        .select('id')
+        .eq('level', sessionLevel);
+
+      console.log('Questions count for level', sessionLevel, ':', questionsCount?.length, 'Error:', countError);
+
+      if (!questionsCount || questionsCount.length === 0) {
+        toast({
+          title: "Aucune question disponible",
+          description: `Aucune question n'est disponible pour le niveau ${sessionLevel}.`,
+          variant: "destructive"
         });
+        navigate('/dashboard');
+        return;
+      }
+
+      // Calculer les questions par session et l'offset
+      const questionsPerSession = Math.floor(questionsCount.length * questionsPercentage / 100);
+      const sessionIndex = Math.floor((sessionNumber - sessionLevel) * 10);
+      const offset = sessionIndex * questionsPerSession;
+
+      console.log('Session calculation:', {
+        totalQuestions: questionsCount.length,
+        questionsPerSession,
+        sessionIndex,
+        offset
+      });
+
+      // Pour l'instant, utiliser une requête simple au lieu de la fonction RPC
+      const { data: sessionQuestions, error } = await supabase
+        .from('questions')
+        .select('*')
+        .eq('level', sessionLevel)
+        .range(offset, offset + questionsPerSession - 1);
+
+      console.log('Session questions:', sessionQuestions, 'Error:', error);
 
       if (error) throw error;
 
@@ -99,7 +133,7 @@ const SessionTest = () => {
       console.error('Erreur lors du chargement des questions:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de charger les questions de la session.",
+        description: `Impossible de charger les questions de la session: ${error?.message || 'Erreur inconnue'}`,
         variant: "destructive"
       });
       navigate('/dashboard');
