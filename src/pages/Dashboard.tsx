@@ -7,8 +7,13 @@ import { useLevelAccess } from '@/hooks/useLevelAccess';
 import { useDifficultyLevels } from '@/hooks/useDifficultyLevels';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Settings, Lock } from 'lucide-react';
+import { Settings, Lock, BookOpen, Target, Clock, TrendingUp, Award, BarChart3 } from 'lucide-react';
 import CertificationBadges from '@/components/CertificationBadges';
+import StatsCard from '@/components/dashboard/StatsCard';
+import ProgressChart from '@/components/dashboard/ProgressChart';
+import ScoreGauge from '@/components/dashboard/ScoreGauge';
+import StudyTimeChart from '@/components/dashboard/StudyTimeChart';
+import ActivityHeatmap from '@/components/dashboard/ActivityHeatmap';
 
 const Dashboard = () => {
   const { user, loading, signOut } = useAuth();
@@ -70,137 +75,116 @@ const Dashboard = () => {
         {/* Section des badges de certification */}
         <CertificationBadges />
         
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card>
-            <CardHeader>
-              <CardTitle>Tests passés</CardTitle>
-              <CardDescription>
-                Nombre total de tests effectués
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">
-                {userStats.loading ? '...' : userStats.totalTests}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Tests complétés
-              </p>
-            </CardContent>
-          </Card>
+        {/* Cartes de statistiques principales */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+          <StatsCard
+            title="Tests passés"
+            value={userStats.loading ? '...' : userStats.totalTests}
+            subtitle="Sessions complétées"
+            icon={BookOpen}
+            color="blue"
+          />
+          <StatsCard
+            title="Questions répondues"
+            value={userStats.loading ? '...' : userStats.totalQuestions}
+            subtitle="Total des questions"
+            icon={Target}
+            color="green"
+          />
+          <StatsCard
+            title="Temps d'étude"
+            value={userStats.loading ? '...' : 
+              userStats.timeSpent >= 60 ? 
+                `${Math.floor(userStats.timeSpent / 60)}h ${userStats.timeSpent % 60}min` :
+                `${userStats.timeSpent}min`
+            }
+            subtitle="Temps total passé"
+            icon={Clock}
+            color="purple"
+          />
+          <StatsCard
+            title="Certifications"
+            value={userStats.loading ? '...' : userStats.certificationsCount}
+            subtitle="Badges obtenus"
+            icon={Award}
+            color="yellow"
+          />
+        </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Questions répondues</CardTitle>
-              <CardDescription>
-                Total des questions traitées
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">
-                {userStats.loading ? '...' : userStats.totalQuestions}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Questions au total
-              </p>
-            </CardContent>
-          </Card>
+        {/* Graphiques et visualisations */}
+        <div className="grid gap-6 lg:grid-cols-2 mb-8">
+          {/* Graphique en camembert */}
+          <ProgressChart
+            correctAnswers={userStats.correctAnswers}
+            incorrectAnswers={userStats.incorrectAnswers}
+            loading={userStats.loading}
+          />
+          
+          {/* Jauge de score */}
+          <ScoreGauge
+            score={userStats.progressPercentage}
+            loading={userStats.loading}
+          />
+        </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Progression</CardTitle>
-              <CardDescription>
-                Votre taux de réussite
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">
-                {userStats.loading ? '...' : `${userStats.progressPercentage}%`}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                De bonnes réponses
-              </p>
-            </CardContent>
-          </Card>
+        {/* Graphiques détaillés */}
+        <div className="grid gap-6 lg:grid-cols-2 mb-8">
+          {/* Graphique temps d'étude */}
+          <StudyTimeChart
+            timeSpent={userStats.timeSpent}
+            sessionsCount={userStats.totalTests}
+            loading={userStats.loading}
+          />
+          
+          {/* Heatmap d'activité */}
+          <ActivityHeatmap
+            totalQuestions={userStats.totalQuestions}
+            sessionsCount={userStats.totalTests}
+            loading={userStats.loading}
+          />
+        </div>
 
+        {/* Statistiques détaillées en grille */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
           <Card>
-            <CardHeader>
-              <CardTitle>Réponses correctes</CardTitle>
-              <CardDescription>
-                Questions réussies
-              </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Réponses correctes</CardTitle>
+              <TrendingUp className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-green-600">
+              <div className="text-2xl font-bold text-green-600">
                 {userStats.loading ? '...' : userStats.correctAnswers}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Bonnes réponses
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Réponses incorrectes</CardTitle>
-              <CardDescription>
-                Questions à retravailler
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold text-destructive">
-                {userStats.loading ? '...' : userStats.incorrectAnswers}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Erreurs commises
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Temps d'étude</CardTitle>
-              <CardDescription>
-                Durée sur la plateforme
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">
-                {userStats.loading ? '...' : 
-                  userStats.timeSpent >= 60 ? 
-                    `${Math.floor(userStats.timeSpent / 60)}h ${userStats.timeSpent % 60}min` :
-                    `${userStats.timeSpent}min`
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {userStats.loading ? '' : 
+                  `${userStats.totalQuestions > 0 ? Math.round((userStats.correctAnswers / userStats.totalQuestions) * 100) : 0}% de réussite`
                 }
               </p>
-              <p className="text-sm text-muted-foreground">
-                Temps total passé
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Réponses incorrectes</CardTitle>
+              <BarChart3 className="h-4 w-4 text-red-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-600">
+                {userStats.loading ? '...' : userStats.incorrectAnswers}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Questions à retravailler
               </p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle>Certifications</CardTitle>
-              <CardDescription>
-                Vos badges obtenus
-              </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Niveau actuel</CardTitle>
+              <Award className="h-4 w-4 text-indigo-600" />
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold">
-                {userStats.loading ? '...' : userStats.certificationsCount}
-              </p>
-              <p className="text-sm text-muted-foreground">Certifications obtenues</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Niveau actuel</CardTitle>
-              <CardDescription>
-                Votre niveau d'étude
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">
+              <div className="text-2xl font-bold text-indigo-600">
                 {userStats.loading ? '...' : 
                   userStats.currentLevel === 1 ? 'Élémentaire' :
                   userStats.currentLevel === 2 ? 'Intermédiaire' :
@@ -208,8 +192,8 @@ const Dashboard = () => {
                   userStats.currentLevel === 4 ? 'Expert' :
                   userStats.currentLevel === 5 ? 'Maître' : 'Élémentaire'
                 }
-              </p>
-              <p className="text-sm text-muted-foreground">
+              </div>
+              <p className="text-xs text-muted-foreground">
                 Niveau {userStats.loading ? '1' : userStats.currentLevel}
               </p>
             </CardContent>
