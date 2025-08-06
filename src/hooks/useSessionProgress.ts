@@ -24,7 +24,7 @@ export const useSessionProgress = (level: number) => {
   const [loading, setLoading] = useState(true);
   const [availableSessions, setAvailableSessions] = useState<SessionInfo[]>([]);
 
-  const loadProgress = useCallback(async () => {
+  const loadProgress = useCallback(async (forceRefresh = false) => {
     if (!user || !level) return;
 
     try {
