@@ -229,10 +229,10 @@ const CertificationBadges = () => {
                 </div>
 
                 {/* Level Name */}
-                <h3 className={`font-semibold text-sm text-center mb-1 ${
+<h3 className={`font-semibold text-sm text-center mb-1 ${
                   isObtained ? '' : 'text-muted-foreground'
                 }`}>
-                  {difficultyLevel.name || template?.difficulty_levels?.name || getLevelName(level)}
+                  {difficultyLevel.name}
                 </h3>
 
                 {isObtained && certification ? (
