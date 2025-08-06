@@ -389,8 +389,9 @@ const SessionTest = () => {
               </Badge>
             )}
           </div>
-          <div className="text-right text-sm text-muted-foreground">
-            Question {currentQuestionIndex + 1} / {questions.length}
+          <div className="text-right text-sm text-muted-foreground space-y-1">
+            <div>Question {currentQuestionIndex + 1} / {questions.length}</div>
+            <div className="text-xs opacity-60">ID: {currentQuestion.id}</div>
           </div>
         </div>
 
