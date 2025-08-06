@@ -56,6 +56,7 @@ const SessionTest = () => {
     totalQuestions: number;
     passed: boolean;
   } | null>(null);
+  const [isCompletingSession, setIsCompletingSession] = useState(false);
 
   // Charger les questions de la session
   const loadSessionQuestions = useCallback(async () => {
@@ -195,13 +196,15 @@ const SessionTest = () => {
       setCurrentAnswer('');
       setShowExplanation(false);
     } else {
-      completeSession();
+      setTestCompleted(true);
     }
   }, [currentQuestionIndex, questions.length]);
 
   // Terminer la session
   const completeSession = useCallback(async () => {
-    if (!user) return;
+    if (!user || isCompletingSession) return;
+    
+    setIsCompletingSession(true);
 
     console.log('=== DÉBUT COMPLETION SESSION ===');
     console.log('User:', user?.id);
@@ -316,8 +319,10 @@ const SessionTest = () => {
         description: "Impossible de sauvegarder les résultats.",
         variant: "destructive"
       });
+    } finally {
+      setIsCompletingSession(false);
     }
-  }, [user, userAnswers, questions, sessionLevel, sessionNumber, sessionType, updateProgress]);
+  }, [user, userAnswers, questions, sessionLevel, sessionNumber, sessionType, updateProgress, isCompletingSession]);
 
   // Gestion des réponses selon le type de question
   const handleAnswerChange = (value: string) => {
