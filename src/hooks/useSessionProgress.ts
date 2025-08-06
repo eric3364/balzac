@@ -38,12 +38,14 @@ export const useSessionProgress = (level: number) => {
         .single();
 
       const questionsPercentage = parseInt(configData?.config_value as string) || 20;
+      console.log('Questions percentage récupéré:', questionsPercentage);
 
       // Calculer le nombre total de sessions pour ce niveau
       // Si 20% par session : 100/20 = 5 sessions
       // Si 25% par session : 100/25 = 4 sessions  
       // Si 10% par session : 100/10 = 10 sessions
       const correctTotalSessions = Math.ceil(100 / questionsPercentage);
+      console.log('Nombre de sessions calculé:', correctTotalSessions);
 
       // Récupérer ou créer la progression pour ce niveau
       const { data: existingProgress } = await supabase
