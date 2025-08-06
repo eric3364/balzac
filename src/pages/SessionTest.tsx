@@ -223,7 +223,7 @@ const SessionTest = () => {
       const answersToInsert = userAnswers.map(answer => ({
         user_id: user.id,
         session_id: sessionData.id,
-        question_id: answer.question_id.toString(), // Convertir en string pour la base
+        question_id: answer.question_id, // Garder le type bigint
         user_answer: answer.user_answer,
         is_correct: answer.is_correct,
         answered_at: new Date().toISOString(),
