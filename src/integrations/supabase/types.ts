@@ -366,7 +366,7 @@ export type Database = {
           created_at: string
           id: string
           is_correct: boolean | null
-          question_id: string | null
+          question_id: number | null
           session_id: string | null
           user_answer: string | null
           user_id: string
@@ -376,7 +376,7 @@ export type Database = {
           created_at: string
           id?: string
           is_correct?: boolean | null
-          question_id?: string | null
+          question_id?: number | null
           session_id?: string | null
           user_answer?: string | null
           user_id?: string
@@ -386,7 +386,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_correct?: boolean | null
-          question_id?: string | null
+          question_id?: number | null
           session_id?: string | null
           user_answer?: string | null
           user_id?: string
