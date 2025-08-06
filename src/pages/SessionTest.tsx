@@ -258,7 +258,9 @@ const SessionTest = () => {
 
       const { error: answersError } = await supabase
         .from('test_answers')
-        .insert(answersToInsert);
+        .upsert(answersToInsert, {
+          onConflict: 'user_id,session_id,question_id'
+        });
 
       if (answersError) {
         console.error('Erreur réponses:', answersError);
