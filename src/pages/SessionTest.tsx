@@ -193,8 +193,8 @@ const SessionTest = () => {
       const score = Math.round((correctAnswers / totalQuestions) * 100);
       const passed = score >= 75; // Seuil de réussite
 
-      // Créer la session de test dans la base
-      const { error: sessionError } = await supabase
+      // Créer la session de test dans la base (sans ID car il est auto-généré)
+      const { data: sessionData, error: sessionError } = await supabase
         .from('test_sessions')
         .insert({
           user_id: user.id,
@@ -208,7 +208,9 @@ const SessionTest = () => {
           ended_at: new Date().toISOString(),
           is_session_validated: passed,
           required_score_percentage: 75
-        });
+        })
+        .select()
+        .single();
 
       if (sessionError) throw sessionError;
 
