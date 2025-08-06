@@ -92,13 +92,21 @@ export const useSessionProgress = (level: number) => {
         failedQuestionsCount: failedQuestions?.length || 0
       });
 
-      // Générer la liste des sessions disponibles
+      // Générer la liste des sessions disponibles avec prérequis
       const sessions: SessionInfo[] = [];
       
       // Sessions régulières
       for (let i = 1; i <= progressData.total_sessions_for_level; i++) {
         const sessionNumber = parseFloat(`${level}.${i}`);
-        const isAvailable = sessionNumber <= progressData.current_session_number;
+        const isFirstSession = i === 1;
+        const previousSessionNumber = parseFloat(`${level}.${i - 1}`);
+        
+        // Une session est disponible si :
+        // - C'est la première session du niveau OU
+        // - La session précédente a été complétée avec succès
+        const isAvailable = isFirstSession || sessionNumber <= progressData.current_session_number;
+        const isCompleted = sessionNumber < progressData.current_session_number || 
+                           (sessionNumber === progressData.current_session_number && progressData.completed_sessions >= i);
         
         sessions.push({
           sessionNumber,

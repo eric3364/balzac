@@ -3,15 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserStats } from '@/hooks/useUserStats';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
+import { useLevelAccess } from '@/hooks/useLevelAccess';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Settings } from 'lucide-react';
+import { Settings, Lock } from 'lucide-react';
 import CertificationBadges from '@/components/CertificationBadges';
 
 const Dashboard = () => {
   const { user, loading, signOut } = useAuth();
   const userStats = useUserStats();
   const { isAdmin } = useIsAdmin();
+  const { levelAccess, loading: levelAccessLoading } = useLevelAccess();
   const navigate = useNavigate();
 
   // Redirect to auth if not authenticated
@@ -222,22 +224,42 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-3">
-                {[1, 2, 3, 4, 5].map((level) => (
-                  <Button
-                    key={level}
-                    variant="outline"
-                    className="h-20 flex flex-col items-center justify-center"
-                    onClick={() => navigate(`/session-progress?level=${level}`)}
-                  >
-                    <span className="text-lg font-semibold">Niveau {level}</span>
-                    <span className="text-sm text-muted-foreground">
-                      {level === 1 ? 'Élémentaire' :
-                       level === 2 ? 'Intermédiaire' :
-                       level === 3 ? 'Avancé' :
-                       level === 4 ? 'Expert' : 'Maître'}
-                    </span>
-                  </Button>
-                ))}
+                {[1, 2, 3, 4, 5].map((level) => {
+                  const levelInfo = levelAccess.find(l => l.level === level);
+                  const isUnlocked = levelInfo?.isUnlocked || level === 1;
+                  const isCompleted = levelInfo?.isCompleted || false;
+                  
+                  return (
+                    <Button
+                      key={level}
+                      variant={isCompleted ? "default" : isUnlocked ? "outline" : "secondary"}
+                      className={`h-20 flex flex-col items-center justify-center relative ${
+                        !isUnlocked ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
+                      onClick={() => {
+                        if (isUnlocked) {
+                          navigate(`/session-progress?level=${level}`);
+                        }
+                      }}
+                      disabled={!isUnlocked}
+                      title={!isUnlocked ? `Vous devez d'abord valider le niveau ${level - 1}` : ''}
+                    >
+                      {!isUnlocked && (
+                        <Lock className="absolute top-2 right-2 h-4 w-4 text-muted-foreground" />
+                      )}
+                      <span className="text-lg font-semibold">Niveau {level}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {level === 1 ? 'Élémentaire' :
+                         level === 2 ? 'Intermédiaire' :
+                         level === 3 ? 'Avancé' :
+                         level === 4 ? 'Expert' : 'Maître'}
+                      </span>
+                      {isCompleted && (
+                        <span className="text-xs text-green-600 font-medium">✓ Validé</span>
+                      )}
+                    </Button>
+                  );
+                })}
               </div>
               
               <div className="pt-4 border-t">

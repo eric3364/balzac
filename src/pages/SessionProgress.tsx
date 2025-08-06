@@ -2,10 +2,12 @@ import React, { useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useSessionProgress } from '@/hooks/useSessionProgress';
+import { useLevelAccess } from '@/hooks/useLevelAccess';
 import { SessionProgressComponent } from '@/components/SessionProgress';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
 
 const SessionProgress = () => {
   const { user, loading } = useAuth();
@@ -13,16 +15,44 @@ const SessionProgress = () => {
   const [searchParams] = useSearchParams();
   
   const level = parseInt(searchParams.get('level') || '1');
+  const { levelAccess } = useLevelAccess();
   const { progress, loading: progressLoading, availableSessions } = useSessionProgress(level);
 
-  // Redirection si pas d'utilisateur
+  // Vérifier si l'utilisateur a accès à ce niveau
+  const currentLevelAccess = levelAccess.find(l => l.level === level);
+  const hasLevelAccess = currentLevelAccess?.isUnlocked || level === 1;
+
+  // Redirection si pas d'utilisateur ou pas d'accès au niveau
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
+      return;
     }
-  }, [user, loading, navigate]);
+    
+    // Vérifier l'accès au niveau
+    if (!hasLevelAccess && levelAccess.length > 0) {
+      toast({
+        title: "Accès refusé",
+        description: `Vous devez d'abord valider le niveau ${level - 1} pour accéder au niveau ${level}.`,
+        variant: "destructive"
+      });
+      navigate('/dashboard');
+      return;
+    }
+  }, [user, loading, navigate, hasLevelAccess, levelAccess, level]);
 
   const handleStartSession = (sessionNumber: number, sessionType: 'regular' | 'remedial') => {
+    const session = availableSessions.find(s => s.sessionNumber === sessionNumber);
+    
+    if (!session?.isAvailable) {
+      toast({
+        title: "Session non disponible",
+        description: "Vous devez d'abord valider la session précédente.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     const sessionParams = new URLSearchParams({
       level: level.toString(),
       session: sessionNumber.toString(),
