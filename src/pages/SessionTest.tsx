@@ -257,21 +257,35 @@ const SessionTest = () => {
       console.log('Answers to insert:', answersToInsert);
       console.log('Session ID:', sessionData.id);
 
+      console.log('=== DÉBUT SAUVEGARDE RÉPONSES ===');
+      console.log('Session ID pour suppression:', sessionData.id);
+      
       // Supprimer d'abord toutes les réponses existantes pour cette session
-      await supabase
+      const { error: deleteError } = await supabase
         .from('test_answers')
         .delete()
         .eq('session_id', sessionData.id);
+
+      if (deleteError) {
+        console.error('Erreur suppression:', deleteError);
+        throw deleteError;
+      }
+      
+      console.log('Suppression réussie, insertion des nouvelles réponses...');
 
       // Puis insérer les nouvelles réponses
       const { error: answersError } = await supabase
         .from('test_answers')
         .insert(answersToInsert);
 
+      console.log('Résultat insertion:', { answersError });
+
       if (answersError) {
-        console.error('Erreur réponses:', answersError);
+        console.error('Erreur insertion réponses:', answersError);
         throw answersError;
       }
+
+      console.log('=== SAUVEGARDE RÉPONSES RÉUSSIE ===');
 
       // Mettre à jour la progression si la session est réussie
       if (passed) {
