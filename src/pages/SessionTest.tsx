@@ -251,17 +251,22 @@ const SessionTest = () => {
         is_correct: answer.is_correct,
         answered_at: new Date().toISOString(),
         created_at: new Date().toISOString()
+        // Ne pas inclure l'id pour laisser la DB auto-générer
       }));
 
       console.log('Answers to insert:', answersToInsert);
       console.log('Session ID:', sessionData.id);
 
+      // Supprimer d'abord toutes les réponses existantes pour cette session
+      await supabase
+        .from('test_answers')
+        .delete()
+        .eq('session_id', sessionData.id);
+
+      // Puis insérer les nouvelles réponses
       const { error: answersError } = await supabase
         .from('test_answers')
-        .upsert(answersToInsert, {
-          onConflict: 'user_id,session_id,question_id',
-          ignoreDuplicates: false
-        });
+        .insert(answersToInsert);
 
       if (answersError) {
         console.error('Erreur réponses:', answersError);
