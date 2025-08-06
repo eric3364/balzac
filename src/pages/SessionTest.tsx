@@ -58,6 +58,7 @@ const SessionTest = () => {
   } | null>(null);
   const [isCompletingSession, setIsCompletingSession] = useState(false);
   const completionRef = useRef(false);
+  const sessionStartTime = useRef<string | null>(null);
 
   // Charger les questions de la session
   const loadSessionQuestions = useCallback(async () => {
@@ -131,6 +132,12 @@ const SessionTest = () => {
       }
 
       setQuestions(sessionQuestions);
+      
+      // Enregistrer le temps de début de la session
+      if (!sessionStartTime.current) {
+        sessionStartTime.current = new Date().toISOString();
+        console.log('Session started at:', sessionStartTime.current);
+      }
     } catch (error) {
       console.error('Erreur lors du chargement des questions:', error);
       toast({
@@ -222,6 +229,11 @@ const SessionTest = () => {
       console.log('Calculs:', { correctAnswers, totalQuestions, score, passed });
 
       // Créer ou mettre à jour la session de test dans la base
+      const currentTime = new Date().toISOString();
+      const startTime = sessionStartTime.current || currentTime; // Fallback si pas défini
+      
+      console.log('Session timing:', { startTime, currentTime });
+      
       const { data: sessionData, error: sessionError } = await supabase
         .from('test_sessions')
         .upsert({
@@ -232,8 +244,8 @@ const SessionTest = () => {
           score: score,
           status: 'completed',
           total_questions: totalQuestions,
-          started_at: new Date().toISOString(),
-          ended_at: new Date().toISOString(),
+          started_at: startTime,
+          ended_at: currentTime,
           is_session_validated: passed,
           required_score_percentage: 75
         }, {
