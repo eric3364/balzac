@@ -212,12 +212,16 @@ const SessionTest = () => {
         .select()
         .single();
 
-      if (sessionError) throw sessionError;
+      if (sessionError) {
+        console.error('Erreur session:', sessionError);
+        throw sessionError;
+      }
 
-      // Enregistrer les réponses
+      // Enregistrer les réponses avec l'ID de session
       const answersToInsert = userAnswers.map(answer => ({
         user_id: user.id,
-        question_id: answer.question_id.toString(),
+        session_id: sessionData.id,
+        question_id: answer.question_id.toString(), // Convertir en string pour la base
         user_answer: answer.user_answer,
         is_correct: answer.is_correct,
         answered_at: new Date().toISOString(),
@@ -228,7 +232,10 @@ const SessionTest = () => {
         .from('test_answers')
         .insert(answersToInsert);
 
-      if (answersError) throw answersError;
+      if (answersError) {
+        console.error('Erreur réponses:', answersError);
+        throw answersError;
+      }
 
       // Mettre à jour la progression si la session est réussie
       if (passed) {
