@@ -149,7 +149,7 @@ export const SessionProgressComponent: React.FC<SessionProgressProps> = ({
 
               return (
                 <div
-                  key={session.sessionNumber}
+                  key={`session-${progress.level}-${session.sessionNumber}-${session.sessionType}`}
                   className="flex items-center justify-between p-3 border rounded-lg"
                 >
                   <div className="flex items-center space-x-3">

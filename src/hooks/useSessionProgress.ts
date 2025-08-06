@@ -51,11 +51,10 @@ export const useSessionProgress = (level: number) => {
         const questionsPercentage = parseInt(configData?.config_value as string) || 20;
 
         // Calculer le nombre total de sessions pour ce niveau
-        const { data: totalSessions } = await supabase
-          .rpc('calculate_total_sessions_for_level', {
-            level_num: level,
-            questions_percentage: questionsPercentage
-          });
+        // Si 20% par session : 100/20 = 5 sessions
+        // Si 25% par session : 100/25 = 4 sessions  
+        // Si 10% par session : 100/10 = 10 sessions
+        const totalSessionsForLevel = Math.ceil(100 / questionsPercentage);
 
         // Créer une nouvelle progression
         const { data: newProgress, error } = await supabase
@@ -64,7 +63,7 @@ export const useSessionProgress = (level: number) => {
             user_id: user.id,
             level: level,
             current_session_number: parseFloat(`${level}.1`),
-            total_sessions_for_level: totalSessions || 5,
+            total_sessions_for_level: totalSessionsForLevel,
             completed_sessions: 0,
             is_level_completed: false
           })
