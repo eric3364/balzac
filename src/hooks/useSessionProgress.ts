@@ -64,7 +64,7 @@ export const useSessionProgress = (level: number) => {
           .insert({
             user_id: user.id,
             level: level,
-            current_session_number: parseFloat(`${level}.0`), // Commencer à .0
+            current_session_number: 1, // Commencer à 1
             total_sessions_for_level: correctTotalSessions,
             completed_sessions: 0,
             is_level_completed: false
@@ -83,9 +83,7 @@ export const useSessionProgress = (level: number) => {
               total_sessions_for_level: correctTotalSessions,
               // Réajuster la progression si nécessaire
               completed_sessions: Math.min(existingProgress.completed_sessions, correctTotalSessions),
-              current_session_number: existingProgress.current_session_number > parseFloat(`${level}.${correctTotalSessions}`) 
-                ? parseFloat(`${level}.${correctTotalSessions}`)
-                : existingProgress.current_session_number
+              current_session_number: Math.min(existingProgress.current_session_number, correctTotalSessions)
             })
             .eq('user_id', user.id)
             .eq('level', level)
@@ -117,21 +115,18 @@ export const useSessionProgress = (level: number) => {
       console.log('Progress data:', progressData);
       console.log('Total sessions for level:', progressData.total_sessions_for_level);
 
-      // Générer la liste des sessions disponibles avec prérequis
+      // Générer la liste des sessions disponibles avec numérotation simplifiée
       const sessions: SessionInfo[] = [];
       
-      // Sessions régulières (commencer à .0 pour éviter les doublons avec .10)
-      for (let i = 0; i < progressData.total_sessions_for_level; i++) {
-        const sessionNumber = parseFloat(`${level}.${i}`);
-        const isFirstSession = i === 0;
-        const previousSessionNumber = parseFloat(`${level}.${i - 1}`);
+      // Sessions régulières numérotées de 1 à totalSessionsForLevel
+      for (let i = 1; i <= progressData.total_sessions_for_level; i++) {
+        const sessionNumber = i;
+        const isFirstSession = i === 1;
         
         // Une session est disponible si :
         // - C'est la première session du niveau OU
         // - La session précédente a été complétée avec succès
-        const isAvailable = isFirstSession || sessionNumber <= progressData.current_session_number;
-        const isCompleted = sessionNumber < progressData.current_session_number || 
-                           (sessionNumber === progressData.current_session_number && progressData.completed_sessions > i);
+        const isAvailable = isFirstSession || i <= progressData.current_session_number;
         
         sessions.push({
           sessionNumber,
@@ -144,7 +139,7 @@ export const useSessionProgress = (level: number) => {
       // Session de rattrapage si des questions ont échoué
       if (failedQuestions && failedQuestions.length > 0 && progressData.completed_sessions === progressData.total_sessions_for_level) {
         sessions.push({
-          sessionNumber: parseFloat(`${level}.99`), // Session de rattrapage
+          sessionNumber: 99, // Session de rattrapage
           sessionType: 'remedial',
           questionsCount: failedQuestions.length,
           isAvailable: true
@@ -179,15 +174,12 @@ export const useSessionProgress = (level: number) => {
             .eq('user_id', user.id)
             .eq('level', level);
         } else {
-          // Session régulière complétée
-          const sessionIndex = Math.floor((sessionNumber - level) * 10);
+          // Session régulière complétée avec numérotation simplifiée
+          updates.completed_sessions = sessionNumber;
           
-          // Mettre à jour le nombre de sessions complétées et passer à la suivante
-          updates.completed_sessions = sessionIndex + 1;
-          
-          if (sessionIndex + 1 < progress.totalSessionsForLevel) {
+          if (sessionNumber < progress.totalSessionsForLevel) {
             // Passer à la session suivante
-            updates.current_session_number = parseFloat(`${level}.${sessionIndex + 1}`);
+            updates.current_session_number = sessionNumber + 1;
           } else {
             // Toutes les sessions régulières complétées
             updates.completed_sessions = progress.totalSessionsForLevel;

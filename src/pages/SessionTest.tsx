@@ -37,7 +37,7 @@ const SessionTest = () => {
   
   // Paramètres de session depuis l'URL
   const sessionLevel = parseInt(searchParams.get('level') || '1');
-  const sessionNumber = parseFloat(searchParams.get('session') || '1.1');
+  const sessionNumber = parseInt(searchParams.get('session') || '1'); // Numérotation simplifiée : entiers
   const sessionType = (searchParams.get('type') || 'regular') as 'regular' | 'remedial';
   
   const { progress, updateProgress, recordFailedQuestion } = useSessionProgress(sessionLevel);
@@ -95,9 +95,9 @@ const SessionTest = () => {
         return;
       }
 
-      // Calculer les questions par session et l'offset
+      // Calculer les questions par session et l'offset avec numérotation simplifiée
       const questionsPerSession = Math.floor(questionsCount.length * questionsPercentage / 100);
-      const sessionIndex = Math.floor((sessionNumber - sessionLevel) * 10);
+      const sessionIndex = sessionNumber - 1; // Session 1 = index 0, Session 2 = index 1, etc.
       const offset = sessionIndex * questionsPerSession;
 
       console.log('Session calculation:', {

@@ -36,9 +36,9 @@ export const SessionProgressComponent: React.FC<SessionProgressProps> = ({
 }) => {
   const formatSessionNumber = (sessionNumber: number) => {
     if (sessionNumber >= 99) {
-      return `${Math.floor(sessionNumber)}.R`; // Session de rattrapage
+      return `R`; // Session de rattrapage
     }
-    return sessionNumber.toFixed(1);
+    return sessionNumber.toString();
   };
 
   const getSessionStatus = (session: SessionInfo) => {
@@ -46,18 +46,12 @@ export const SessionProgressComponent: React.FC<SessionProgressProps> = ({
       return 'locked';
     }
     
-    // Calculer l'index de la session (0, 1, 2, etc.)
-    const sessionIndex = Math.floor((session.sessionNumber - progress.level) * 10);
-    
-    // Une session est complétée seulement si elle est réussie (basé sur completed_sessions)
-    if (sessionIndex < progress.completedSessions) {
+    // Avec la numérotation simplifiée (1, 2, 3, etc.)
+    if (session.sessionNumber <= progress.completedSessions) {
       return 'completed';
     }
     
-    // La session courante est basée sur current_session_number
-    const currentSessionIndex = Math.floor((progress.currentSessionNumber - progress.level) * 10);
-    
-    if (sessionIndex === currentSessionIndex) {
+    if (session.sessionNumber === progress.currentSessionNumber) {
       return 'current';
     }
     
