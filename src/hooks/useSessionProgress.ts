@@ -114,6 +114,9 @@ export const useSessionProgress = (level: number) => {
         failedQuestionsCount: failedQuestions?.length || 0
       });
 
+      console.log('Progress data:', progressData);
+      console.log('Total sessions for level:', progressData.total_sessions_for_level);
+
       // Générer la liste des sessions disponibles avec prérequis
       const sessions: SessionInfo[] = [];
       
