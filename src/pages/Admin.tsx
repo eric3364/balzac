@@ -438,19 +438,222 @@ const Admin = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <HomepageAssetUploader
-                    label="Logo principal"
-                    currentUrl={homepageAssets.logoUrl || ''}
-                    onUrlChange={(url) => updateHomepageAssets({ logoUrl: url })}
-                    bucketPath="logo"
-                  />
-                  <HomepageAssetUploader
-                    label="Image bannière"
-                    currentUrl={homepageAssets.bannerUrl || ''}
-                    onUrlChange={(url) => updateHomepageAssets({ bannerUrl: url })}
-                    bucketPath="banner"
-                  />
+                {/* Section Images */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Images et visuels</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <HomepageAssetUploader
+                      label="Logo principal"
+                      currentUrl={homepageAssets.logoUrl || ''}
+                      onUrlChange={(url) => updateHomepageAssets({ logoUrl: url })}
+                      bucketPath="logo"
+                    />
+                    <HomepageAssetUploader
+                      label="Image bannière"
+                      currentUrl={homepageAssets.bannerUrl || ''}
+                      onUrlChange={(url) => updateHomepageAssets({ bannerUrl: url })}
+                      bucketPath="banner"
+                    />
+                  </div>
+                </div>
+
+                {/* Section Titre du site */}
+                <div className="space-y-4 border-t pt-6">
+                  <h3 className="text-lg font-medium">Titre du site</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="siteTitle">Titre principal</Label>
+                      <Input
+                        id="siteTitle"
+                        value={homepageAssets.siteTitle}
+                        onChange={(e) => updateHomepageAssets({ siteTitle: e.target.value })}
+                        placeholder="Nom de votre site"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="siteSubtitle">Sous-titre</Label>
+                      <Input
+                        id="siteSubtitle"
+                        value={homepageAssets.siteSubtitle}
+                        onChange={(e) => updateHomepageAssets({ siteSubtitle: e.target.value })}
+                        placeholder="Slogan ou description courte"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section Hero */}
+                <div className="space-y-4 border-t pt-6">
+                  <h3 className="text-lg font-medium">Section Hero (bannière principale)</h3>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="heroTitle">Titre principal</Label>
+                      <Input
+                        id="heroTitle"
+                        value={homepageAssets.heroTitle}
+                        onChange={(e) => updateHomepageAssets({ heroTitle: e.target.value })}
+                        placeholder="Titre accrocheur de votre page d'accueil"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="heroDescription">Description</Label>
+                      <Textarea
+                        id="heroDescription"
+                        value={homepageAssets.heroDescription}
+                        onChange={(e) => updateHomepageAssets({ heroDescription: e.target.value })}
+                        placeholder="Description détaillée de votre service"
+                        rows={3}
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="heroCta1">Bouton principal</Label>
+                        <Input
+                          id="heroCta1"
+                          value={homepageAssets.heroCta_primary}
+                          onChange={(e) => updateHomepageAssets({ heroCta_primary: e.target.value })}
+                          placeholder="Ex: Commencer maintenant"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="heroCta2">Bouton secondaire</Label>
+                        <Input
+                          id="heroCta2"
+                          value={homepageAssets.heroCta_secondary}
+                          onChange={(e) => updateHomepageAssets({ heroCta_secondary: e.target.value })}
+                          placeholder="Ex: En savoir plus"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section Fonctionnalités */}
+                <div className="space-y-4 border-t pt-6">
+                  <h3 className="text-lg font-medium">Section Fonctionnalités</h3>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="featuresTitle">Titre de section</Label>
+                      <Input
+                        id="featuresTitle"
+                        value={homepageAssets.featuresTitle}
+                        onChange={(e) => updateHomepageAssets({ featuresTitle: e.target.value })}
+                        placeholder="Titre de la section fonctionnalités"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="featuresDescription">Description</Label>
+                      <Textarea
+                        id="featuresDescription"
+                        value={homepageAssets.featuresDescription}
+                        onChange={(e) => updateHomepageAssets({ featuresDescription: e.target.value })}
+                        placeholder="Description des avantages de votre service"
+                        rows={2}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section Statistiques */}
+                <div className="space-y-4 border-t pt-6">
+                  <h3 className="text-lg font-medium">Section Statistiques</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label>Statistique 1</Label>
+                      <div className="space-y-2">
+                        <Input
+                          value={homepageAssets.stat1Number}
+                          onChange={(e) => updateHomepageAssets({ stat1Number: e.target.value })}
+                          placeholder="10K+"
+                        />
+                        <Input
+                          value={homepageAssets.stat1Label}
+                          onChange={(e) => updateHomepageAssets({ stat1Label: e.target.value })}
+                          placeholder="Utilisateurs actifs"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Statistique 2</Label>
+                      <div className="space-y-2">
+                        <Input
+                          value={homepageAssets.stat2Number}
+                          onChange={(e) => updateHomepageAssets({ stat2Number: e.target.value })}
+                          placeholder="95%"
+                        />
+                        <Input
+                          value={homepageAssets.stat2Label}
+                          onChange={(e) => updateHomepageAssets({ stat2Label: e.target.value })}
+                          placeholder="Taux de satisfaction"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Statistique 3</Label>
+                      <div className="space-y-2">
+                        <Input
+                          value={homepageAssets.stat3Number}
+                          onChange={(e) => updateHomepageAssets({ stat3Number: e.target.value })}
+                          placeholder="15+"
+                        />
+                        <Input
+                          value={homepageAssets.stat3Label}
+                          onChange={(e) => updateHomepageAssets({ stat3Label: e.target.value })}
+                          placeholder="Niveaux disponibles"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section Call-to-Action final */}
+                <div className="space-y-4 border-t pt-6">
+                  <h3 className="text-lg font-medium">Section Call-to-Action finale</h3>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="ctaTitle">Titre de l'appel à l'action</Label>
+                      <Input
+                        id="ctaTitle"
+                        value={homepageAssets.ctaTitle}
+                        onChange={(e) => updateHomepageAssets({ ctaTitle: e.target.value })}
+                        placeholder="Titre incitatif pour passer à l'action"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="ctaDescription">Description</Label>
+                      <Textarea
+                        id="ctaDescription"
+                        value={homepageAssets.ctaDescription}
+                        onChange={(e) => updateHomepageAssets({ ctaDescription: e.target.value })}
+                        placeholder="Message d'encouragement final"
+                        rows={2}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="ctaButton">Texte du bouton</Label>
+                      <Input
+                        id="ctaButton"
+                        value={homepageAssets.ctaButton}
+                        onChange={(e) => updateHomepageAssets({ ctaButton: e.target.value })}
+                        placeholder="Ex: Commencer maintenant"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-6 border-t">
+                  <Button 
+                    onClick={() => {
+                      toast({
+                        title: "Configuration sauvegardée",
+                        description: "Les modifications de la page d'accueil ont été enregistrées."
+                      });
+                    }}
+                    className="w-full md:w-auto"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    Sauvegarder les modifications
+                  </Button>
                 </div>
               </CardContent>
             </Card>
