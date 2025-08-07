@@ -145,12 +145,18 @@ export const useAntiCheat = ({
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Bloquer tous les raccourcis de navigation et d'outils de développement
-      const blockedKeys = [
-        'F12', 'F5', // Outils de dev et rafraîchissement
-        'Tab', // Changement d'onglet avec Ctrl+Tab
-      ];
+      // Ne pas bloquer les touches de saisie normale (lettres, chiffres, espace, backspace, etc.)
+      const isInputKey = (
+        (e.key.length === 1) || // Lettres, chiffres, symboles
+        ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'Tab', 'Enter', 'Shift', 'CapsLock'].includes(e.key)
+      );
 
+      // Si c'est une touche de saisie normale, ne pas la bloquer
+      if (isInputKey && !e.ctrlKey && !e.altKey) {
+        return;
+      }
+
+      // Bloquer les raccourcis de navigation et d'outils de développement
       const blockedCombinations = [
         { ctrl: true, shift: true, key: 'I' }, // DevTools
         { ctrl: true, shift: true, key: 'C' }, // Console
@@ -168,8 +174,8 @@ export const useAntiCheat = ({
         { ctrl: true, shift: true, key: 'Tab' }, // Changer d'onglet (reverse)
       ];
 
-      // Vérifier les touches simples bloquées
-      if (blockedKeys.includes(e.key)) {
+      // Bloquer F12 et F5 sans modificateurs
+      if (['F12', 'F5'].includes(e.key) && !e.ctrlKey && !e.shiftKey && !e.altKey) {
         e.preventDefault();
         e.stopPropagation();
         toast({
@@ -224,8 +230,10 @@ export const useAntiCheat = ({
     document.addEventListener('dragover', handleDragOver);
     document.addEventListener('drop', handleDrop);
 
-    // Tenter de passer en plein écran si disponible
-    if (strictMode && document.documentElement.requestFullscreen) {
+    // Essayer de passer en plein écran une seule fois au début
+    let fullscreenAttempted = false;
+    if (strictMode && !fullscreenAttempted && document.documentElement.requestFullscreen) {
+      fullscreenAttempted = true;
       document.documentElement.requestFullscreen().catch(() => {
         // Ignore l'erreur si le plein écran n'est pas autorisé
       });
