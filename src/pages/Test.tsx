@@ -96,7 +96,7 @@ export default function Test() {
     navigate('/dashboard');
   };
 
-  const { attempts, isTerminated, isLocked } = useAntiCheat({
+  const { attempts, isTerminated, isLocked, warningMessage } = useAntiCheat({
     onTestTerminated: handleTestTerminated,
     isActive: !isCompleted && !loading && questions.length > 0,
     strictMode: true // Mode verrouillage complet
@@ -713,6 +713,12 @@ export default function Test() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Message d'avertissement anti-triche */}
+      {warningMessage && (
+        <div className="bg-destructive text-destructive-foreground px-4 py-2 text-center font-medium text-sm">
+          {warningMessage}
+        </div>
+      )}
       {/* Header */}
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">

@@ -76,7 +76,7 @@ const SessionTest = () => {
     navigate('/dashboard');
   };
 
-  const { attempts, isTerminated, isLocked } = useAntiCheat({
+  const { attempts, isTerminated, isLocked, warningMessage } = useAntiCheat({
     onTestTerminated: handleTestTerminated,
     isActive: !testCompleted && !isLoading && questions.length > 0,
     strictMode: true // Mode verrouillage complet
@@ -644,8 +644,14 @@ const SessionTest = () => {
   const progressPercentage = ((currentQuestionIndex + 1) / questions.length) * 100;
 
   return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-background">
+      {/* Message d'avertissement anti-triche */}
+      {warningMessage && (
+        <div className="bg-destructive text-destructive-foreground px-4 py-2 text-center font-medium text-sm">
+          {warningMessage}
+        </div>
+      )}
+      <div className="p-4">
         {/* En-tête */}
         <div className="mb-6 flex items-center justify-between">
           <Button variant="ghost" onClick={() => navigate('/dashboard')}>

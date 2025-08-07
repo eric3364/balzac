@@ -260,6 +260,7 @@ export const useAntiCheat = ({
     attempts,
     isTerminated,
     isLocked,
-    remainingAttempts: maxAttempts - attempts
+    remainingAttempts: maxAttempts - attempts,
+    warningMessage: isActive ? "Session de test en cours ! Vous ne pouvez pas quitter la fenêtre - Sinon le test sera interrompu" : null
   };
 };
