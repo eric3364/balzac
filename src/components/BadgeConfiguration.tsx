@@ -240,6 +240,8 @@ export const BadgeConfiguration: React.FC<BadgeConfigurationProps> = ({
                 {uploading ? 'Importation...' : 'Importer un badge personnalisé'}
               </Button>
               <p className="text-xs text-muted-foreground">
+                <strong>Recommandations :</strong> 512x512px minimum, format carré, PNG/SVG recommandés
+                <br />
                 Format accepté: JPG, PNG, SVG (max 2MB)
               </p>
             </div>
