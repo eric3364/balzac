@@ -1070,22 +1070,52 @@ const Admin = () => {
                                              <Label>Certification active</Label>
                                            </div>
 
-                                           {/* Configuration du badge */}
-                                           <div className="space-y-4 border-t pt-4">
-                                             <BadgeConfiguration
-                                               initialConfig={{
-                                                 badge_icon: associatedCert.badge_icon || 'star',
-                                                 badge_color: associatedCert.badge_color || '#6366f1',
-                                                 badge_background_color: associatedCert.badge_background_color || '#ffffff',
-                                                 badge_size: associatedCert.badge_size || 'medium'
-                                               }}
-                                               onConfigChange={(config) => {
-                                                 // Handle badge configuration change
-                                                 console.log('Badge config updated:', config);
-                                               }}
-                                               levelNumber={level.level_number}
-                                             />
-                                           </div>
+                                            {/* Configuration du badge */}
+                                            <div className="space-y-4 border-t pt-4">
+                                              <BadgeConfiguration
+                                                initialConfig={{
+                                                  badge_icon: associatedCert.badge_icon || 'star',
+                                                  badge_color: associatedCert.badge_color || '#6366f1',
+                                                  badge_background_color: associatedCert.badge_background_color || '#ffffff',
+                                                  badge_size: associatedCert.badge_size || 'medium',
+                                                  custom_badge_url: associatedCert.custom_badge_url || undefined
+                                                }}
+                                                onConfigChange={async (config) => {
+                                                  try {
+                                                    // Sauvegarder immédiatement la configuration du badge
+                                                    const { error } = await supabase
+                                                      .from('certificate_templates')
+                                                      .update({
+                                                        badge_icon: config.badge_icon,
+                                                        badge_color: config.badge_color,
+                                                        badge_background_color: config.badge_background_color,
+                                                        badge_size: config.badge_size,
+                                                        custom_badge_url: config.custom_badge_url || null,
+                                                        updated_at: new Date().toISOString()
+                                                      })
+                                                      .eq('id', associatedCert.id);
+
+                                                    if (error) throw error;
+
+                                                    toast({
+                                                      title: "Configuration sauvegardée",
+                                                      description: "Le badge a été mis à jour avec succès.",
+                                                    });
+
+                                                    // Recharger les certificats pour mettre à jour l'affichage
+                                                    loadCertificates();
+                                                  } catch (error) {
+                                                    console.error('Erreur lors de la sauvegarde du badge:', error);
+                                                    toast({
+                                                      title: "Erreur",
+                                                      description: "Impossible de sauvegarder la configuration du badge.",
+                                                      variant: "destructive",
+                                                    });
+                                                  }
+                                                }}
+                                                levelNumber={level.level_number}
+                                              />
+                                            </div>
                                          </div>
                                        )}
                                     </div>
