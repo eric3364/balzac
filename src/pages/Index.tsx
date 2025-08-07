@@ -238,7 +238,7 @@ const Index = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-24 relative overflow-hidden">
+      <section className="py-8 relative overflow-hidden">
         {/* Background pattern */}
         <div className="absolute inset-0 bg-gradient-to-b from-background to-muted/20"></div>
         <div className="absolute inset-0" style={{
