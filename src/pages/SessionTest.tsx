@@ -270,14 +270,20 @@ const SessionTest = () => {
     console.log('User:', user?.id);
     console.log('Session params:', { sessionLevel, sessionNumber, sessionType });
     console.log('User answers:', userAnswers);
+    console.log('Questions length:', questions.length);
 
     try {
+      if (userAnswers.length === 0) {
+        console.error('❌ ERREUR: Aucune réponse utilisateur trouvée');
+        throw new Error('Aucune réponse utilisateur trouvée');
+      }
+
       const correctAnswers = userAnswers.filter(a => a.is_correct).length;
       const totalQuestions = questions.length;
       const score = Math.round((correctAnswers / totalQuestions) * 100);
       const passed = score >= 75; // Seuil de réussite
 
-      console.log('Calculs:', { correctAnswers, totalQuestions, score, passed });
+      console.log('✅ Calculs:', { correctAnswers, totalQuestions, score, passed });
 
       // Créer ou mettre à jour la session de test dans la base
       const currentTime = new Date().toISOString();
@@ -288,6 +294,20 @@ const SessionTest = () => {
       // Pour les sessions de rattrapage, utiliser 99 comme session_number
       const sessionNumberForDB = sessionType === 'remedial' ? 99 : sessionNumber;
       
+      console.log('💾 Tentative de sauvegarde session avec params:', {
+        user_id: user.id,
+        level: sessionLevel,
+        session_number: sessionNumberForDB,
+        session_type: sessionType,
+        score: score,
+        status: 'completed',
+        total_questions: totalQuestions,
+        started_at: startTime,
+        ended_at: currentTime,
+        is_session_validated: passed,
+        required_score_percentage: 75
+      });
+
       const { data: sessionData, error: sessionError } = await supabase
         .from('test_sessions')
         .upsert({
@@ -309,21 +329,35 @@ const SessionTest = () => {
         .single();
 
       if (sessionError) {
-        console.error('Erreur session:', sessionError);
+        console.error('❌ ERREUR SESSION:', sessionError);
+        console.error('❌ Détails erreur:', JSON.stringify(sessionError, null, 2));
         throw sessionError;
       }
 
+      if (!sessionData) {
+        console.error('❌ ERREUR: Aucune donnée de session retournée');
+        throw new Error('Aucune donnée de session retournée');
+      }
+
+      console.log('✅ Session sauvegardée avec succès, ID:', sessionData.id);
+
       // Enregistrer les réponses avec l'ID de session
-      const answersToInsert = userAnswers.map(answer => ({
-        user_id: user.id,
-        session_id: sessionData.id,
-        question_id: answer.question_id, // Garder le type bigint
-        user_answer: answer.user_answer,
-        is_correct: answer.is_correct,
-        answered_at: new Date().toISOString(),
-        created_at: new Date().toISOString()
-        // Ne pas inclure l'id pour laisser la DB auto-générer
-      }));
+      console.log('📝 Préparation des réponses à insérer...');
+      console.log('UserAnswers avant traitement:', userAnswers);
+      
+      const answersToInsert = userAnswers.map((answer, index) => {
+        console.log(`Réponse ${index + 1}:`, answer);
+        return {
+          user_id: user.id,
+          session_id: sessionData.id,
+          question_id: answer.question_id, // Garder le type bigint
+          user_answer: answer.user_answer,
+          is_correct: answer.is_correct,
+          answered_at: new Date().toISOString(),
+          created_at: new Date().toISOString()
+          // Ne pas inclure l'id pour laisser la DB auto-générer
+        };
+      });
 
       console.log('Answers to insert:', answersToInsert);
       console.log('Session ID:', sessionData.id);
@@ -332,31 +366,35 @@ const SessionTest = () => {
       console.log('Session ID pour suppression:', sessionData.id);
       
       // Supprimer d'abord toutes les réponses existantes pour cette session
+      console.log('🗑️ Suppression des réponses existantes...');
       const { error: deleteError } = await supabase
         .from('test_answers')
         .delete()
         .eq('session_id', sessionData.id);
 
       if (deleteError) {
-        console.error('Erreur suppression:', deleteError);
+        console.error('❌ Erreur suppression:', deleteError);
+        console.error('❌ Détails erreur suppression:', JSON.stringify(deleteError, null, 2));
         throw deleteError;
       }
       
-      console.log('Suppression réussie, insertion des nouvelles réponses...');
+      console.log('✅ Suppression réussie, insertion des nouvelles réponses...');
+      console.log('📤 Données à insérer:', JSON.stringify(answersToInsert, null, 2));
 
       // Puis insérer les nouvelles réponses
       const { error: answersError } = await supabase
         .from('test_answers')
         .insert(answersToInsert);
 
-      console.log('Résultat insertion:', { answersError });
+      console.log('📥 Résultat insertion:', { answersError });
 
       if (answersError) {
-        console.error('Erreur insertion réponses:', answersError);
+        console.error('❌ ERREUR INSERTION RÉPONSES:', answersError);
+        console.error('❌ Détails erreur insertion:', JSON.stringify(answersError, null, 2));
         throw answersError;
       }
 
-      console.log('=== SAUVEGARDE RÉPONSES RÉUSSIE ===');
+      console.log('🎉 SAUVEGARDE RÉPONSES RÉUSSIE ===');
 
       // Sauvegarder aussi dans question_attempts pour les statistiques
       const questionAttemptsData = userAnswers.map(answer => ({
