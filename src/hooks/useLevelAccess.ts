@@ -29,6 +29,12 @@ export const useLevelAccess = () => {
         .eq('user_id', user.id)
         .order('level', { ascending: true });
 
+      // Récupérer les certifications obtenues
+      const { data: certifications } = await supabase
+        .from('user_certifications')
+        .select('level')
+        .eq('user_id', user.id);
+
       // Récupérer les prix des niveaux depuis les templates de certificats
       const { data: pricing } = await supabase
         .from('certificate_templates')
@@ -45,28 +51,21 @@ export const useLevelAccess = () => {
         const levelProgress = progressions?.find(p => p.level === level);
         const levelPricing = pricing?.find(p => p.difficulty_levels.level_number === level);
         const isFreeLevel = levelPricing?.price_euros === 0;
+        const hasCertification = certifications?.some(c => c.level === level);
         
-        // Le niveau 1 est toujours débloqué
-        // Les autres niveaux sont débloqués si:
-        // - Le niveau précédent est complété ET
-        // - L'utilisateur a acheté le niveau (ou le niveau est gratuit)
-        let isUnlocked = level === 1;
+        // Déterminer si le niveau précédent est validé
+        const previousLevelValidated = level === 1 || certifications?.some(c => c.level === level - 1);
         
-        if (level > 1) {
-          const previousLevelProgress = progressions?.find(p => p.level === level - 1);
-          const previousLevelCompleted = previousLevelProgress?.is_level_completed || false;
-          const hasAccess = isFreeLevel || hasValidPurchase(level);
-          
-          isUnlocked = previousLevelCompleted && hasAccess;
-        } else {
-          // Pour le niveau 1, vérifier aussi l'accès
-          isUnlocked = isFreeLevel || hasValidPurchase(level);
-        }
+        // Le niveau est débloqué si:
+        // - C'est le niveau 1 OU le niveau précédent est validé (a une certification) 
+        // - ET l'utilisateur a acheté le niveau (ou le niveau est gratuit)
+        const hasAccess = isFreeLevel || hasValidPurchase(level);
+        const isUnlocked = (level === 1 || previousLevelValidated) && hasAccess;
 
         access.push({
           level,
           isUnlocked,
-          isCompleted: levelProgress?.is_level_completed || false,
+          isCompleted: hasCertification || levelProgress?.is_level_completed || false,
           currentSessionNumber: levelProgress?.current_session_number || parseFloat(`${level}.1`)
         });
       }
