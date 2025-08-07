@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useHomepageConfig } from '@/hooks/useHomepageConfig';
+import { useFooterConfig } from '@/hooks/useFooterConfig';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,6 +27,7 @@ const Index = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { config: homepageAssets } = useHomepageConfig();
+  const { config: footerConfig } = useFooterConfig();
   const [searchParams] = useSearchParams();
   const previewMode = searchParams.get('preview') === 'true';
   const [certificationPricing, setCertificationPricing] = useState<CertificationPricing[]>([]);
@@ -548,13 +550,13 @@ const Index = () => {
                 <BookOpen className="h-6 w-6 text-white" />
               </div>
               <div>
-                <span className="font-bold text-lg">Balzac Certification</span>
+                <span className="font-bold text-lg">{footerConfig.company_name}</span>
                 <p className="text-sm text-muted-foreground">Excellence en français</p>
               </div>
             </div>
             <div className="text-center md:text-right">
               <p className="text-sm text-muted-foreground mb-2">
-                © 2024 Balzac Certification. Tous droits réservés.
+                {footerConfig.copyright_text}
               </p>
               <div className="flex items-center justify-center md:justify-end gap-4 text-xs text-muted-foreground">
                 <span>🔒 100% Sécurisé</span>
