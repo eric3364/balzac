@@ -217,7 +217,7 @@ const Index = () => {
 
             {/* Trust indicators */}
             <div className="mt-16 animate-fade-in" style={{ animationDelay: '0.8s' }}>
-              <p className="text-sm text-muted-foreground mb-6">Déjà choisi par plus de 10 000 apprenants</p>
+              
               <div className="flex justify-center items-center gap-8 opacity-60">
                 <div className="flex items-center gap-2">
                   <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
