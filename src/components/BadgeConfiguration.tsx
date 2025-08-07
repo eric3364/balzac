@@ -67,8 +67,10 @@ export const BadgeConfiguration: React.FC<BadgeConfigurationProps> = ({
   const { toast } = useToast();
 
   const handleConfigChange = (newConfig: Partial<typeof config>) => {
+    console.log('BadgeConfiguration: Configuration en cours de changement', newConfig);
     const updatedConfig = { ...config, ...newConfig };
     setConfig(updatedConfig);
+    console.log('BadgeConfiguration: Appel de onConfigChange avec', updatedConfig);
     onConfigChange(updatedConfig);
   };
 

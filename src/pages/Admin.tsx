@@ -1081,9 +1081,12 @@ const Admin = () => {
                                                   custom_badge_url: associatedCert.custom_badge_url || undefined
                                                 }}
                                                 onConfigChange={async (config) => {
+                                                  console.log('Admin: Début de la sauvegarde du badge', config);
+                                                  console.log('Admin: ID du certificat', associatedCert.id);
                                                   try {
                                                     // Sauvegarder immédiatement la configuration du badge
-                                                    const { error } = await supabase
+                                                    console.log('Admin: Tentative de mise à jour en base');
+                                                    const { error, data } = await supabase
                                                       .from('certificate_templates')
                                                       .update({
                                                         badge_icon: config.badge_icon,
@@ -1095,8 +1098,11 @@ const Admin = () => {
                                                       })
                                                       .eq('id', associatedCert.id);
 
+                                                    console.log('Admin: Résultat de la mise à jour', { error, data });
+
                                                     if (error) throw error;
 
+                                                    console.log('Admin: Sauvegarde réussie');
                                                     toast({
                                                       title: "Configuration sauvegardée",
                                                       description: "Le badge a été mis à jour avec succès.",
@@ -1105,7 +1111,7 @@ const Admin = () => {
                                                     // Recharger les certificats pour mettre à jour l'affichage
                                                     loadCertificates();
                                                   } catch (error) {
-                                                    console.error('Erreur lors de la sauvegarde du badge:', error);
+                                                    console.error('Admin: Erreur lors de la sauvegarde du badge:', error);
                                                     toast({
                                                       title: "Erreur",
                                                       description: "Impossible de sauvegarder la configuration du badge.",
