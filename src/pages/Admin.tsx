@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { HomepageAssetUploader } from '@/components/HomepageAssetUploader';
 import { useHomepageConfig } from '@/hooks/useHomepageConfig';
 import { UserManagement } from '@/components/UserManagement';
+import { FooterConfigForm } from '@/components/FooterConfigForm';
 
 interface AdminUser {
   id: number;
@@ -198,6 +199,25 @@ const Admin = () => {
   });
   const [savingHomepageConfig, setSavingHomepageConfig] = useState(false);
 
+  // État pour la configuration du footer
+  const [footerConfig, setFooterConfig] = useState({
+    company_name: 'Balzac Certification',
+    company_address: '',
+    company_phone: '',
+    company_email: '',
+    mentions_legales: '',
+    politique_confidentialite: '',
+    conditions_utilisation: '',
+    copyright_text: '© 2024 Balzac Certification. Tous droits réservés.',
+    social_links: {
+      facebook: '',
+      twitter: '',
+      linkedin: '',
+      instagram: ''
+    }
+  });
+  const [savingFooterConfig, setSavingFooterConfig] = useState(false);
+
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
@@ -237,6 +257,7 @@ const Admin = () => {
       loadQuestions();
       loadTestConfig();
       loadHomepageConfig();
+      loadFooterConfig();
     } catch (error) {
       console.error('Erreur lors de la vérification admin:', error);
       navigate('/dashboard');
@@ -567,7 +588,187 @@ const Admin = () => {
     }
   };
 
-  const saveHomepageConfig = async () => {
+  const loadFooterConfig = async () => {
+    try {
+      const { data: configs, error } = await supabase
+        .from('site_configuration')
+        .select('config_key, config_value')
+        .in('config_key', [
+          'footer_company_name', 'footer_company_address', 'footer_company_phone', 'footer_company_email',
+          'footer_mentions_legales', 'footer_politique_confidentialite', 'footer_conditions_utilisation',
+          'footer_copyright_text', 'footer_social_facebook', 'footer_social_twitter', 
+          'footer_social_linkedin', 'footer_social_instagram'
+        ]);
+
+      if (error) throw error;
+
+      if (configs && configs.length > 0) {
+        const configObj = configs.reduce((acc, config) => {
+          acc[config.config_key] = config.config_value;
+          return acc;
+        }, {} as any);
+
+        setFooterConfig(prev => ({
+          ...prev,
+          company_name: configObj.footer_company_name || prev.company_name,
+          company_address: configObj.footer_company_address || prev.company_address,
+          company_phone: configObj.footer_company_phone || prev.company_phone,
+          company_email: configObj.footer_company_email || prev.company_email,
+          mentions_legales: configObj.footer_mentions_legales || prev.mentions_legales,
+          politique_confidentialite: configObj.footer_politique_confidentialite || prev.politique_confidentialite,
+          conditions_utilisation: configObj.footer_conditions_utilisation || prev.conditions_utilisation,
+          copyright_text: configObj.footer_copyright_text || prev.copyright_text,
+          social_links: {
+            facebook: configObj.footer_social_facebook || prev.social_links.facebook,
+            twitter: configObj.footer_social_twitter || prev.social_links.twitter,
+            linkedin: configObj.footer_social_linkedin || prev.social_links.linkedin,
+            instagram: configObj.footer_social_instagram || prev.social_links.instagram
+          }
+        }));
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement de la configuration du footer:', error);
+    }
+  };
+
+  const loadFooterConfig = async () => {
+    try {
+      const { data: configs, error } = await supabase
+        .from('site_configuration')
+        .select('config_key, config_value')
+        .in('config_key', [
+          'footer_company_name', 'footer_company_address', 'footer_company_phone', 'footer_company_email',
+          'footer_mentions_legales', 'footer_politique_confidentialite', 'footer_conditions_utilisation',
+          'footer_copyright_text', 'footer_social_facebook', 'footer_social_twitter', 
+          'footer_social_linkedin', 'footer_social_instagram'
+        ]);
+
+      if (error) throw error;
+
+      if (configs && configs.length > 0) {
+        const configObj = configs.reduce((acc, config) => {
+          acc[config.config_key] = config.config_value;
+          return acc;
+        }, {} as any);
+
+        setFooterConfig(prev => ({
+          ...prev,
+          company_name: configObj.footer_company_name || prev.company_name,
+          company_address: configObj.footer_company_address || prev.company_address,
+          company_phone: configObj.footer_company_phone || prev.company_phone,
+          company_email: configObj.footer_company_email || prev.company_email,
+          mentions_legales: configObj.footer_mentions_legales || prev.mentions_legales,
+          politique_confidentialite: configObj.footer_politique_confidentialite || prev.politique_confidentialite,
+          conditions_utilisation: configObj.footer_conditions_utilisation || prev.conditions_utilisation,
+          copyright_text: configObj.footer_copyright_text || prev.copyright_text,
+          social_links: {
+            facebook: configObj.footer_social_facebook || prev.social_links.facebook,
+            twitter: configObj.footer_social_twitter || prev.social_links.twitter,
+            linkedin: configObj.footer_social_linkedin || prev.social_links.linkedin,
+            instagram: configObj.footer_social_instagram || prev.social_links.instagram
+          }
+        }));
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement de la configuration du footer:', error);
+    }
+  };
+
+  const saveFooterConfig = async () => {
+    setSavingFooterConfig(true);
+    try {
+      const configEntries = [
+        { config_key: 'footer_company_name', config_value: footerConfig.company_name },
+        { config_key: 'footer_company_address', config_value: footerConfig.company_address },
+        { config_key: 'footer_company_phone', config_value: footerConfig.company_phone },
+        { config_key: 'footer_company_email', config_value: footerConfig.company_email },
+        { config_key: 'footer_mentions_legales', config_value: footerConfig.mentions_legales },
+        { config_key: 'footer_politique_confidentialite', config_value: footerConfig.politique_confidentialite },
+        { config_key: 'footer_conditions_utilisation', config_value: footerConfig.conditions_utilisation },
+        { config_key: 'footer_copyright_text', config_value: footerConfig.copyright_text },
+        { config_key: 'footer_social_facebook', config_value: footerConfig.social_links.facebook },
+        { config_key: 'footer_social_twitter', config_value: footerConfig.social_links.twitter },
+        { config_key: 'footer_social_linkedin', config_value: footerConfig.social_links.linkedin },
+        { config_key: 'footer_social_instagram', config_value: footerConfig.social_links.instagram }
+      ];
+
+      for (const entry of configEntries) {
+        const { error } = await supabase
+          .from('site_configuration')
+          .upsert({
+            config_key: entry.config_key,
+            config_value: entry.config_value,
+            updated_by: user?.id
+          }, {
+            onConflict: 'config_key'
+          });
+
+        if (error) throw error;
+      }
+
+      toast({
+        title: "Configuration sauvegardée",
+        description: "La configuration du footer a été mise à jour avec succès"
+      });
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de sauvegarder la configuration du footer",
+        variant: "destructive"
+      });
+    } finally {
+      setSavingFooterConfig(false);
+    }
+  };
+
+  const saveFooterConfig = async () => {
+    setSavingFooterConfig(true);
+    try {
+      const configEntries = [
+        { config_key: 'footer_company_name', config_value: footerConfig.company_name },
+        { config_key: 'footer_company_address', config_value: footerConfig.company_address },
+        { config_key: 'footer_company_phone', config_value: footerConfig.company_phone },
+        { config_key: 'footer_company_email', config_value: footerConfig.company_email },
+        { config_key: 'footer_mentions_legales', config_value: footerConfig.mentions_legales },
+        { config_key: 'footer_politique_confidentialite', config_value: footerConfig.politique_confidentialite },
+        { config_key: 'footer_conditions_utilisation', config_value: footerConfig.conditions_utilisation },
+        { config_key: 'footer_copyright_text', config_value: footerConfig.copyright_text },
+        { config_key: 'footer_social_facebook', config_value: footerConfig.social_links.facebook },
+        { config_key: 'footer_social_twitter', config_value: footerConfig.social_links.twitter },
+        { config_key: 'footer_social_linkedin', config_value: footerConfig.social_links.linkedin },
+        { config_key: 'footer_social_instagram', config_value: footerConfig.social_links.instagram }
+      ];
+
+      for (const entry of configEntries) {
+        const { error } = await supabase
+          .from('site_configuration')
+          .upsert({
+            config_key: entry.config_key,
+            config_value: entry.config_value,
+            updated_by: user?.id
+          }, {
+            onConflict: 'config_key'
+          });
+
+        if (error) throw error;
+      }
+
+      toast({
+        title: "Configuration sauvegardée",
+        description: "La configuration du footer a été mise à jour avec succès"
+      });
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de sauvegarder la configuration du footer",
+        variant: "destructive"
+      });
+    } finally {
+      setSavingFooterConfig(false);
+    }
+  };
     setSavingHomepageConfig(true);
     try {
       const configEntries = Object.entries(homepageConfig).map(([key, value]) => ({
@@ -1063,10 +1264,11 @@ Délivré le {date}.`
       <div className="container mx-auto px-4 py-8">
         {/* Onglets d'administration */}
         <Tabs defaultValue="stats" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="stats">Statistiques</TabsTrigger>
             <TabsTrigger value="students">Apprenants</TabsTrigger>
             <TabsTrigger value="homepage">Page d'accueil</TabsTrigger>
+            <TabsTrigger value="footer">Footer</TabsTrigger>
             <TabsTrigger value="levels">Niveaux & Certifications</TabsTrigger>
             <TabsTrigger value="questions">Questions</TabsTrigger>
             <TabsTrigger value="settings">Paramètres</TabsTrigger>
@@ -1114,6 +1316,234 @@ Délivré le {date}.`
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="footer" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Configuration Footer & Mentions Légales
+                </CardTitle>
+                <CardDescription>
+                  Configurez le footer du site avec les informations légales et de contact
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Informations de l'entreprise */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium border-b pb-2">Informations de l'entreprise</h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="company_name">Nom de l'entreprise</Label>
+                      <Input
+                        id="company_name"
+                        value={footerConfig.company_name}
+                        onChange={(e) => setFooterConfig({
+                          ...footerConfig,
+                          company_name: e.target.value
+                        })}
+                        placeholder="Balzac Certification"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="company_email">Email de contact</Label>
+                      <Input
+                        id="company_email"
+                        type="email"
+                        value={footerConfig.company_email}
+                        onChange={(e) => setFooterConfig({
+                          ...footerConfig,
+                          company_email: e.target.value
+                        })}
+                        placeholder="contact@balzac-certification.fr"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="company_phone">Téléphone</Label>
+                      <Input
+                        id="company_phone"
+                        value={footerConfig.company_phone}
+                        onChange={(e) => setFooterConfig({
+                          ...footerConfig,
+                          company_phone: e.target.value
+                        })}
+                        placeholder="+33 1 23 45 67 89"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="company_address">Adresse</Label>
+                      <Input
+                        id="company_address"
+                        value={footerConfig.company_address}
+                        onChange={(e) => setFooterConfig({
+                          ...footerConfig,
+                          company_address: e.target.value
+                        })}
+                        placeholder="123 Rue de la Formation, Paris"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Réseaux sociaux */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium border-b pb-2">Réseaux sociaux</h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="social_facebook">Facebook</Label>
+                      <Input
+                        id="social_facebook"
+                        value={footerConfig.social_links.facebook}
+                        onChange={(e) => setFooterConfig({
+                          ...footerConfig,
+                          social_links: {
+                            ...footerConfig.social_links,
+                            facebook: e.target.value
+                          }
+                        })}
+                        placeholder="https://facebook.com/balzac-certification"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="social_twitter">Twitter/X</Label>
+                      <Input
+                        id="social_twitter"
+                        value={footerConfig.social_links.twitter}
+                        onChange={(e) => setFooterConfig({
+                          ...footerConfig,
+                          social_links: {
+                            ...footerConfig.social_links,
+                            twitter: e.target.value
+                          }
+                        })}
+                        placeholder="https://twitter.com/balzac_cert"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="social_linkedin">LinkedIn</Label>
+                      <Input
+                        id="social_linkedin"
+                        value={footerConfig.social_links.linkedin}
+                        onChange={(e) => setFooterConfig({
+                          ...footerConfig,
+                          social_links: {
+                            ...footerConfig.social_links,
+                            linkedin: e.target.value
+                          }
+                        })}
+                        placeholder="https://linkedin.com/company/balzac-certification"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="social_instagram">Instagram</Label>
+                      <Input
+                        id="social_instagram"
+                        value={footerConfig.social_links.instagram}
+                        onChange={(e) => setFooterConfig({
+                          ...footerConfig,
+                          social_links: {
+                            ...footerConfig.social_links,
+                            instagram: e.target.value
+                          }
+                        })}
+                        placeholder="https://instagram.com/balzac_certification"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mentions légales */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium border-b pb-2">Mentions légales</h3>
+                  
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="mentions_legales">Mentions légales</Label>
+                      <Textarea
+                        id="mentions_legales"
+                        value={footerConfig.mentions_legales}
+                        onChange={(e) => setFooterConfig({
+                          ...footerConfig,
+                          mentions_legales: e.target.value
+                        })}
+                        placeholder="Saisissez les mentions légales..."
+                        rows={6}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="politique_confidentialite">Politique de confidentialité</Label>
+                      <Textarea
+                        id="politique_confidentialite"
+                        value={footerConfig.politique_confidentialite}
+                        onChange={(e) => setFooterConfig({
+                          ...footerConfig,
+                          politique_confidentialite: e.target.value
+                        })}
+                        placeholder="Saisissez la politique de confidentialité..."
+                        rows={6}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="conditions_utilisation">Conditions d'utilisation</Label>
+                      <Textarea
+                        id="conditions_utilisation"
+                        value={footerConfig.conditions_utilisation}
+                        onChange={(e) => setFooterConfig({
+                          ...footerConfig,
+                          conditions_utilisation: e.target.value
+                        })}
+                        placeholder="Saisissez les conditions d'utilisation..."
+                        rows={6}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="copyright_text">Texte de copyright</Label>
+                      <Input
+                        id="copyright_text"
+                        value={footerConfig.copyright_text}
+                        onChange={(e) => setFooterConfig({
+                          ...footerConfig,
+                          copyright_text: e.target.value
+                        })}
+                        placeholder="© 2024 Balzac Certification. Tous droits réservés."
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bouton de sauvegarde */}
+                <div className="flex justify-end">
+                  <Button 
+                    onClick={saveFooterConfig} 
+                    disabled={savingFooterConfig}
+                    className="w-full md:w-auto"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    {savingFooterConfig ? 'Sauvegarde...' : 'Sauvegarder la configuration'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="footer" className="space-y-6">
+            <FooterConfigForm />
           </TabsContent>
 
           <TabsContent value="homepage" className="space-y-6">
