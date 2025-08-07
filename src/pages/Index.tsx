@@ -187,10 +187,6 @@ const Index = () => {
         
         <div className="relative z-10 container mx-auto px-4 py-16 text-center">
           <div className="max-w-5xl mx-auto">
-            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-8 animate-fade-in">
-              <Sparkles className="h-4 w-4" />
-              Plateforme certifiée et reconnue
-            </div>
             
             <h1 className="text-5xl md:text-7xl font-bold mb-8 text-foreground animate-fade-in bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent"
                 style={{ animationDelay: '0.2s' }}>
