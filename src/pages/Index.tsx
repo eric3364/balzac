@@ -46,12 +46,16 @@ const Index = () => {
               color
             )
           `)
-          .eq('is_active', true)
-          .order('difficulty_levels.level_number');
+          .eq('is_active', true);
 
         if (error) throw error;
 
-        const formattedData = (data || []).map((item: any) => ({
+        // Trier les données côté client par level_number
+        const sortedData = (data || []).sort((a: any, b: any) => 
+          a.difficulty_levels.level_number - b.difficulty_levels.level_number
+        );
+
+        const formattedData = sortedData.map((item: any) => ({
           id: item.id,
           name: item.name,
           price_euros: item.price_euros,
