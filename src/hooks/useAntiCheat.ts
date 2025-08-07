@@ -24,19 +24,15 @@ export const useAntiCheat = ({
     if (!isActive || isTerminated) return;
 
     if (strictMode) {
-      // En mode strict, toute tentative est immédiatement bloquée
-      if (!lockMessageShown.current) {
-        lockMessageShown.current = true;
-        toast({
-          title: "🔒 Session verrouillée",
-          description: "Vous ne pouvez pas quitter cette page pendant le test. Terminez votre session pour continuer.",
-          variant: "destructive",
-          duration: 6000
-        });
-        setTimeout(() => {
-          lockMessageShown.current = false;
-        }, 2000);
-      }
+      // En mode strict, terminer immédiatement le test
+      setIsTerminated(true);
+      toast({
+        title: "🚫 Test interrompu",
+        description: "Tentative de sortie détectée. Le test est terminé pour des raisons de sécurité.",
+        variant: "destructive",
+        duration: 5000
+      });
+      onTestTerminated();
       return;
     }
 
@@ -90,9 +86,7 @@ export const useAntiCheat = ({
       if (!isTerminated) {
         e.preventDefault();
         e.returnValue = 'Cette session est verrouillée. Vous ne pouvez pas quitter pendant le test.';
-        if (strictMode) {
-          handleSuspiciousActivity('page_unload');
-        }
+        handleSuspiciousActivity('page_unload');
         return e.returnValue;
       }
     };
