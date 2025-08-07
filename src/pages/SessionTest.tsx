@@ -115,25 +115,55 @@ const SessionTest = () => {
       let sessionQuestions, error;
       
       if (sessionType === 'remedial') {
-        // Pour les sessions de rattrapage, utiliser la fonction RPC qui récupère TOUTES les questions échouées
-        const { data, error: rpcError } = await supabase
-          .rpc('get_session_questions', {
-            user_uuid: user.id,
-            level_num: sessionLevel,
-            session_num: 99, // Numéro de session de rattrapage
-            questions_percentage: questionsPercentage
+        // Pour les sessions de rattrapage, récupérer directement TOUTES les questions échouées
+        console.log('Loading remedial session - fetching all failed questions for level', sessionLevel);
+        
+        const { data: failedQuestionsData, error: failedError } = await supabase
+          .from('failed_questions')
+          .select('question_id')
+          .eq('user_id', user.id)
+          .eq('level', sessionLevel)
+          .eq('is_remediated', false);
+
+        if (failedError) {
+          error = failedError;
+          sessionQuestions = null;
+        } else if (!failedQuestionsData || failedQuestionsData.length === 0) {
+          toast({
+            title: "Aucune question de rattrapage",
+            description: "Vous n'avez aucune question échouée à revoir pour ce niveau.",
+            variant: "default"
           });
-        sessionQuestions = data;
-        error = rpcError;
+          navigate('/dashboard');
+          return;
+        } else {
+          // Récupérer les détails des questions échouées
+          const questionIds = failedQuestionsData.map(fq => fq.question_id);
+          console.log('Failed question IDs:', questionIds);
+          
+          const { data: questionsData, error: questionsError } = await supabase
+            .from('questions')
+            .select('*')
+            .in('id', questionIds)
+            .eq('level', sessionLevel)
+            .order('id');
+            
+          sessionQuestions = questionsData;
+          error = questionsError;
+        }
       } else {
-        // Pour les sessions normales, utiliser la fonction RPC avec le numéro de session correct
+        // Pour les sessions normales, utiliser la méthode simple avec offset
+        const questionsPerSession = Math.floor(questionsCount.length * questionsPercentage / 100);
+        const sessionIndex = sessionNumber - 1;
+        const offset = sessionIndex * questionsPerSession;
+        
         const { data, error: rpcError } = await supabase
-          .rpc('get_session_questions', {
-            user_uuid: user.id,
-            level_num: sessionLevel,
-            session_num: sessionNumber,
-            questions_percentage: questionsPercentage
-          });
+          .from('questions')
+          .select('*')
+          .eq('level', sessionLevel)
+          .range(offset, offset + questionsPerSession - 1)
+          .order('id');
+          
         sessionQuestions = data;
         error = rpcError;
       }
