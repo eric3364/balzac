@@ -55,11 +55,13 @@ export type Database = {
           custom_badge_url: string | null
           description: string | null
           difficulty_level_id: string
+          free_sessions: number | null
           id: string
           is_active: boolean
           min_questions_correct: number | null
           min_score_required: number
           name: string
+          price_euros: number | null
           time_limit_seconds: number | null
           updated_at: string
         }
@@ -79,11 +81,13 @@ export type Database = {
           custom_badge_url?: string | null
           description?: string | null
           difficulty_level_id: string
+          free_sessions?: number | null
           id?: string
           is_active?: boolean
           min_questions_correct?: number | null
           min_score_required?: number
           name: string
+          price_euros?: number | null
           time_limit_seconds?: number | null
           updated_at?: string
         }
@@ -103,11 +107,13 @@ export type Database = {
           custom_badge_url?: string | null
           description?: string | null
           difficulty_level_id?: string
+          free_sessions?: number | null
           id?: string
           is_active?: boolean
           min_questions_correct?: number | null
           min_score_required?: number
           name?: string
+          price_euros?: number | null
           time_limit_seconds?: number | null
           updated_at?: string
         }
@@ -184,39 +190,6 @@ export type Database = {
           level?: number
           question_id?: number
           user_id?: string
-        }
-        Relationships: []
-      }
-      level_pricing: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          free_sessions: number
-          id: string
-          is_active: boolean
-          level: number
-          price_euros: number
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          free_sessions?: number
-          id?: string
-          is_active?: boolean
-          level: number
-          price_euros?: number
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          free_sessions?: number
-          id?: string
-          is_active?: boolean
-          level?: number
-          price_euros?: number
-          updated_at?: string
         }
         Relationships: []
       }

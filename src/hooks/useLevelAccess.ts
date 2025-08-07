@@ -29,10 +29,13 @@ export const useLevelAccess = () => {
         .eq('user_id', user.id)
         .order('level', { ascending: true });
 
-      // Récupérer les prix des niveaux
+      // Récupérer les prix des niveaux depuis les templates de certificats
       const { data: pricing } = await supabase
-        .from('level_pricing')
-        .select('level, price_euros')
+        .from('certificate_templates')
+        .select(`
+          price_euros,
+          difficulty_levels!inner(level_number)
+        `)
         .eq('is_active', true);
 
       // Générer l'accès pour les niveaux 1 à 5
@@ -40,7 +43,7 @@ export const useLevelAccess = () => {
       
       for (let level = 1; level <= 5; level++) {
         const levelProgress = progressions?.find(p => p.level === level);
-        const levelPricing = pricing?.find(p => p.level === level);
+        const levelPricing = pricing?.find(p => p.difficulty_levels.level_number === level);
         const isFreeLevel = levelPricing?.price_euros === 0;
         
         // Le niveau 1 est toujours débloqué

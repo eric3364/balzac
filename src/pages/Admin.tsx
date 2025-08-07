@@ -77,6 +77,8 @@ interface CertificateTemplate {
   badge_background_color: string;
   badge_size: string;
   custom_badge_url: string | null;
+  price_euros: number;
+  free_sessions: number;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -150,6 +152,8 @@ const Admin = () => {
     badge_background_color: '#ffffff',
     badge_size: 'medium',
     custom_badge_url: null as string | null,
+    price_euros: 10.00,
+    free_sessions: 3,
     is_active: true
   });
 
@@ -846,6 +850,8 @@ const Admin = () => {
         badge_background_color: certificate.badge_background_color || '#ffffff',
         badge_size: certificate.badge_size || 'medium',
         custom_badge_url: certificate.custom_badge_url || null,
+        price_euros: (certificate as any).price_euros || 10.00,
+        free_sessions: (certificate as any).free_sessions || 3,
         is_active: certificate.is_active
       });
     } else {
@@ -876,6 +882,8 @@ Délivré le {date}.`
         badge_background_color: '#ffffff',
         badge_size: 'medium',
         custom_badge_url: null,
+        price_euros: 10.00,
+        free_sessions: 3,
         is_active: true
       });
     }
@@ -905,6 +913,8 @@ Délivré le {date}.`
             badge_background_color: certificateForm.badge_background_color,
             badge_size: certificateForm.badge_size,
             custom_badge_url: certificateForm.custom_badge_url,
+            price_euros: certificateForm.price_euros,
+            free_sessions: certificateForm.free_sessions,
             is_active: certificateForm.is_active
           })
           .eq('id', editingCertificate.id);
@@ -954,6 +964,9 @@ Délivré le {date}.`
             badge_color: certificateForm.badge_color,
             badge_background_color: certificateForm.badge_background_color,
             badge_size: certificateForm.badge_size,
+            custom_badge_url: certificateForm.custom_badge_url,
+            price_euros: certificateForm.price_euros,
+            free_sessions: certificateForm.free_sessions,
             is_active: certificateForm.is_active,
             created_by: user?.id
           });
@@ -2055,6 +2068,50 @@ Délivré le {date}.`
                     })}
                     placeholder="Optionnel"
                   />
+                </div>
+              </div>
+            </div>
+
+            {/* Configuration tarifaire */}
+            <div className="space-y-4 pt-4 border-t">
+              <h4 className="font-medium text-sm">Configuration tarifaire</h4>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="price_euros">Prix (€)</Label>
+                  <Input
+                    id="price_euros"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={certificateForm.price_euros}
+                    onChange={(e) => setCertificateForm({
+                      ...certificateForm,
+                      price_euros: parseFloat(e.target.value) || 0
+                    })}
+                    placeholder="10.00"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Prix à payer pour débloquer le niveau complet. Mettez 0 pour un niveau gratuit.
+                  </p>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="free_sessions">Sessions gratuites</Label>
+                  <Input
+                    id="free_sessions"
+                    type="number"
+                    min="0"
+                    value={certificateForm.free_sessions}
+                    onChange={(e) => setCertificateForm({
+                      ...certificateForm,
+                      free_sessions: parseInt(e.target.value) || 0
+                    })}
+                    placeholder="3"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Nombre de sessions gratuites avant d'exiger le paiement.
+                  </p>
                 </div>
               </div>
             </div>

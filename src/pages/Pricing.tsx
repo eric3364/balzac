@@ -131,9 +131,9 @@ export default function Pricing() {
             <div className="grid md:grid-cols-3 gap-6">
               <div className="space-y-2">
                 <div className="text-primary font-semibold">1. Essayez gratuitement</div>
-                <p className="text-sm text-muted-foreground">
-                  Démarrez avec {pricing.find(p => p.level === 2)?.free_sessions || 3} sessions gratuites par niveau
-                </p>
+                 <p className="text-sm text-muted-foreground">
+                   Démarrez avec quelques sessions gratuites par niveau
+                 </p>
               </div>
               <div className="space-y-2">
                 <div className="text-primary font-semibold">2. Débloquez l'accès complet</div>

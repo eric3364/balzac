@@ -16,13 +16,26 @@ export const useLevelPricing = () => {
     const fetchPricing = async () => {
       try {
         const { data, error } = await supabase
-          .from('level_pricing')
-          .select('level, price_euros, free_sessions, is_active')
+          .from('certificate_templates')
+          .select(`
+            price_euros, 
+            free_sessions, 
+            is_active,
+            difficulty_levels!inner(level_number)
+          `)
           .eq('is_active', true)
-          .order('level');
+          .order('difficulty_levels.level_number');
 
         if (error) throw error;
-        setPricing(data || []);
+        
+        const formattedData = (data || []).map((item: any) => ({
+          level: item.difficulty_levels.level_number,
+          price_euros: item.price_euros,
+          free_sessions: item.free_sessions,
+          is_active: item.is_active
+        }));
+        
+        setPricing(formattedData);
       } catch (error) {
         console.error('Erreur lors du chargement des prix:', error);
       } finally {

@@ -34,11 +34,14 @@ serve(async (req) => {
       throw new Error("Utilisateur non authentifié");
     }
 
-    // Vérifier le prix du niveau
+    // Vérifier le prix du niveau depuis les templates de certificats
     const { data: pricingData } = await supabaseClient
-      .from('level_pricing')
-      .select('price_euros')
-      .eq('level', level)
+      .from('certificate_templates')
+      .select(`
+        price_euros,
+        difficulty_levels!inner(level_number)
+      `)
+      .eq('difficulty_levels.level_number', level)
       .eq('is_active', true)
       .single();
 
