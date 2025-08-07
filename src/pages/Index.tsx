@@ -165,7 +165,7 @@ const Index = () => {
       <section className="relative overflow-hidden"
                style={{
                  background: 'linear-gradient(135deg, hsl(var(--primary)/0.1) 0%, hsl(var(--primary)/0.05) 50%, transparent 100%)',
-                 minHeight: '40vh'
+                 minHeight: '20vh'
                }}>
         {/* Animated background elements */}
         <div className="absolute inset-0 overflow-hidden">
