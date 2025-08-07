@@ -145,15 +145,23 @@ export const useAntiCheat = ({
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ne pas bloquer les touches de saisie normale (lettres, chiffres, espace, backspace, etc.)
-      const isInputKey = (
-        (e.key.length === 1) || // Lettres, chiffres, symboles
-        ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'Tab', 'Enter', 'Shift', 'CapsLock'].includes(e.key)
-      );
-
-      // Si c'est une touche de saisie normale, ne pas la bloquer
-      if (isInputKey && !e.ctrlKey && !e.altKey) {
-        return;
+      // Vérifier si c'est une saisie dans un champ input ou textarea
+      const target = e.target as HTMLElement;
+      const isInputField = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.contentEditable === 'true';
+      
+      // Si c'est une saisie dans un champ, ne bloquer que les raccourcis vraiment dangereux
+      if (isInputField) {
+        // Permettre toutes les touches de saisie normale dans les champs
+        const isDangerousShortcut = (
+          (e.ctrlKey && ['U', 'R', 'W', 'T', 'N'].includes(e.key)) ||
+          (e.ctrlKey && e.shiftKey && ['I', 'C', 'J', 'N'].includes(e.key)) ||
+          (e.altKey && ['F4', 'Tab'].includes(e.key)) ||
+          (e.key === 'F12' && !e.ctrlKey && !e.shiftKey && !e.altKey)
+        );
+        
+        if (!isDangerousShortcut) {
+          return; // Permettre la saisie normale
+        }
       }
 
       // Bloquer les raccourcis de navigation et d'outils de développement
