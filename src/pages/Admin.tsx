@@ -53,27 +53,43 @@ interface DifficultyLevel {
   level_number: number;
   name: string;
   description: string;
-  min_questions: number;
+  color: string;
+  is_active: boolean;
   created_at: string;
+  updated_at: string;
+  created_by: string;
 }
 
 interface CertificateTemplate {
   id: string;
-  level_id: string;
-  title: string;
+  difficulty_level_id: string;
+  name: string;
   description: string;
-  minimum_score: number;
-  badge_text: string;
+  certificate_title: string;
+  certificate_subtitle: string;
+  certificate_text: string;
+  certificate_background_color: string;
+  certificate_border_color: string;
+  certificate_text_color: string;
+  min_score_required: number;
+  badge_icon: string;
   badge_color: string;
+  badge_background_color: string;
+  badge_size: string;
+  custom_badge_url: string;
+  price_euros: number;
+  free_sessions: number;
+  is_active: boolean;
   created_at: string;
-  level?: DifficultyLevel;
+  updated_at: string;
+  created_by: string;
 }
 
 interface Question {
   id: number;
   level: number;
   content: string;
-  type: 'QCM' | 'GAP_FILL' | 'ERROR_SPOT';
+  type: string;
   rule: string | null;
   answer: string;
   choices: string[] | null;
