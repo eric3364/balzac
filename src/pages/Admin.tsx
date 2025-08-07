@@ -13,6 +13,7 @@ import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { BadgePreview, BadgeSelector } from '@/components/BadgePreview';
+import { BadgeConfiguration } from '@/components/BadgeConfiguration';
 import { Users, Settings, BarChart3, Shield, ArrowLeft, Save, Plus, Edit2, Trash2, Award, FileText, Upload, Download, FileDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { HomepageAssetUploader } from '@/components/HomepageAssetUploader';
@@ -1063,12 +1064,29 @@ const Admin = () => {
                                             <Label>Texte du certificat</Label>
                                             <Textarea defaultValue={associatedCert.certificate_text} rows={3} />
                                           </div>
-                                          <div className="flex items-center space-x-2">
-                                            <Switch defaultChecked={associatedCert.is_active} />
-                                            <Label>Certification active</Label>
-                                          </div>
-                                        </div>
-                                      )}
+                                           <div className="flex items-center space-x-2">
+                                             <Switch defaultChecked={associatedCert.is_active} />
+                                             <Label>Certification active</Label>
+                                           </div>
+
+                                           {/* Configuration du badge */}
+                                           <div className="space-y-4 border-t pt-4">
+                                             <BadgeConfiguration
+                                               initialConfig={{
+                                                 badge_icon: associatedCert.badge_icon || 'star',
+                                                 badge_color: associatedCert.badge_color || '#6366f1',
+                                                 badge_background_color: associatedCert.badge_background_color || '#ffffff',
+                                                 badge_size: associatedCert.badge_size || 'medium'
+                                               }}
+                                               onConfigChange={(config) => {
+                                                 // Handle badge configuration change
+                                                 console.log('Badge config updated:', config);
+                                               }}
+                                               levelNumber={level.level_number}
+                                             />
+                                           </div>
+                                         </div>
+                                       )}
                                     </div>
                                     <DialogFooter className="gap-2">
                                       <Button variant="destructive">
