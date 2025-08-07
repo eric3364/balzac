@@ -165,7 +165,7 @@ const Index = () => {
       <section className="relative overflow-hidden"
                style={{
                  background: 'linear-gradient(135deg, hsl(var(--primary)/0.1) 0%, hsl(var(--primary)/0.05) 50%, transparent 100%)',
-                 minHeight: '80vh'
+                 minHeight: '40vh'
                }}>
         {/* Animated background elements */}
         <div className="absolute inset-0 overflow-hidden">
@@ -185,7 +185,7 @@ const Index = () => {
           </div>
         )}
         
-        <div className="relative z-10 container mx-auto px-4 py-32 text-center">
+        <div className="relative z-10 container mx-auto px-4 py-16 text-center">
           <div className="max-w-5xl mx-auto">
             <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-8 animate-fade-in">
               <Sparkles className="h-4 w-4" />
