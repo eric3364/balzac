@@ -53,13 +53,17 @@ export const useLevelAccess = () => {
         const isFreeLevel = levelPricing?.price_euros === 0;
         const hasCertification = certifications?.some(c => c.level === level);
         
+        // Récupérer les sessions gratuites pour ce niveau
+        const { data: freeSessionsData } = await supabase.rpc('get_free_sessions_for_level', { level_num: level });
+        const freeSessions = freeSessionsData || 3; // Default à 3 si pas de données
+        
         // Déterminer si le niveau précédent est validé
         const previousLevelValidated = level === 1 || certifications?.some(c => c.level === level - 1);
         
-        // Le niveau est débloqué si:
+        // Le niveau est accessible si:
         // - C'est le niveau 1 OU le niveau précédent est validé (a une certification) 
-        // - ET l'utilisateur a acheté le niveau (ou le niveau est gratuit)
-        const hasAccess = isFreeLevel || hasValidPurchase(level);
+        // - ET (niveau gratuit OU utilisateur a acheté OU il reste des sessions gratuites)
+        const hasAccess = isFreeLevel || hasValidPurchase(level) || (levelProgress?.completed_sessions || 0) < freeSessions;
         const isUnlocked = (level === 1 || previousLevelValidated) && hasAccess;
 
         access.push({
