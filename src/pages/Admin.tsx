@@ -1030,43 +1030,131 @@ const Admin = () => {
                                           <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-2">
                                               <Label>Nom de la certification</Label>
-                                              <Input defaultValue={associatedCert.name} />
+                                              <Input 
+                                                defaultValue={associatedCert.name}
+                                                onChange={(e) => {
+                                                  // Mettre à jour la valeur dans l'état
+                                                  setCertificates(prev => prev.map(cert => 
+                                                    cert.id === associatedCert.id 
+                                                      ? { ...cert, name: e.target.value }
+                                                      : cert
+                                                  ));
+                                                }}
+                                              />
                                             </div>
                                             <div className="space-y-2">
                                               <Label>Prix (€)</Label>
-                                              <Input defaultValue={associatedCert.price_euros} type="number" step="0.01" />
+                                              <Input 
+                                                defaultValue={associatedCert.price_euros} 
+                                                type="number" 
+                                                step="0.01"
+                                                onChange={(e) => {
+                                                  setCertificates(prev => prev.map(cert => 
+                                                    cert.id === associatedCert.id 
+                                                      ? { ...cert, price_euros: parseFloat(e.target.value) || 0 }
+                                                      : cert
+                                                  ));
+                                                }}
+                                              />
                                             </div>
                                           </div>
                                           <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-2">
                                               <Label>Score minimum (%)</Label>
-                                              <Input defaultValue={associatedCert.min_score_required} type="number" />
+                                              <Input 
+                                                defaultValue={associatedCert.min_score_required} 
+                                                type="number"
+                                                onChange={(e) => {
+                                                  setCertificates(prev => prev.map(cert => 
+                                                    cert.id === associatedCert.id 
+                                                      ? { ...cert, min_score_required: parseInt(e.target.value) || 70 }
+                                                      : cert
+                                                  ));
+                                                }}
+                                              />
                                             </div>
                                             <div className="space-y-2">
                                               <Label>Sessions gratuites</Label>
-                                              <Input defaultValue={associatedCert.free_sessions} type="number" />
+                                              <Input 
+                                                defaultValue={associatedCert.free_sessions} 
+                                                type="number"
+                                                onChange={(e) => {
+                                                  setCertificates(prev => prev.map(cert => 
+                                                    cert.id === associatedCert.id 
+                                                      ? { ...cert, free_sessions: parseInt(e.target.value) || 3 }
+                                                      : cert
+                                                  ));
+                                                }}
+                                              />
                                             </div>
                                           </div>
                                           <div className="space-y-2">
                                             <Label>Description de la certification</Label>
-                                            <Textarea defaultValue={associatedCert.description || ''} rows={2} />
+                                            <Textarea 
+                                              defaultValue={associatedCert.description || ''} 
+                                              rows={2}
+                                              onChange={(e) => {
+                                                setCertificates(prev => prev.map(cert => 
+                                                  cert.id === associatedCert.id 
+                                                    ? { ...cert, description: e.target.value }
+                                                    : cert
+                                                ));
+                                              }}
+                                            />
                                           </div>
                                           <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-2">
                                               <Label>Titre du certificat</Label>
-                                              <Input defaultValue={associatedCert.certificate_title} />
+                                              <Input 
+                                                defaultValue={associatedCert.certificate_title}
+                                                onChange={(e) => {
+                                                  setCertificates(prev => prev.map(cert => 
+                                                    cert.id === associatedCert.id 
+                                                      ? { ...cert, certificate_title: e.target.value }
+                                                      : cert
+                                                  ));
+                                                }}
+                                              />
                                             </div>
                                             <div className="space-y-2">
                                               <Label>Sous-titre du certificat</Label>
-                                              <Input defaultValue={associatedCert.certificate_subtitle || ''} />
+                                              <Input 
+                                                defaultValue={associatedCert.certificate_subtitle || ''}
+                                                onChange={(e) => {
+                                                  setCertificates(prev => prev.map(cert => 
+                                                    cert.id === associatedCert.id 
+                                                      ? { ...cert, certificate_subtitle: e.target.value }
+                                                      : cert
+                                                  ));
+                                                }}
+                                              />
                                             </div>
                                           </div>
                                           <div className="space-y-2">
                                             <Label>Texte du certificat</Label>
-                                            <Textarea defaultValue={associatedCert.certificate_text} rows={3} />
+                                            <Textarea 
+                                              defaultValue={associatedCert.certificate_text} 
+                                              rows={3}
+                                              onChange={(e) => {
+                                                setCertificates(prev => prev.map(cert => 
+                                                  cert.id === associatedCert.id 
+                                                    ? { ...cert, certificate_text: e.target.value }
+                                                    : cert
+                                                ));
+                                              }}
+                                            />
                                           </div>
                                            <div className="flex items-center space-x-2">
-                                             <Switch defaultChecked={associatedCert.is_active} />
+                                             <Switch 
+                                               defaultChecked={associatedCert.is_active}
+                                               onCheckedChange={(checked) => {
+                                                 setCertificates(prev => prev.map(cert => 
+                                                   cert.id === associatedCert.id 
+                                                     ? { ...cert, is_active: checked }
+                                                     : cert
+                                                 ));
+                                               }}
+                                             />
                                              <Label>Certification active</Label>
                                            </div>
 
@@ -1130,7 +1218,54 @@ const Admin = () => {
                                         <Trash2 className="h-4 w-4 mr-2" />
                                         Supprimer
                                       </Button>
-                                      <Button type="submit">
+                                      <Button 
+                                        onClick={async () => {
+                                          if (!associatedCert) return;
+                                          
+                                          try {
+                                            // Sauvegarder toutes les modifications du certificat
+                                            const certToUpdate = certificates.find(cert => cert.id === associatedCert.id);
+                                            if (!certToUpdate) return;
+
+                                            const { error } = await supabase
+                                              .from('certificate_templates')
+                                              .update({
+                                                name: certToUpdate.name,
+                                                price_euros: certToUpdate.price_euros,
+                                                min_score_required: certToUpdate.min_score_required,
+                                                free_sessions: certToUpdate.free_sessions,
+                                                description: certToUpdate.description,
+                                                certificate_title: certToUpdate.certificate_title,
+                                                certificate_subtitle: certToUpdate.certificate_subtitle,
+                                                certificate_text: certToUpdate.certificate_text,
+                                                is_active: certToUpdate.is_active,
+                                                updated_at: new Date().toISOString()
+                                              })
+                                              .eq('id', associatedCert.id);
+
+                                            if (error) throw error;
+
+                                            toast({
+                                              title: "Configuration sauvegardée",
+                                              description: "Le certificat a été mis à jour avec succès.",
+                                            });
+
+                                            // Recharger les certificats
+                                            loadCertificates();
+                                            
+                                            // Fermer le dialog - méthode plus propre
+                                            const closeButton = document.querySelector('[data-state="open"] button[aria-label="Close"]') as HTMLButtonElement;
+                                            closeButton?.click();
+                                          } catch (error) {
+                                            console.error('Erreur lors de la sauvegarde:', error);
+                                            toast({
+                                              title: "Erreur",
+                                              description: "Impossible de sauvegarder la configuration.",
+                                              variant: "destructive",
+                                            });
+                                          }
+                                        }}
+                                      >
                                         <Save className="h-4 w-4 mr-2" />
                                         Sauvegarder
                                       </Button>
