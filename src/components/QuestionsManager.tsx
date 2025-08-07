@@ -265,6 +265,7 @@ export const QuestionsManager: React.FC<QuestionsManagerProps> = ({ difficultyLe
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-20">ID</TableHead>
                 <TableHead>Niveau</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead className="max-w-md">Question</TableHead>
@@ -278,6 +279,9 @@ export const QuestionsManager: React.FC<QuestionsManagerProps> = ({ difficultyLe
                 const levelInfo = getLevelInfo(question.level);
                 return (
                   <TableRow key={question.id}>
+                    <TableCell className="font-mono text-sm">
+                      #{question.id}
+                    </TableCell>
                     <TableCell>
                       <Badge
                         variant="outline"
