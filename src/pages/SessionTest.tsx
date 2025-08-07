@@ -381,10 +381,12 @@ const SessionTest = () => {
       console.log('✅ Suppression réussie, insertion des nouvelles réponses...');
       console.log('📤 Données à insérer:', JSON.stringify(answersToInsert, null, 2));
 
-      // Puis insérer les nouvelles réponses
+      // Utiliser upsert au lieu d'insert pour éviter les conflits de contraintes d'unicité
       const { error: answersError } = await supabase
         .from('test_answers')
-        .insert(answersToInsert);
+        .upsert(answersToInsert, {
+          onConflict: 'user_id,session_id,question_id'
+        });
 
       console.log('📥 Résultat insertion:', { answersError });
 
