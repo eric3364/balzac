@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, Award, Users, CheckCircle, Star, ArrowRight, Shield, Sparkles, TrendingUp, Target, Zap, Clock, Brain, Crown } from 'lucide-react';
+import { BookOpen, Award, Users, CheckCircle, Star, ArrowRight, Shield, Sparkles, TrendingUp, Target, Zap, Clock, Brain, Crown, Trophy } from 'lucide-react';
 
 interface CertificationPricing {
   id: string;
@@ -16,6 +16,9 @@ interface CertificationPricing {
   level_number: number;
   level_name: string;
   level_color: string;
+  badge_icon: string;
+  badge_color: string;
+  badge_background_color: string;
   is_active: boolean;
 }
 
@@ -40,6 +43,9 @@ const Index = () => {
             price_euros,
             free_sessions,
             is_active,
+            badge_icon,
+            badge_color,
+            badge_background_color,
             difficulty_levels!inner(
               level_number,
               name,
@@ -63,6 +69,9 @@ const Index = () => {
           level_number: item.difficulty_levels.level_number,
           level_name: item.difficulty_levels.name,
           level_color: item.difficulty_levels.color,
+          badge_icon: item.badge_icon,
+          badge_color: item.badge_color,
+          badge_background_color: item.badge_background_color,
           is_active: item.is_active
         }));
 
@@ -83,6 +92,21 @@ const Index = () => {
       navigate('/dashboard');
     }
   }, [user, loading, navigate, previewMode]);
+
+  // Function to get icon component from badge_icon name
+  const getIconComponent = (iconName: string) => {
+    switch (iconName) {
+      case 'award': return Award;
+      case 'star': return Star;
+      case 'trophy': return Trophy;
+      case 'shield': return Shield;
+      case 'crown': return Crown;
+      case 'target': return Target;
+      case 'zap': return Zap;
+      case 'brain': return Brain;
+      default: return Award;
+    }
+  };
 
   if (loading) {
     return (
@@ -465,10 +489,18 @@ const Index = () => {
                       <CardContent className="pt-4">
                         {/* Level Icon */}
                         <div 
-                          className="w-12 h-12 mx-auto mb-4 rounded-full flex items-center justify-center font-bold text-white"
-                          style={{ backgroundColor: cert.level_color }}
+                          className="w-12 h-12 mx-auto mb-4 rounded-full flex items-center justify-center"
+                          style={{ backgroundColor: cert.badge_background_color || '#ffffff' }}
                         >
-                          {cert.level_number}
+                          {(() => {
+                            const IconComponent = getIconComponent(cert.badge_icon);
+                            return (
+                              <IconComponent 
+                                className="h-6 w-6" 
+                                style={{ color: cert.badge_color || '#6366f1' }}
+                              />
+                            );
+                          })()}
                         </div>
 
                         {/* Level Name */}
