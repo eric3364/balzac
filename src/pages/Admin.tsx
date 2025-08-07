@@ -21,6 +21,7 @@ import { useHomepageConfig } from '@/hooks/useHomepageConfig';
 import { useFooterConfig } from '@/hooks/useFooterConfig';
 import { UserManagement } from '@/components/UserManagement';
 import { FooterConfigForm } from '@/components/FooterConfigForm';
+import { QuestionsManager } from '@/components/QuestionsManager';
 
 interface AdminUser {
   id: number;
@@ -1199,98 +1200,7 @@ const Admin = () => {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <Plus className="h-5 w-5" />
-                      Questions par niveau
-                    </CardTitle>
-                    <CardDescription>
-                      Gérez le contenu des questions pour chaque niveau
-                    </CardDescription>
-                  </div>
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Ajouter une question
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {difficultyLevels.map((level) => {
-                    const levelQuestions = questions.filter(q => q.level === level.level_number);
-                    return (
-                      <div key={level.id} className="border rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-3">
-                            <Badge 
-                              variant="outline"
-                              style={{ backgroundColor: level.color + '20', borderColor: level.color, color: level.color }}
-                            >
-                              Niveau {level.level_number}
-                            </Badge>
-                            <h3 className="font-medium">{level.name}</h3>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="secondary">
-                              {levelQuestions.length} question{levelQuestions.length !== 1 ? 's' : ''}
-                            </Badge>
-                            <Button variant="outline" size="sm">
-                              <Plus className="h-4 w-4 mr-1" />
-                              Ajouter
-                            </Button>
-                          </div>
-                        </div>
-                        
-                        {levelQuestions.length > 0 ? (
-                          <div className="space-y-2 max-h-60 overflow-y-auto">
-                            {levelQuestions.slice(0, 5).map((question) => (
-                              <div key={question.id} className="flex items-center justify-between p-3 bg-muted/50 rounded">
-                                <div className="flex-1">
-                                  <p className="text-sm font-medium truncate max-w-md">
-                                    {question.content}
-                                  </p>
-                                  <div className="flex items-center gap-2 mt-1">
-                                    <Badge variant="outline" className="text-xs">
-                                      {question.type}
-                                    </Badge>
-                                    {question.rule && (
-                                      <span className="text-xs text-muted-foreground">
-                                        Règle: {question.rule}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  <Button variant="ghost" size="sm">
-                                    <Edit2 className="h-3 w-3" />
-                                  </Button>
-                                  <Button variant="ghost" size="sm">
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
-                                </div>
-                              </div>
-                            ))}
-                            {levelQuestions.length > 5 && (
-                              <p className="text-xs text-muted-foreground text-center pt-2">
-                                et {levelQuestions.length - 5} autre{levelQuestions.length - 5 !== 1 ? 's' : ''} question{levelQuestions.length - 5 !== 1 ? 's' : ''}...
-                              </p>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="text-center py-6 text-muted-foreground">
-                            <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                            <p className="text-sm">Aucune question pour ce niveau</p>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
+            <QuestionsManager difficultyLevels={difficultyLevels} />
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-6">
