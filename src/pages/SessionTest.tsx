@@ -285,12 +285,15 @@ const SessionTest = () => {
       
       console.log('Session timing:', { startTime, currentTime });
       
+      // Pour les sessions de rattrapage, utiliser 99 comme session_number
+      const sessionNumberForDB = sessionType === 'remedial' ? 99 : sessionNumber;
+      
       const { data: sessionData, error: sessionError } = await supabase
         .from('test_sessions')
         .upsert({
           user_id: user.id,
           level: sessionLevel,
-          session_number: sessionNumber,
+          session_number: sessionNumberForDB,
           session_type: sessionType,
           score: score,
           status: 'completed',
@@ -375,9 +378,17 @@ const SessionTest = () => {
           });
       }
 
-      // Mettre à jour la progression si la session est réussie
-      if (passed) {
-        await updateProgress(sessionNumber, true);
+      // Mettre à jour la progression selon le type de session
+      if (sessionType === 'remedial') {
+        // Pour les sessions de rattrapage, utiliser 99 comme numéro de session
+        if (passed) {
+          await updateProgress(99, true);
+        }
+      } else {
+        // Pour les sessions normales
+        if (passed) {
+          await updateProgress(sessionNumber, true);
+        }
       }
 
       // Mettre à jour les statistiques utilisateur
