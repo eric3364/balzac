@@ -566,7 +566,7 @@ const Index = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 relative overflow-hidden">
+      <section className="py-12 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/90 to-primary/80"></div>
         <div className="absolute inset-0 bg-gradient-to-br from-transparent via-purple-500/10 to-blue-500/10"></div>
         
