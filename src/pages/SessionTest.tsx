@@ -76,9 +76,10 @@ const SessionTest = () => {
     navigate('/dashboard');
   };
 
-  const { attempts, isTerminated } = useAntiCheat({
+  const { attempts, isTerminated, isLocked } = useAntiCheat({
     onTestTerminated: handleTestTerminated,
-    isActive: !testCompleted && !isLoading && questions.length > 0
+    isActive: !testCompleted && !isLoading && questions.length > 0,
+    strictMode: true // Mode verrouillage complet
   });
 
   // Charger les questions de la session

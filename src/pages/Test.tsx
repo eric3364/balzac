@@ -96,9 +96,10 @@ export default function Test() {
     navigate('/dashboard');
   };
 
-  const { attempts, isTerminated } = useAntiCheat({
+  const { attempts, isTerminated, isLocked } = useAntiCheat({
     onTestTerminated: handleTestTerminated,
-    isActive: !isCompleted && !loading && questions.length > 0
+    isActive: !isCompleted && !loading && questions.length > 0,
+    strictMode: true // Mode verrouillage complet
   });
 
   // Timer effect
