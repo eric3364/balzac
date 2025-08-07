@@ -368,68 +368,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-background to-muted/10"></div>
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="text-center mb-20">
-            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-6">
-              <Star className="h-4 w-4" />
-              Témoignages
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">Ce que disent nos apprenants</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Découvrez l'expérience de ceux qui nous font confiance
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[
-              {
-                name: "Marie Dubois",
-                role: "Étudiante en commerce",
-                content: "Grâce à Balzac Certification, j'ai pu valider mon niveau B2 et décrocher le stage de mes rêves ! La plateforme est intuitive et les résultats sont impressionnants.",
-                rating: 5,
-                avatar: "🎓"
-              },
-              {
-                name: "Pierre Martin",
-                role: "Professionnel RH",
-                content: "Une plateforme exceptionnelle qui m'a permis de progresser rapidement en français professionnel. Les certifications sont reconnues par mon entreprise.",
-                rating: 5,
-                avatar: "👔"
-              },
-              {
-                name: "Sofia Chen",
-                role: "Étudiante internationale",
-                content: "L'approche pédagogique est remarquable. Les tests adaptatifs m'ont permis d'identifier mes lacunes et de progresser efficacement. Je recommande vivement !",
-                rating: 5,
-                avatar: "🌟"
-              }
-            ].map((testimonial, index) => (
-              <Card key={index} className="group border-0 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-gradient-to-br from-background to-background/50 backdrop-blur-sm">
-                <CardContent className="p-8">
-                  <div className="flex items-center mb-6">
-                    <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full flex items-center justify-center text-2xl mr-4">
-                      {testimonial.avatar}
-                    </div>
-                    <div>
-                      <p className="font-semibold text-lg">{testimonial.name}</p>
-                      <p className="text-sm text-muted-foreground">{testimonial.role}</p>
-                    </div>
-                  </div>
-                  <div className="flex mb-4">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                    ))}
-                  </div>
-                  <p className="text-muted-foreground leading-relaxed italic">"{testimonial.content}"</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Pricing Preview Section */}
       <section className="py-20 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/50">
