@@ -332,7 +332,7 @@ const Index = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="py-24 relative overflow-hidden">
+      <section className="py-8 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-purple-500/5 to-blue-500/5"></div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-16">
