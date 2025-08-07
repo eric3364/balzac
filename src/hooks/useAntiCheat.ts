@@ -238,14 +238,9 @@ export const useAntiCheat = ({
     document.addEventListener('dragover', handleDragOver);
     document.addEventListener('drop', handleDrop);
 
-    // Essayer de passer en plein écran une seule fois au début
-    let fullscreenAttempted = false;
-    if (strictMode && !fullscreenAttempted && document.documentElement.requestFullscreen) {
-      fullscreenAttempted = true;
-      document.documentElement.requestFullscreen().catch(() => {
-        // Ignore l'erreur si le plein écran n'est pas autorisé
-      });
-    }
+    // Ne pas forcer le plein écran automatiquement car cela cause des problèmes d'instabilité
+    // L'utilisateur peut l'activer manuellement via F11 si souhaité
+    console.log("Anti-cheat système activé en mode strict");
 
     return () => {
       setIsLocked(false);
