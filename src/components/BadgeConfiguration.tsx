@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Upload, X } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import CertificationBadge from './CertificationBadge';
 
 interface BadgeConfigurationProps {
@@ -13,12 +16,14 @@ interface BadgeConfigurationProps {
     badge_color: string;
     badge_background_color: string;
     badge_size: string;
+    custom_badge_url?: string;
   };
   onConfigChange: (config: {
     badge_icon: string;
     badge_color: string;
     badge_background_color: string;
     badge_size: string;
+    custom_badge_url?: string;
   }) => void;
   levelNumber?: number;
 }
@@ -57,11 +62,76 @@ export const BadgeConfiguration: React.FC<BadgeConfigurationProps> = ({
   levelNumber = 1
 }) => {
   const [config, setConfig] = useState(initialConfig);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   const handleConfigChange = (newConfig: Partial<typeof config>) => {
     const updatedConfig = { ...config, ...newConfig };
     setConfig(updatedConfig);
     onConfigChange(updatedConfig);
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Vérifier le type de fichier
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner une image valide",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Vérifier la taille du fichier (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: "Erreur",
+        description: "L'image ne doit pas dépasser 2MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `badge-${levelNumber}-${Date.now()}.${fileExt}`;
+      const filePath = `badges/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('public')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('public')
+        .getPublicUrl(filePath);
+
+      handleConfigChange({ custom_badge_url: publicUrl });
+
+      toast({
+        title: "Succès",
+        description: "Badge personnalisé importé avec succès",
+      });
+    } catch (error) {
+      console.error('Erreur lors de l\'upload:', error);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de l'importation du badge",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removeCustomBadge = () => {
+    handleConfigChange({ custom_badge_url: undefined });
   };
 
   return (
@@ -125,6 +195,55 @@ export const BadgeConfiguration: React.FC<BadgeConfigurationProps> = ({
               ))}
             </SelectContent>
           </Select>
+        </div>
+
+        {/* Badge personnalisé */}
+        <div className="space-y-3">
+          <Label>Badge personnalisé</Label>
+          {config.custom_badge_url ? (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 p-3 border rounded-lg bg-muted/20">
+                <img 
+                  src={config.custom_badge_url} 
+                  alt="Badge personnalisé" 
+                  className="w-12 h-12 object-cover rounded"
+                />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Badge personnalisé utilisé</p>
+                  <p className="text-xs text-muted-foreground">Ce badge remplace l'icône sélectionnée</p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={removeCustomBadge}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+              <Button
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="w-full"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                {uploading ? 'Importation...' : 'Importer un badge personnalisé'}
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                Format accepté: JPG, PNG, SVG (max 2MB)
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Configuration de la taille */}
