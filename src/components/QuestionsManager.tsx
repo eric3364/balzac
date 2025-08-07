@@ -280,7 +280,7 @@ export const QuestionsManager: React.FC<QuestionsManagerProps> = ({ difficultyLe
                 return (
                   <TableRow key={question.id}>
                     <TableCell className="font-mono text-sm">
-                      #{question.id}
+                      {question.id}
                     </TableCell>
                     <TableCell>
                       <Badge
