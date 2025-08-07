@@ -155,17 +155,49 @@ export const useSessionProgress = (level: number) => {
     }
   }, [user, level]);
 
-  const updateProgress = useCallback(async (sessionNumber: number, isCompleted: boolean) => {
-    if (!user || !progress) return;
+  const createCertification = useCallback(async (levelNumber: number, finalScore: number) => {
+    if (!user) return null;
+
+    try {
+      // Créer la certification
+      const { data: certification, error } = await supabase
+        .from('user_certifications')
+        .insert({
+          user_id: user.id,
+          level: levelNumber,
+          score: finalScore,
+          certified_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Erreur lors de la création de la certification:', error);
+        return null;
+      }
+
+      console.log('🏆 Certification créée avec succès:', certification);
+      return certification;
+    } catch (error) {
+      console.error('Erreur lors de la création de la certification:', error);
+      return null;
+    }
+  }, [user]);
+
+  const updateProgress = useCallback(async (sessionNumber: number, isCompleted: boolean, sessionScore?: number) => {
+    if (!user || !progress) return { levelCompleted: false, certification: null };
 
     try {
       const updates: any = {};
+      let levelCompleted = false;
+      let certification = null;
 
       if (isCompleted) {
         // Vérifier si c'est la session de rattrapage
         if (sessionNumber >= 99) {
           // Session de rattrapage complétée - valider le niveau
           updates.is_level_completed = true;
+          levelCompleted = true;
           
           // Marquer toutes les questions échouées comme remédiées
           await supabase
@@ -173,6 +205,11 @@ export const useSessionProgress = (level: number) => {
             .update({ is_remediated: true })
             .eq('user_id', user.id)
             .eq('level', level);
+
+          // Créer la certification avec le score de la session de rattrapage
+          if (sessionScore) {
+            certification = await createCertification(level, sessionScore);
+          }
         } else {
           // Session régulière complétée avec numérotation simplifiée
           updates.completed_sessions = sessionNumber;
@@ -195,6 +232,12 @@ export const useSessionProgress = (level: number) => {
             if (!failedQuestions || failedQuestions.length === 0) {
               // Aucune question échouée - valider le niveau
               updates.is_level_completed = true;
+              levelCompleted = true;
+
+              // Créer la certification avec le score de la dernière session
+              if (sessionScore) {
+                certification = await createCertification(level, sessionScore);
+              }
             }
           }
         }
@@ -212,10 +255,13 @@ export const useSessionProgress = (level: number) => {
         // Recharger la progression
         await loadProgress();
       }
+
+      return { levelCompleted, certification };
     } catch (error) {
       console.error('Erreur lors de la mise à jour de la progression:', error);
+      return { levelCompleted: false, certification: null };
     }
-  }, [user, level, progress, loadProgress]);
+  }, [user, level, progress, loadProgress, createCertification]);
 
   const recordFailedQuestion = useCallback(async (questionId: number) => {
     if (!user) return;

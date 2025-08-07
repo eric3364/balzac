@@ -57,6 +57,8 @@ const SessionTest = () => {
     correctAnswers: number;
     totalQuestions: number;
     passed: boolean;
+    levelCompleted?: boolean;
+    certification?: any;
   } | null>(null);
   const [isCompletingSession, setIsCompletingSession] = useState(false);
   const completionRef = useRef(false);
@@ -419,15 +421,17 @@ const SessionTest = () => {
       }
 
       // Mettre à jour la progression selon le type de session
+      let progressResult = { levelCompleted: false, certification: null };
+      
       if (sessionType === 'remedial') {
         // Pour les sessions de rattrapage, utiliser 99 comme numéro de session
         if (passed) {
-          await updateProgress(99, true);
+          progressResult = await updateProgress(99, true, score);
         }
       } else {
         // Pour les sessions normales
         if (passed) {
-          await updateProgress(sessionNumber, true);
+          progressResult = await updateProgress(sessionNumber, true, score);
         }
       }
 
@@ -438,7 +442,9 @@ const SessionTest = () => {
         score,
         correctAnswers,
         totalQuestions,
-        passed
+        passed,
+        levelCompleted: progressResult.levelCompleted,
+        certification: progressResult.certification
       });
       
       setTestCompleted(true);
@@ -450,6 +456,17 @@ const SessionTest = () => {
           : `Vous avez obtenu ${score}%. Il faut 75% minimum pour valider la session.`,
         variant: passed ? "default" : "destructive"
       });
+
+      // Ajouter un toast spécial pour la certification
+      if (progressResult.levelCompleted && progressResult.certification) {
+        setTimeout(() => {
+          toast({
+            title: "🏆 Certification obtenue !",
+            description: `Félicitations ! Vous avez obtenu votre certification de niveau ${sessionLevel} avec ${progressResult.certification.score}% !`,
+            variant: "default"
+          });
+        }, 1000);
+      }
 
     } catch (error) {
       console.error('Erreur lors de la finalisation:', error);
@@ -502,7 +519,44 @@ const SessionTest = () => {
   if (testCompleted && sessionResults) {
     return (
       <div className="min-h-screen bg-background p-4">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-2xl mx-auto space-y-6">
+          {/* Affichage de la certification si obtenue */}
+          {sessionResults.levelCompleted && sessionResults.certification && (
+            <Card className="border-2 border-yellow-400 bg-gradient-to-br from-yellow-50 to-amber-50">
+              <CardHeader className="text-center">
+                <div className="mx-auto mb-4">
+                  <Trophy className="h-20 w-20 text-yellow-600" />
+                </div>
+                <CardTitle className="text-3xl text-yellow-800">
+                  🎉 Félicitations ! 🎉
+                </CardTitle>
+                <p className="text-yellow-700 text-lg font-medium">
+                  Vous avez obtenu votre certification de niveau {sessionLevel} !
+                </p>
+              </CardHeader>
+              <CardContent className="text-center space-y-4">
+                <div className="bg-white/80 rounded-lg p-4 border border-yellow-200">
+                  <p className="text-lg font-semibold text-yellow-800">
+                    Certification de niveau {sessionResults.certification.level}
+                  </p>
+                  <p className="text-yellow-700">
+                    Score final : {sessionResults.certification.score}%
+                  </p>
+                  <p className="text-sm text-yellow-600">
+                    Obtenue le : {new Date(sessionResults.certification.certified_at).toLocaleDateString('fr-FR')}
+                  </p>
+                </div>
+                <div className="flex gap-2 justify-center">
+                  <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-300">
+                    <Star className="h-3 w-3 mr-1" />
+                    Niveau {sessionLevel} maîtrisé
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Résultats de la session */}
           <Card>
             <CardHeader className="text-center">
               <div className="mx-auto mb-4">
