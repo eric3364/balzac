@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSiteConfig } from '@/hooks/useSiteConfig';
+import { useAntiCheat } from '@/hooks/useAntiCheat';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -82,6 +83,23 @@ export default function Test() {
   const [batchScore, setBatchScore] = useState(0);
   const [totalAnswered, setTotalAnswered] = useState(0);
   const [correctAnswers, setCorrectAnswers] = useState(0);
+
+  // Anti-cheat system
+  const handleTestTerminated = () => {
+    setIsCompleted(true);
+    toast({
+      title: "Test interrompu",
+      description: "Le test a été interrompu pour cause de triche détectée.",
+      variant: "destructive"
+    });
+    endTestSession();
+    navigate('/dashboard');
+  };
+
+  const { attempts, isTerminated } = useAntiCheat({
+    onTestTerminated: handleTestTerminated,
+    isActive: !isCompleted && !loading && questions.length > 0
+  });
 
   // Timer effect
   useEffect(() => {

@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSessionProgress } from '@/hooks/useSessionProgress';
 import { useUserStats } from '@/hooks/useUserStats';
+import { useAntiCheat } from '@/hooks/useAntiCheat';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -63,6 +64,22 @@ const SessionTest = () => {
   const [isCompletingSession, setIsCompletingSession] = useState(false);
   const completionRef = useRef(false);
   const sessionStartTime = useRef<string | null>(null);
+
+  // Anti-cheat system
+  const handleTestTerminated = () => {
+    setTestCompleted(true);
+    toast({
+      title: "Test interrompu",
+      description: "Le test a été interrompu pour cause de triche détectée.",
+      variant: "destructive"
+    });
+    navigate('/dashboard');
+  };
+
+  const { attempts, isTerminated } = useAntiCheat({
+    onTestTerminated: handleTestTerminated,
+    isActive: !testCompleted && !isLoading && questions.length > 0
+  });
 
   // Charger les questions de la session
   const loadSessionQuestions = useCallback(async () => {
