@@ -562,17 +562,6 @@ const Index = () => {
               )}
             </>
           )}
-          
-          <div className="text-center mt-12">
-            <Button 
-              size="lg" 
-              onClick={() => navigate('/pricing')}
-              variant="outline"
-              className="border-2 hover:bg-accent/50 px-8 py-6 text-lg font-semibold rounded-xl"
-            >
-              Voir tous les détails
-            </Button>
-          </div>
         </div>
       </section>
 
