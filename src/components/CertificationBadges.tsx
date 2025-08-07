@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Award, Star, Trophy, Shield, Crown, Clock } from 'lucide-react';
+import CertificationBadge from './CertificationBadge';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -22,6 +23,7 @@ interface CertificateTemplate {
   badge_icon: string;
   badge_color: string;
   badge_background_color: string;
+  badge_size?: string;
   difficulty_level_id: string;
   difficulty_levels: {
     level_number: number;
@@ -212,19 +214,16 @@ const CertificationBadges = () => {
                     : 'bg-muted/50 opacity-60 hover:opacity-80'
                 }`}
               >
-                {/* Badge Icon */}
-                <div 
-                  className={`w-16 h-16 rounded-full flex items-center justify-center mb-3 shadow-md ${
-                    isObtained ? '' : 'grayscale'
-                  }`}
-                  style={{ 
-                    backgroundColor: isObtained ? backgroundColor : '#f1f5f9',
-                    border: `2px solid ${isObtained ? badgeColor : '#94a3b8'}`
-                  }}
-                >
-                  <IconComponent 
-                    className="h-8 w-8" 
-                    style={{ color: isObtained ? badgeColor : '#94a3b8' }}
+                {/* Badge avec nouveau composant */}
+                <div className="mb-3">
+                  <CertificationBadge
+                    icon={template?.badge_icon || 'award'}
+                    color={badgeColor}
+                    backgroundColor={backgroundColor}
+                    size={template?.badge_size === 'small' ? 'small' : template?.badge_size === 'large' ? 'large' : 'medium'}
+                    isObtained={isObtained}
+                    level={level}
+                    animated={true}
                   />
                 </div>
 
