@@ -852,105 +852,299 @@ const Admin = () => {
           <TabsContent value="levels" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Award className="h-5 w-5" />
-                  Niveaux de difficulté
-                </CardTitle>
-                <CardDescription>
-                  Gérez les niveaux de difficulté disponibles sur la plateforme
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Award className="h-5 w-5" />
+                      Niveaux de difficulté
+                    </CardTitle>
+                    <CardDescription>
+                      Gérez les niveaux de difficulté et leurs certifications associées
+                    </CardDescription>
+                  </div>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Ajouter un niveau
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Nouveau niveau de difficulté</DialogTitle>
+                        <DialogDescription>
+                          Créez un nouveau niveau avec sa certification associée
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        {/* Informations du niveau */}
+                        <div className="space-y-4">
+                          <h4 className="font-medium">Informations du niveau</h4>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="level_number">Numéro de niveau</Label>
+                              <Input id="level_number" type="number" placeholder="1" />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="level_name">Nom du niveau</Label>
+                              <Input id="level_name" placeholder="Débutant" />
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="level_description">Description</Label>
+                            <Textarea id="level_description" placeholder="Description du niveau de difficulté" rows={2} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="level_color">Couleur</Label>
+                            <Input id="level_color" type="color" defaultValue="#6366f1" />
+                          </div>
+                        </div>
+
+                        {/* Configuration de la certification */}
+                        <div className="space-y-4 border-t pt-4">
+                          <h4 className="font-medium">Configuration de la certification</h4>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="cert_name">Nom de la certification</Label>
+                              <Input id="cert_name" placeholder="Certification Niveau Débutant" />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="cert_price">Prix (€)</Label>
+                              <Input id="cert_price" type="number" step="0.01" placeholder="10.00" />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="min_score">Score minimum (%)</Label>
+                              <Input id="min_score" type="number" placeholder="70" />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="free_sessions">Sessions gratuites</Label>
+                              <Input id="free_sessions" type="number" placeholder="3" />
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="cert_description">Description de la certification</Label>
+                            <Textarea id="cert_description" placeholder="Description de la certification" rows={2} />
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="cert_title">Titre du certificat</Label>
+                              <Input id="cert_title" placeholder="Certificat de Français Niveau Débutant" />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="cert_subtitle">Sous-titre du certificat</Label>
+                              <Input id="cert_subtitle" placeholder="Décerné à" />
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="cert_text">Texte du certificat</Label>
+                            <Textarea id="cert_text" placeholder="Texte affiché sur le certificat" rows={3} />
+                          </div>
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button type="submit">
+                          <Save className="h-4 w-4 mr-2" />
+                          Créer le niveau
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {difficultyLevels.length > 0 ? (
                     <div className="grid gap-4">
-                      {difficultyLevels.map((level) => (
-                        <div key={level.id} className="flex items-center justify-between p-4 border rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <Badge 
-                              variant="outline" 
-                              style={{ backgroundColor: level.color + '20', borderColor: level.color, color: level.color }}
-                            >
-                              Niveau {level.level_number}
-                            </Badge>
-                            <div>
-                              <h4 className="font-medium">{level.name}</h4>
-                              <p className="text-sm text-muted-foreground">{level.description}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant={level.is_active ? "default" : "secondary"}>
-                              {level.is_active ? "Actif" : "Inactif"}
-                            </Badge>
-                            <Button variant="ghost" size="sm">
-                              <Edit2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <p className="text-muted-foreground">Aucun niveau de difficulté configuré</p>
-                      <Button className="mt-4">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Ajouter un niveau
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                      {difficultyLevels.map((level) => {
+                        const associatedCert = certificates.find(cert => cert.difficulty_level_id === level.id);
+                        return (
+                          <div key={level.id} className="border rounded-lg p-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-3">
+                                <Badge 
+                                  variant="outline" 
+                                  style={{ backgroundColor: level.color + '20', borderColor: level.color, color: level.color }}
+                                >
+                                  Niveau {level.level_number}
+                                </Badge>
+                                <div>
+                                  <h4 className="font-medium">{level.name}</h4>
+                                  <p className="text-sm text-muted-foreground">{level.description}</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Badge variant={level.is_active ? "default" : "secondary"}>
+                                  {level.is_active ? "Actif" : "Inactif"}
+                                </Badge>
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <Button variant="ghost" size="sm">
+                                      <Edit2 className="h-4 w-4" />
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                                    <DialogHeader>
+                                      <DialogTitle>Modifier le niveau {level.level_number}</DialogTitle>
+                                      <DialogDescription>
+                                        Modifiez les paramètres du niveau et de sa certification
+                                      </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="grid gap-4 py-4">
+                                      {/* Informations du niveau */}
+                                      <div className="space-y-4">
+                                        <h4 className="font-medium">Informations du niveau</h4>
+                                        <div className="grid grid-cols-2 gap-4">
+                                          <div className="space-y-2">
+                                            <Label>Numéro de niveau</Label>
+                                            <Input defaultValue={level.level_number} type="number" />
+                                          </div>
+                                          <div className="space-y-2">
+                                            <Label>Nom du niveau</Label>
+                                            <Input defaultValue={level.name} />
+                                          </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                          <Label>Description</Label>
+                                          <Textarea defaultValue={level.description || ''} rows={2} />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                          <div className="space-y-2">
+                                            <Label>Couleur</Label>
+                                            <Input type="color" defaultValue={level.color} />
+                                          </div>
+                                          <div className="flex items-center space-x-2">
+                                            <Switch defaultChecked={level.is_active} />
+                                            <Label>Niveau actif</Label>
+                                          </div>
+                                        </div>
+                                      </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  Modèles de certification
-                </CardTitle>
-                <CardDescription>
-                  Configurez les certificats associés à chaque niveau
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {certificates.length > 0 ? (
-                    <div className="grid gap-4">
-                      {certificates.map((cert) => (
-                        <div key={cert.id} className="p-4 border rounded-lg">
-                          <div className="flex items-center justify-between mb-3">
-                            <h4 className="font-medium">{cert.name}</h4>
-                            <div className="flex items-center gap-2">
-                              <Badge variant="outline">
-                                {cert.price_euros > 0 ? `${cert.price_euros}€` : 'Gratuit'}
-                              </Badge>
-                              <Badge variant={cert.is_active ? "default" : "secondary"}>
-                                {cert.is_active ? "Actif" : "Inactif"}
-                              </Badge>
-                              <Button variant="ghost" size="sm">
-                                <Edit2 className="h-4 w-4" />
-                              </Button>
+                                      {/* Configuration de la certification */}
+                                      {associatedCert && (
+                                        <div className="space-y-4 border-t pt-4">
+                                          <h4 className="font-medium">Configuration de la certification</h4>
+                                          <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                              <Label>Nom de la certification</Label>
+                                              <Input defaultValue={associatedCert.name} />
+                                            </div>
+                                            <div className="space-y-2">
+                                              <Label>Prix (€)</Label>
+                                              <Input defaultValue={associatedCert.price_euros} type="number" step="0.01" />
+                                            </div>
+                                          </div>
+                                          <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                              <Label>Score minimum (%)</Label>
+                                              <Input defaultValue={associatedCert.min_score_required} type="number" />
+                                            </div>
+                                            <div className="space-y-2">
+                                              <Label>Sessions gratuites</Label>
+                                              <Input defaultValue={associatedCert.free_sessions} type="number" />
+                                            </div>
+                                          </div>
+                                          <div className="space-y-2">
+                                            <Label>Description de la certification</Label>
+                                            <Textarea defaultValue={associatedCert.description || ''} rows={2} />
+                                          </div>
+                                          <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                              <Label>Titre du certificat</Label>
+                                              <Input defaultValue={associatedCert.certificate_title} />
+                                            </div>
+                                            <div className="space-y-2">
+                                              <Label>Sous-titre du certificat</Label>
+                                              <Input defaultValue={associatedCert.certificate_subtitle || ''} />
+                                            </div>
+                                          </div>
+                                          <div className="space-y-2">
+                                            <Label>Texte du certificat</Label>
+                                            <Textarea defaultValue={associatedCert.certificate_text} rows={3} />
+                                          </div>
+                                          <div className="flex items-center space-x-2">
+                                            <Switch defaultChecked={associatedCert.is_active} />
+                                            <Label>Certification active</Label>
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                    <DialogFooter className="gap-2">
+                                      <Button variant="destructive">
+                                        <Trash2 className="h-4 w-4 mr-2" />
+                                        Supprimer
+                                      </Button>
+                                      <Button type="submit">
+                                        <Save className="h-4 w-4 mr-2" />
+                                        Sauvegarder
+                                      </Button>
+                                    </DialogFooter>
+                                  </DialogContent>
+                                </Dialog>
+                              </div>
                             </div>
+                            
+                            {/* Informations de la certification associée */}
+                            {associatedCert && (
+                              <div className="mt-3 p-3 bg-muted/50 rounded border-l-4 border-l-primary/50">
+                                <div className="flex items-center justify-between mb-2">
+                                  <h5 className="font-medium text-sm">Certification associée</h5>
+                                  <Badge variant="outline">
+                                    {associatedCert.price_euros > 0 ? `${associatedCert.price_euros}€` : 'Gratuit'}
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-muted-foreground mb-2">{associatedCert.name}</p>
+                                <div className="grid grid-cols-3 gap-4 text-xs">
+                                  <div>
+                                    <span className="font-medium">Score minimum:</span> {associatedCert.min_score_required}%
+                                  </div>
+                                  <div>
+                                    <span className="font-medium">Sessions gratuites:</span> {associatedCert.free_sessions}
+                                  </div>
+                                  <div>
+                                    <span className="font-medium">Status:</span> {associatedCert.is_active ? "Active" : "Inactive"}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
-                          <p className="text-sm text-muted-foreground mb-2">{cert.description}</p>
-                          <div className="grid grid-cols-2 gap-4 text-xs">
-                            <div>
-                              <span className="font-medium">Score minimum:</span> {cert.min_score_required}%
-                            </div>
-                            <div>
-                              <span className="font-medium">Sessions gratuites:</span> {cert.free_sessions}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   ) : (
                     <div className="text-center py-8">
-                      <p className="text-muted-foreground">Aucun modèle de certification configuré</p>
-                      <Button className="mt-4">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Ajouter un modèle
-                      </Button>
+                      <Award className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+                      <p className="text-muted-foreground mb-4">Aucun niveau de difficulté configuré</p>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button>
+                            <Plus className="h-4 w-4 mr-2" />
+                            Créer le premier niveau
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Créer le premier niveau</DialogTitle>
+                            <DialogDescription>
+                              Commencez par créer votre premier niveau de difficulté
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="grid gap-4 py-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="first_level_name">Nom du niveau</Label>
+                              <Input id="first_level_name" placeholder="Débutant" />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="first_level_desc">Description</Label>
+                              <Textarea id="first_level_desc" placeholder="Description du niveau débutant" />
+                            </div>
+                          </div>
+                          <DialogFooter>
+                            <Button type="submit">Créer</Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
                     </div>
                   )}
                 </div>
