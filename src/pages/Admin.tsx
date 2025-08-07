@@ -258,25 +258,35 @@ const Admin = () => {
 
   const saveTestConfig = async () => {
     setSavingConfig(true);
+    console.log('Admin: Début de la sauvegarde des paramètres de test');
+    console.log('Admin: Configuration actuelle:', testConfig);
+    
     try {
       const configEntries = Object.entries(testConfig).map(([key, value]) => ({
         config_key: key,
         config_value: value,
-        updated_at: new Date().toISOString()
+        updated_by: user?.id || null
       }));
 
-      const { error } = await supabase
+      console.log('Admin: Entrées de configuration à sauvegarder:', configEntries);
+
+      const { error, data } = await supabase
         .from('site_configuration')
-        .upsert(configEntries);
+        .upsert(configEntries, {
+          onConflict: 'config_key'
+        });
+
+      console.log('Admin: Résultat de la sauvegarde:', { error, data });
 
       if (error) throw error;
 
+      console.log('Admin: Sauvegarde des paramètres réussie');
       toast({
         title: "Configuration sauvegardée",
         description: "Les paramètres des tests ont été mis à jour avec succès.",
       });
     } catch (error) {
-      console.error('Erreur lors de la sauvegarde de la configuration:', error);
+      console.error('Admin: Erreur lors de la sauvegarde de la configuration:', error);
       toast({
         title: "Erreur",
         description: "Impossible de sauvegarder la configuration.",
