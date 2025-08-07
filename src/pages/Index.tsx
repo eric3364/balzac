@@ -1,10 +1,23 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useHomepageConfig } from '@/hooks/useHomepageConfig';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BookOpen, Award, Users, CheckCircle, Star, ArrowRight, Shield, Sparkles, TrendingUp, Target, Zap, Clock, Brain } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { BookOpen, Award, Users, CheckCircle, Star, ArrowRight, Shield, Sparkles, TrendingUp, Target, Zap, Clock, Brain, Crown } from 'lucide-react';
+
+interface CertificationPricing {
+  id: string;
+  name: string;
+  price_euros: number;
+  free_sessions: number;
+  level_number: number;
+  level_name: string;
+  level_color: string;
+  is_active: boolean;
+}
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -12,6 +25,53 @@ const Index = () => {
   const { config: homepageAssets } = useHomepageConfig();
   const [searchParams] = useSearchParams();
   const previewMode = searchParams.get('preview') === 'true';
+  const [certificationPricing, setCertificationPricing] = useState<CertificationPricing[]>([]);
+  const [loadingPricing, setLoadingPricing] = useState(true);
+
+  // Load certification pricing data
+  useEffect(() => {
+    const fetchCertificationPricing = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('certificate_templates')
+          .select(`
+            id,
+            name,
+            price_euros,
+            free_sessions,
+            is_active,
+            difficulty_levels!inner(
+              level_number,
+              name,
+              color
+            )
+          `)
+          .eq('is_active', true)
+          .order('difficulty_levels.level_number');
+
+        if (error) throw error;
+
+        const formattedData = (data || []).map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          price_euros: item.price_euros,
+          free_sessions: item.free_sessions,
+          level_number: item.difficulty_levels.level_number,
+          level_name: item.difficulty_levels.name,
+          level_color: item.difficulty_levels.color,
+          is_active: item.is_active
+        }));
+
+        setCertificationPricing(formattedData);
+      } catch (error) {
+        console.error('Erreur lors du chargement des tarifs:', error);
+      } finally {
+        setLoadingPricing(false);
+      }
+    };
+
+    fetchCertificationPricing();
+  }, []);
 
   // Redirect authenticated users to dashboard, except in preview mode
   useEffect(() => {
@@ -357,99 +417,115 @@ const Index = () => {
           <div className="text-center mb-12">
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
               <span className="bg-gradient-to-r from-primary via-purple-600 to-primary bg-clip-text text-transparent">
-                Tarifs transparents
+                Nos Certifications
               </span>
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Démarrez gratuitement puis débloquez chaque niveau à votre rythme
+              Progressez niveau par niveau et obtenez vos certifications officielles
             </p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {/* Niveau 1 */}
-            <div className="bg-card p-8 rounded-2xl border-2 border-green-200 relative">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <span className="bg-green-500 text-white px-4 py-1 rounded-full text-sm font-semibold">
-                  GRATUIT
-                </span>
-              </div>
-              <div className="text-center">
-                <h3 className="text-2xl font-bold mb-2">Niveau 1</h3>
-                <div className="text-3xl font-bold text-green-600 mb-4">0€</div>
-                <p className="text-muted-foreground mb-6">Découverte complète</p>
-                <ul className="space-y-2 text-left">
-                  <li className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full" />
-                    <span>Accès complet gratuit</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full" />
-                    <span>Toutes les sessions</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full" />
-                    <span>Certification incluse</span>
-                  </li>
-                </ul>
-              </div>
+          {loadingPricing ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
+          ) : (
+            <>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 max-w-7xl mx-auto">
+                {certificationPricing.map((cert) => {
+                  const isFree = cert.price_euros === 0;
+                  return (
+                    <Card key={cert.id} className={`relative p-6 text-center border-2 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${
+                      isFree 
+                        ? 'border-green-200 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20' 
+                        : 'border-primary/20 bg-gradient-to-br from-background to-background/50'
+                    }`}>
+                      {/* Badge */}
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                        {isFree ? (
+                          <Badge className="bg-green-500 hover:bg-green-600 text-white font-semibold">
+                            GRATUIT
+                          </Badge>
+                        ) : cert.level_number === 1 ? (
+                          <Badge className="bg-primary hover:bg-primary/90 text-white font-semibold">
+                            POPULAIRE
+                          </Badge>
+                        ) : cert.level_number >= 4 ? (
+                          <Badge className="bg-gradient-to-r from-purple-500 to-purple-600 text-white font-semibold">
+                            <Crown className="h-3 w-3 mr-1" />
+                            EXPERT
+                          </Badge>
+                        ) : null}
+                      </div>
 
-            {/* Niveaux 2-4 */}
-            <div className="bg-card p-8 rounded-2xl border-2 border-primary/20 relative">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <span className="bg-primary text-white px-4 py-1 rounded-full text-sm font-semibold">
-                  POPULAIRE
-                </span>
-              </div>
-              <div className="text-center">
-                <h3 className="text-2xl font-bold mb-2">Niveaux 2-4</h3>
-                <div className="text-3xl font-bold text-primary mb-4">10€</div>
-                <p className="text-muted-foreground mb-6">Par niveau</p>
-                <ul className="space-y-2 text-left">
-                  <li className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-primary rounded-full" />
-                    <span>3 sessions d'essai gratuites</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-primary rounded-full" />
-                    <span>Accès complet après achat</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-primary rounded-full" />
-                    <span>Certification niveau</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
+                      <CardContent className="pt-4">
+                        {/* Level Icon */}
+                        <div 
+                          className="w-12 h-12 mx-auto mb-4 rounded-full flex items-center justify-center font-bold text-white"
+                          style={{ backgroundColor: cert.level_color }}
+                        >
+                          {cert.level_number}
+                        </div>
 
-            {/* Niveau 5 */}
-            <div className="bg-card p-8 rounded-2xl border-2 border-purple-200 relative">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <span className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
-                  PREMIUM
-                </span>
+                        {/* Level Name */}
+                        <h3 className="text-lg font-bold mb-2">{cert.level_name}</h3>
+                        
+                        {/* Price */}
+                        <div className="mb-4">
+                          {isFree ? (
+                            <div className="text-2xl font-bold text-green-600">Gratuit</div>
+                          ) : (
+                            <div className="text-2xl font-bold text-primary">{cert.price_euros}€</div>
+                          )}
+                        </div>
+
+                        {/* Features */}
+                        <div className="space-y-2 text-sm text-left">
+                          {isFree ? (
+                            <>
+                              <div className="flex items-center gap-2">
+                                <CheckCircle className="h-4 w-4 text-green-600" />
+                                <span>Accès complet gratuit</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <CheckCircle className="h-4 w-4 text-green-600" />
+                                <span>Certification incluse</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <CheckCircle className="h-4 w-4 text-green-600" />
+                                <span>Idéal pour débuter</span>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="flex items-center gap-2">
+                                <Zap className="h-4 w-4 text-primary" />
+                                <span>{cert.free_sessions} sessions d'essai</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <CheckCircle className="h-4 w-4 text-primary" />
+                                <span>Accès complet après achat</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Award className="h-4 w-4 text-primary" />
+                                <span>Certification officielle</span>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
-              <div className="text-center">
-                <h3 className="text-2xl font-bold mb-2">Niveau 5</h3>
-                <div className="text-3xl font-bold bg-gradient-to-r from-purple-500 to-purple-600 bg-clip-text text-transparent mb-4">10€</div>
-                <p className="text-muted-foreground mb-6">Niveau expert</p>
-                <ul className="space-y-2 text-left">
-                  <li className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full" />
-                    <span>3 sessions d'essai gratuites</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full" />
-                    <span>Contenu expert</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full" />
-                    <span>Certification maître</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
+
+              {certificationPricing.length === 0 && (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground">Aucune certification disponible pour le moment.</p>
+                </div>
+              )}
+            </>
+          )}
           
           <div className="text-center mt-12">
             <Button 
@@ -458,7 +534,7 @@ const Index = () => {
               variant="outline"
               className="border-2 hover:bg-accent/50 px-8 py-6 text-lg font-semibold rounded-xl"
             >
-              Voir tous les tarifs
+              Voir tous les détails
             </Button>
           </div>
         </div>
