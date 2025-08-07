@@ -429,14 +429,28 @@ const Admin = () => {
           <TabsContent value="homepage" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Configuration de la page d'accueil</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Upload className="h-5 w-5" />
+                  Configuration de la page d'accueil
+                </CardTitle>
                 <CardDescription>
                   Paramétrez les visuels et textes affichés sur la page d'accueil
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <p>Configuration de la page d'accueil disponible via le hook useHomepageConfig</p>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <HomepageAssetUploader
+                    label="Logo principal"
+                    currentUrl={homepageAssets.logoUrl || ''}
+                    onUrlChange={(url) => updateHomepageAssets({ logoUrl: url })}
+                    bucketPath="logo"
+                  />
+                  <HomepageAssetUploader
+                    label="Image bannière"
+                    currentUrl={homepageAssets.bannerUrl || ''}
+                    onUrlChange={(url) => updateHomepageAssets({ bannerUrl: url })}
+                    bucketPath="banner"
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -446,16 +460,106 @@ const Admin = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Settings className="h-5 w-5" />
-                  Niveaux & Certifications
+                  <Award className="h-5 w-5" />
+                  Niveaux de difficulté
                 </CardTitle>
                 <CardDescription>
-                  Gérez les niveaux de difficulté et configurez leurs certifications associées
+                  Gérez les niveaux de difficulté disponibles sur la plateforme
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-8">
-                  <p>Configuration des niveaux en cours de développement...</p>
+                <div className="space-y-4">
+                  {difficultyLevels.length > 0 ? (
+                    <div className="grid gap-4">
+                      {difficultyLevels.map((level) => (
+                        <div key={level.id} className="flex items-center justify-between p-4 border rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <Badge 
+                              variant="outline" 
+                              style={{ backgroundColor: level.color + '20', borderColor: level.color, color: level.color }}
+                            >
+                              Niveau {level.level_number}
+                            </Badge>
+                            <div>
+                              <h4 className="font-medium">{level.name}</h4>
+                              <p className="text-sm text-muted-foreground">{level.description}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={level.is_active ? "default" : "secondary"}>
+                              {level.is_active ? "Actif" : "Inactif"}
+                            </Badge>
+                            <Button variant="ghost" size="sm">
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground">Aucun niveau de difficulté configuré</p>
+                      <Button className="mt-4">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Ajouter un niveau
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Modèles de certification
+                </CardTitle>
+                <CardDescription>
+                  Configurez les certificats associés à chaque niveau
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {certificates.length > 0 ? (
+                    <div className="grid gap-4">
+                      {certificates.map((cert) => (
+                        <div key={cert.id} className="p-4 border rounded-lg">
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="font-medium">{cert.name}</h4>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline">
+                                {cert.price_euros > 0 ? `${cert.price_euros}€` : 'Gratuit'}
+                              </Badge>
+                              <Badge variant={cert.is_active ? "default" : "secondary"}>
+                                {cert.is_active ? "Actif" : "Inactif"}
+                              </Badge>
+                              <Button variant="ghost" size="sm">
+                                <Edit2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-2">{cert.description}</p>
+                          <div className="grid grid-cols-2 gap-4 text-xs">
+                            <div>
+                              <span className="font-medium">Score minimum:</span> {cert.min_score_required}%
+                            </div>
+                            <div>
+                              <span className="font-medium">Sessions gratuites:</span> {cert.free_sessions}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground">Aucun modèle de certification configuré</p>
+                      <Button className="mt-4">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Ajouter un modèle
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -464,14 +568,121 @@ const Admin = () => {
           <TabsContent value="questions" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Gestion des Questions</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Statistiques des questions par niveau
+                </CardTitle>
                 <CardDescription>
-                  Créez et gérez les questions pour chaque niveau de difficulté
+                  Vue d'ensemble de la répartition des questions par niveau de difficulté
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-8">
-                  <p>Gestion des questions en cours de développement...</p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {Object.entries(questionsStats).length > 0 ? (
+                    Object.entries(questionsStats).map(([level, count]) => (
+                      <div key={level} className="p-4 border rounded-lg text-center">
+                        <p className="text-2xl font-bold text-primary">{count}</p>
+                        <p className="text-sm text-muted-foreground">Niveau {level}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="col-span-full text-center py-8">
+                      <p className="text-muted-foreground">Aucune question trouvée</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Plus className="h-5 w-5" />
+                      Questions par niveau
+                    </CardTitle>
+                    <CardDescription>
+                      Gérez le contenu des questions pour chaque niveau
+                    </CardDescription>
+                  </div>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Ajouter une question
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {difficultyLevels.map((level) => {
+                    const levelQuestions = questions.filter(q => q.level === level.level_number);
+                    return (
+                      <div key={level.id} className="border rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <Badge 
+                              variant="outline"
+                              style={{ backgroundColor: level.color + '20', borderColor: level.color, color: level.color }}
+                            >
+                              Niveau {level.level_number}
+                            </Badge>
+                            <h3 className="font-medium">{level.name}</h3>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary">
+                              {levelQuestions.length} question{levelQuestions.length !== 1 ? 's' : ''}
+                            </Badge>
+                            <Button variant="outline" size="sm">
+                              <Plus className="h-4 w-4 mr-1" />
+                              Ajouter
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        {levelQuestions.length > 0 ? (
+                          <div className="space-y-2 max-h-60 overflow-y-auto">
+                            {levelQuestions.slice(0, 5).map((question) => (
+                              <div key={question.id} className="flex items-center justify-between p-3 bg-muted/50 rounded">
+                                <div className="flex-1">
+                                  <p className="text-sm font-medium truncate max-w-md">
+                                    {question.content}
+                                  </p>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <Badge variant="outline" className="text-xs">
+                                      {question.type}
+                                    </Badge>
+                                    {question.rule && (
+                                      <span className="text-xs text-muted-foreground">
+                                        Règle: {question.rule}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Button variant="ghost" size="sm">
+                                    <Edit2 className="h-3 w-3" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm">
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                            {levelQuestions.length > 5 && (
+                              <p className="text-xs text-muted-foreground text-center pt-2">
+                                et {levelQuestions.length - 5} autre{levelQuestions.length - 5 !== 1 ? 's' : ''} question{levelQuestions.length - 5 !== 1 ? 's' : ''}...
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-center py-6 text-muted-foreground">
+                            <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                            <p className="text-sm">Aucune question pour ce niveau</p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
