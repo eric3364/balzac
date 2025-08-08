@@ -1350,6 +1350,130 @@ const Admin = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Configuration du partage LinkedIn */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Award className="h-5 w-5" />
+                  Configuration du partage de certifications
+                </CardTitle>
+                <CardDescription>
+                  Paramètres globaux pour le partage des certifications sur LinkedIn et autres plateformes
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Organisation émettrice */}
+                  <div className="space-y-4">
+                    <h4 className="font-medium text-sm">Organisation émettrice</h4>
+                    <div className="space-y-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="issuing_organization">Nom de l'organisation</Label>
+                        <Input
+                          id="issuing_organization"
+                          placeholder="Mon Organisation"
+                          defaultValue=""
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="organization_url">URL de l'organisation</Label>
+                        <Input
+                          id="organization_url"
+                          placeholder="https://mon-organisation.com"
+                          defaultValue=""
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="organization_logo">Logo de l'organisation (URL)</Label>
+                        <Input
+                          id="organization_logo"
+                          placeholder="https://mon-organisation.com/logo.png"
+                          defaultValue=""
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Paramètres de certification */}
+                  <div className="space-y-4">
+                    <h4 className="font-medium text-sm">Paramètres de certification</h4>
+                    <div className="space-y-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="expiration_months">Durée de validité (mois)</Label>
+                        <Input
+                          id="expiration_months"
+                          type="number"
+                          placeholder="24"
+                          defaultValue="24"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Durée avant expiration de la certification (0 = pas d'expiration)
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="verification_url_template">Modèle d'URL de vérification</Label>
+                        <Input
+                          id="verification_url_template"
+                          placeholder="https://mon-site.com/verify/{{credential_id}}"
+                          defaultValue=""
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Utilisez {"{{credential_id}}"} comme placeholder pour l'ID unique
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Métadonnées JSON-LD */}
+                <div className="border-t pt-6">
+                  <h4 className="font-medium text-sm mb-4">Métadonnées JSON-LD (1EdTech)</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="context_url">URL du contexte</Label>
+                      <Input
+                        id="context_url"
+                        defaultValue="https://www.w3.org/2018/credentials/v1"
+                        placeholder="https://www.w3.org/2018/credentials/v1"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="credential_type">Type de certification</Label>
+                      <Input
+                        id="credential_type"
+                        defaultValue="VerifiableCredential"
+                        placeholder="VerifiableCredential"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="achievement_type">Type d'accomplissement</Label>
+                      <Input
+                        id="achievement_type"
+                        defaultValue="Achievement"
+                        placeholder="Achievement"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="criteria_narrative">Description des critères</Label>
+                      <Input
+                        id="criteria_narrative"
+                        placeholder="A réussi l'évaluation avec un score minimum de {{min_score}}%"
+                        defaultValue=""
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bouton de sauvegarde */}
+                <div className="flex justify-end pt-4 border-t">
+                  <Button className="flex items-center gap-2">
+                    <Save className="h-4 w-4" />
+                    Sauvegarder la configuration
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="questions" className="space-y-6">
