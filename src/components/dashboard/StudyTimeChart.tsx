@@ -1,6 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Clock, Target, TrendingUp } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 interface StudyTimeChartProps {
   timeSpent: number; // en minutes
@@ -8,7 +11,82 @@ interface StudyTimeChartProps {
   loading?: boolean;
 }
 
+interface WeeklyStudyData {
+  name: string;
+  minutes: number;
+  sessions: number;
+}
+
 const StudyTimeChart = ({ timeSpent, sessionsCount, loading }: StudyTimeChartProps) => {
+  const { user } = useAuth();
+  const [weeklyData, setWeeklyData] = useState<WeeklyStudyData[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchWeeklyData = async () => {
+      if (!user) return;
+
+      try {
+        setDataLoading(true);
+        
+        // Calculer les dates pour les 7 derniers jours
+        const today = new Date();
+        const weeklyStats: WeeklyStudyData[] = [];
+        
+        for (let i = 6; i >= 0; i--) {
+          const date = new Date(today);
+          date.setDate(date.getDate() - i);
+          const startOfDay = new Date(date.setHours(0, 0, 0, 0));
+          const endOfDay = new Date(date.setHours(23, 59, 59, 999));
+          
+          // Récupérer les sessions de ce jour
+          const { data: sessions } = await supabase
+            .from('test_sessions')
+            .select('started_at, ended_at')
+            .eq('user_id', user.id)
+            .eq('status', 'completed')
+            .gte('started_at', startOfDay.toISOString())
+            .lte('started_at', endOfDay.toISOString());
+
+          // Calculer le temps total pour ce jour
+          const dayMinutes = sessions?.reduce((total, session) => {
+            if (session.started_at && session.ended_at) {
+              const duration = new Date(session.ended_at).getTime() - new Date(session.started_at).getTime();
+              return total + Math.round(duration / (1000 * 60));
+            }
+            return total;
+          }, 0) || 0;
+
+          const dayNames = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+          
+          weeklyStats.push({
+            name: dayNames[startOfDay.getDay()],
+            minutes: dayMinutes,
+            sessions: sessions?.length || 0
+          });
+        }
+        
+        setWeeklyData(weeklyStats);
+      } catch (error) {
+        console.error('Erreur lors du chargement des données hebdomadaires:', error);
+        // Données de fallback en cas d'erreur
+        setWeeklyData([
+          { name: 'Lun', minutes: 0, sessions: 0 },
+          { name: 'Mar', minutes: 0, sessions: 0 },
+          { name: 'Mer', minutes: 0, sessions: 0 },
+          { name: 'Jeu', minutes: 0, sessions: 0 },
+          { name: 'Ven', minutes: 0, sessions: 0 },
+          { name: 'Sam', minutes: 0, sessions: 0 },
+          { name: 'Dim', minutes: 0, sessions: 0 },
+        ]);
+      } finally {
+        setDataLoading(false);
+      }
+    };
+
+    fetchWeeklyData();
+  }, [user]);
+
   if (loading) {
     return (
       <Card>
@@ -25,17 +103,6 @@ const StudyTimeChart = ({ timeSpent, sessionsCount, loading }: StudyTimeChartPro
   const hours = Math.floor(timeSpent / 60);
   const minutes = timeSpent % 60;
   const averageSessionTime = sessionsCount > 0 ? Math.round(timeSpent / sessionsCount) : 0;
-
-  // Données fictives pour simuler l'évolution (en attendant de vraies données historiques)
-  const weeklyData = [
-    { name: 'Lun', minutes: Math.max(0, timeSpent * 0.1 + Math.random() * 20) },
-    { name: 'Mar', minutes: Math.max(0, timeSpent * 0.15 + Math.random() * 20) },
-    { name: 'Mer', minutes: Math.max(0, timeSpent * 0.2 + Math.random() * 20) },
-    { name: 'Jeu', minutes: Math.max(0, timeSpent * 0.18 + Math.random() * 20) },
-    { name: 'Ven', minutes: Math.max(0, timeSpent * 0.22 + Math.random() * 20) },
-    { name: 'Sam', minutes: Math.max(0, timeSpent * 0.08 + Math.random() * 15) },
-    { name: 'Dim', minutes: Math.max(0, timeSpent * 0.07 + Math.random() * 15) },
-  ];
 
   const formatTime = (minutes: number) => {
     if (minutes < 60) return `${Math.round(minutes)}min`;
@@ -78,35 +145,42 @@ const StudyTimeChart = ({ timeSpent, sessionsCount, loading }: StudyTimeChartPro
             Répartition hebdomadaire
           </h4>
           <div className="h-48">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={weeklyData}>
-                <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                <XAxis 
-                  dataKey="name" 
-                  fontSize={12}
-                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                />
-                <YAxis 
-                  fontSize={12}
-                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                  tickFormatter={(value) => `${Math.round(value)}min`}
-                />
-                <Tooltip 
-                  formatter={(value: any) => [`${Math.round(value)}min`, 'Temps d\'étude']}
-                  labelStyle={{ color: 'hsl(var(--foreground))' }}
-                  contentStyle={{ 
-                    backgroundColor: 'hsl(var(--background))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '6px'
-                  }}
-                />
-                <Bar 
-                  dataKey="minutes" 
-                  fill="hsl(var(--primary))" 
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
+            {dataLoading ? (
+              <div className="h-full bg-muted animate-pulse rounded-lg" />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={weeklyData}>
+                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                  <XAxis 
+                    dataKey="name" 
+                    fontSize={12}
+                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                  />
+                  <YAxis 
+                    fontSize={12}
+                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                    tickFormatter={(value) => `${Math.round(value)}min`}
+                  />
+                  <Tooltip 
+                    formatter={(value: any, name: string) => [
+                      name === 'minutes' ? `${Math.round(value)}min` : value,
+                      name === 'minutes' ? 'Temps d\'étude' : 'Sessions'
+                    ]}
+                    labelStyle={{ color: 'hsl(var(--foreground))' }}
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--background))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '6px'
+                    }}
+                  />
+                  <Bar 
+                    dataKey="minutes" 
+                    fill="hsl(var(--primary))" 
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 
