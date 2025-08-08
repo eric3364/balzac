@@ -361,11 +361,11 @@ const Index = () => {
                 {certificationPricing.map((cert) => {
                   const isFree = cert.price_euros === 0;
                   return (
-                    <Card key={cert.id} className={`relative p-6 text-center border-2 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${
-                      isFree 
-                        ? 'border-green-200 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20' 
-                        : 'border-primary/20 bg-gradient-to-br from-background to-background/50'
-                    }`}>
+                     <Card key={cert.id} className={`relative p-4 text-center border-2 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 w-48 flex-shrink-0 ${
+                       isFree 
+                         ? 'border-green-200 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20' 
+                         : 'border-primary/20 bg-gradient-to-br from-background to-background/50'
+                     }`}>
                        {/* Badge */}
                        <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                          {isFree && (
