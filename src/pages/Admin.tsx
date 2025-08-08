@@ -1161,10 +1161,12 @@ const Admin = () => {
                                                 defaultValue={associatedCert.price_euros} 
                                                 type="number" 
                                                 step="0.01"
+                                                min="0"
                                                 onChange={(e) => {
+                                                  const value = Math.max(0, parseFloat(e.target.value) || 0);
                                                   setCertificates(prev => prev.map(cert => 
                                                     cert.id === associatedCert.id 
-                                                      ? { ...cert, price_euros: parseFloat(e.target.value) || 0 }
+                                                      ? { ...cert, price_euros: value }
                                                       : cert
                                                   ));
                                                 }}
