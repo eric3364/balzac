@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Euro, Users, ShoppingCart, Gift, TrendingUp, Trash2, Edit } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface Purchase {
@@ -446,7 +446,14 @@ export const FinanceManager: React.FC = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {promoCodes.map((promo) => (
+                  {promoCodes.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                        Aucun code promo créé pour le moment
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    promoCodes.map((promo) => (
                     <TableRow key={promo.id}>
                       <TableCell className="font-mono font-semibold">
                         {editingPromo?.id === promo.id ? (
@@ -546,7 +553,8 @@ export const FinanceManager: React.FC = () => {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
