@@ -201,24 +201,6 @@ const Index = () => {
             </p>
             
 
-            {/* Trust indicators */}
-            <div className="mt-16 animate-fade-in" style={{ animationDelay: '0.8s' }}>
-              
-              <div className="flex justify-center items-center gap-8 opacity-60">
-                <div className="flex items-center gap-2">
-                  <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                  <span className="font-semibold">4.9/5</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Award className="h-5 w-5 text-primary" />
-                  <span className="font-semibold">Certifié</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-green-600" />
-                  <span className="font-semibold">100% Sécurisé</span>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
