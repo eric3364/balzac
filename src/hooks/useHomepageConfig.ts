@@ -175,6 +175,7 @@ export const useHomepageConfig = () => {
 
   const updateConfig = async (updates: Partial<Omit<HomepageConfig, 'loading'>>) => {
     try {
+      console.log('Updating homepage config:', updates);
       const configUpdates = Object.entries(updates).map(([key, value]) => {
         let configKey = '';
         

@@ -769,11 +769,15 @@ const Admin = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="ctaSubDescription">Sous-description</Label>
-                      <Input
+                      <Textarea
                         id="ctaSubDescription"
-                        value={homepageAssets.ctaSubDescription}
-                        onChange={(e) => updateHomepageAssets({ ctaSubDescription: e.target.value })}
+                        value={homepageAssets.ctaSubDescription || ''}
+                        onChange={(e) => {
+                          console.log('Updating ctaSubDescription:', e.target.value);
+                          updateHomepageAssets({ ctaSubDescription: e.target.value });
+                        }}
                         placeholder="Ex: Démarrez gratuitement avec le niveau 1"
+                        rows={2}
                       />
                     </div>
                   </div>
