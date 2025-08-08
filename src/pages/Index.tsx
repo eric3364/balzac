@@ -200,22 +200,6 @@ const Index = () => {
               {homepageAssets.heroDescription}
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-6 justify-center animate-fade-in"
-                 style={{ animationDelay: '0.6s' }}>
-              <Button size="lg" 
-                      className="text-lg px-10 py-6 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl" 
-                      onClick={() => navigate('/auth')}>
-                <Zap className="mr-2 h-5 w-5" />
-                {homepageAssets.heroCta_primary}
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-              <Button size="lg" 
-                      variant="outline" 
-                      className="text-lg px-10 py-6 border-2 hover:bg-primary/5 transform hover:scale-105 transition-all duration-300">
-                <BookOpen className="mr-2 h-5 w-5" />
-                {homepageAssets.heroCta_secondary}
-              </Button>
-            </div>
 
             {/* Trust indicators */}
             <div className="mt-16 animate-fade-in" style={{ animationDelay: '0.8s' }}>
@@ -520,23 +504,6 @@ const Index = () => {
               Démarrez gratuitement avec le niveau 1 puis progressez à votre rythme
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              <Button size="lg" 
-                      variant="secondary" 
-                      className="text-lg px-10 py-6 bg-white text-primary hover:bg-white/90 transform hover:scale-105 transition-all duration-300 shadow-lg" 
-                      onClick={() => navigate('/auth')}>
-                <Zap className="mr-2 h-5 w-5" />
-                {homepageAssets.ctaButton}
-                <CheckCircle className="ml-2 h-5 w-5" />
-              </Button>
-              <Button size="lg" 
-                      variant="outline" 
-                      className="text-lg px-10 py-6 border-2 border-white/30 text-white hover:bg-white/10 transform hover:scale-105 transition-all duration-300"
-                      onClick={() => navigate('/pricing')}>
-                <BookOpen className="mr-2 h-5 w-5" />
-                Voir les tarifs
-              </Button>
-            </div>
           </div>
         </div>
       </section>
