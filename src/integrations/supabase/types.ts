@@ -575,33 +575,42 @@ export type Database = {
       }
       user_level_purchases: {
         Row: {
+          access_code_used: boolean | null
           created_at: string
           id: string
           level: number
+          payment_method: string | null
           price_paid: number
           purchased_at: string
           status: string
           stripe_payment_intent_id: string | null
+          temporary_access_code: string | null
           user_id: string
         }
         Insert: {
+          access_code_used?: boolean | null
           created_at?: string
           id?: string
           level: number
+          payment_method?: string | null
           price_paid: number
           purchased_at?: string
           status?: string
           stripe_payment_intent_id?: string | null
+          temporary_access_code?: string | null
           user_id: string
         }
         Update: {
+          access_code_used?: boolean | null
           created_at?: string
           id?: string
           level?: number
+          payment_method?: string | null
           price_paid?: number
           purchased_at?: string
           status?: string
           stripe_payment_intent_id?: string | null
+          temporary_access_code?: string | null
           user_id?: string
         }
         Relationships: []
@@ -660,6 +669,10 @@ export type Database = {
         Returns: number
       }
       generate_credential_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_temporary_access_code: {
         Args: Record<PropertyKey, never>
         Returns: string
       }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { usePendingPurchase } from '@/hooks/usePendingPurchase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +13,7 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { user, signIn, signUp } = useAuth();
   const navigate = useNavigate();
+  const { pendingPurchase } = usePendingPurchase();
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -70,7 +72,12 @@ const Auth = () => {
         
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-primary">Balzac Certification</h1>
-          <p className="text-muted-foreground mt-2">Plateforme d'apprentissage du français</p>
+          <p className="text-muted-foreground mt-2">
+            {pendingPurchase 
+              ? `Finalisez votre achat - ${pendingPurchase.name}`
+              : "Plateforme d'apprentissage du français"
+            }
+          </p>
         </div>
 
         <Tabs defaultValue="signin" className="w-full">

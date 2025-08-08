@@ -7,7 +7,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { PurchaseModal } from '@/components/PurchaseModal';
+import { CheckoutFlow } from '@/components/CheckoutFlow';
+import { usePendingPurchase } from '@/hooks/usePendingPurchase';
 import { useToast } from '@/components/ui/use-toast';
 import { BookOpen, Award, Users, CheckCircle, Star, ArrowRight, Shield, Sparkles, TrendingUp, Target, Zap, Clock, Brain, Crown, Trophy, ShoppingCart } from 'lucide-react';
 
@@ -38,6 +39,7 @@ const Index = () => {
   const [certificationPricing, setCertificationPricing] = useState<CertificationPricing[]>([]);
   const [loadingPricing, setLoadingPricing] = useState(true);
   const [selectedCertification, setSelectedCertification] = useState<CertificationPricing | null>(null);
+  const { pendingPurchase, clearPendingPurchase } = usePendingPurchase();
   const { toast } = useToast();
 
   // Load certification pricing data
@@ -107,6 +109,13 @@ const Index = () => {
       navigate('/dashboard');
     }
   }, [user, loading, navigate, previewMode]);
+
+  // Gérer l'achat en attente après connexion
+  useEffect(() => {
+    if (pendingPurchase && user) {
+      setSelectedCertification(pendingPurchase as CertificationPricing);
+    }
+  }, [pendingPurchase, user]);
 
   // Function to get icon component from badge_icon name
   const getIconComponent = (iconName: string) => {
@@ -561,18 +570,22 @@ const Index = () => {
         </div>
       </footer>
 
-      {/* Purchase Modal */}
+      {/* Checkout Flow */}
       {selectedCertification && (
-        <PurchaseModal
+        <CheckoutFlow
           open={selectedCertification !== null}
-          onOpenChange={(open) => !open && setSelectedCertification(null)}
+          onOpenChange={(open) => {
+            if (!open) {
+              setSelectedCertification(null);
+              clearPendingPurchase();
+            }
+          }}
           certification={{
             id: selectedCertification.id,
             name: selectedCertification.name,
             price_euros: selectedCertification.price_euros,
             level_number: selectedCertification.level_number
           }}
-          onConfirm={confirmPurchase}
         />
       )}
     </div>
