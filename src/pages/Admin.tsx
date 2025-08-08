@@ -1416,15 +1416,19 @@ const Admin = () => {
                                              });
 
                                              // Recharger les certificats
-                                             loadCertificates();
+                                             await loadCertificates();
                                              
-                                             // Fermer le dialog et rediriger vers l'onglet Niveaux & Certifications
-                                             const closeButton = document.querySelector('[data-state="open"] button[aria-label="Close"]') as HTMLButtonElement;
-                                             closeButton?.click();
-                                             
-                                             // Redirection vers l'onglet "levels"
-                                             const levelsTab = document.querySelector('[value="levels"]') as HTMLButtonElement;
-                                             levelsTab?.click();
+                                             // Fermer le dialog et rediriger vers l'onglet Niveaux & Certifications après un délai
+                                             setTimeout(() => {
+                                               const closeButton = document.querySelector('[data-state="open"] button[aria-label="Close"]') as HTMLButtonElement;
+                                               closeButton?.click();
+                                               
+                                               // Redirection vers l'onglet "levels" après un autre délai
+                                               setTimeout(() => {
+                                                 const levelsTab = document.querySelector('[value="levels"]') as HTMLButtonElement;
+                                                 levelsTab?.click();
+                                               }, 100);
+                                             }, 500);
                                           } catch (error) {
                                             console.error('Erreur lors de la sauvegarde:', error);
                                             toast({
