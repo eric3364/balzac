@@ -9,14 +9,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, CreditCard, Shield, Zap, Gift, Check } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ArrowLeft, CreditCard, Shield, Zap, Gift, Check, User, UserPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function Payment() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user } = useAuth();
+  const { user, signIn, signUp } = useAuth();
   const { toast } = useToast();
   const { pricing } = useLevelPricing();
   const { applyPromoCode, loading: promoLoading } = usePromoCode();
@@ -27,6 +28,7 @@ export default function Payment() {
   const [promoApplied, setPromoApplied] = useState(false);
   const [finalPrice, setFinalPrice] = useState<number>(0);
   const [loading, setLoading] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('card');
 
   useEffect(() => {
@@ -43,11 +45,56 @@ export default function Payment() {
     }
   }, [searchParams, pricing]);
 
-  useEffect(() => {
-    if (!user) {
-      navigate('/auth');
+  const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+
+    const { error } = await signIn(email, password);
+    
+    if (error) {
+      toast({
+        title: "Erreur de connexion",
+        description: error.message,
+        variant: "destructive"
+      });
     }
-  }, [user, navigate]);
+    
+    setAuthLoading(false);
+  };
+
+  const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+    const firstName = formData.get('firstName') as string;
+    const lastName = formData.get('lastName') as string;
+    const school = formData.get('school') as string;
+    const className = formData.get('className') as string;
+
+    const { error } = await signUp(email, password, firstName, lastName, school, className);
+    
+    if (error) {
+      toast({
+        title: "Erreur d'inscription",
+        description: error.message,
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Inscription réussie",
+        description: "Votre compte a été créé avec succès.",
+      });
+    }
+    
+    setAuthLoading(false);
+  };
 
   const handleApplyPromoCode = async () => {
     if (!level) return;
@@ -132,6 +179,129 @@ export default function Payment() {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8">
+          {/* Section Connexion/Inscription si non connecté */}
+          {!user && (
+            <div className="lg:col-span-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="h-5 w-5 text-primary" />
+                    Connexion requise pour finaliser l'achat
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Tabs defaultValue="signin" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="signin" className="flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        Connexion
+                      </TabsTrigger>
+                      <TabsTrigger value="signup" className="flex items-center gap-2">
+                        <UserPlus className="h-4 w-4" />
+                        Inscription
+                      </TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="signin" className="mt-6">
+                      <form onSubmit={handleSignIn} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="signin-email">Email</Label>
+                          <Input
+                            id="signin-email"
+                            name="email"
+                            type="email"
+                            placeholder="votre@email.com"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="signin-password">Mot de passe</Label>
+                          <Input
+                            id="signin-password"
+                            name="password"
+                            type="password"
+                            placeholder="••••••••"
+                            required
+                          />
+                        </div>
+                        <Button type="submit" className="w-full" disabled={authLoading}>
+                          {authLoading ? 'Connexion...' : 'Se connecter'}
+                        </Button>
+                      </form>
+                    </TabsContent>
+
+                    <TabsContent value="signup" className="mt-6">
+                      <form onSubmit={handleSignUp} className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="firstName">Prénom</Label>
+                            <Input
+                              id="firstName"
+                              name="firstName"
+                              placeholder="Jean"
+                              required
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="lastName">Nom</Label>
+                            <Input
+                              id="lastName"
+                              name="lastName"
+                              placeholder="Dupont"
+                              required
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="signup-email">Email</Label>
+                          <Input
+                            id="signup-email"
+                            name="email"
+                            type="email"
+                            placeholder="votre@email.com"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="signup-password">Mot de passe</Label>
+                          <Input
+                            id="signup-password"
+                            name="password"
+                            type="password"
+                            placeholder="••••••••"
+                            minLength={6}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="school">École</Label>
+                          <Input
+                            id="school"
+                            name="school"
+                            placeholder="ESCEN"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="className">Classe</Label>
+                          <Input
+                            id="className"
+                            name="className"
+                            placeholder="N1"
+                            required
+                          />
+                        </div>
+                        <Button type="submit" className="w-full" disabled={authLoading}>
+                          {authLoading ? 'Inscription...' : "S'inscrire et continuer"}
+                        </Button>
+                      </form>
+                    </TabsContent>
+                  </Tabs>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
           {/* Récapitulatif de commande */}
           <div className="space-y-6">
             <Card>
@@ -238,8 +408,8 @@ export default function Payment() {
             )}
           </div>
 
-          {/* Informations de paiement */}
-          <div className="space-y-6">
+          {/* Informations de paiement - Affiché seulement si connecté */}
+          {user && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -340,7 +510,7 @@ export default function Payment() {
                 )}
               </CardContent>
             </Card>
-          </div>
+          )}
         </div>
       </div>
     </div>

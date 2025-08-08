@@ -43,12 +43,7 @@ export const CheckoutFlow = ({ open, onOpenChange, certification }: CheckoutFlow
   };
 
   const handleProceedToPayment = () => {
-    if (!user) {
-      handleAuthRequired();
-      return;
-    }
-    
-    // Rediriger vers la page de paiement
+    // Rediriger directement vers la page de paiement (avec ou sans utilisateur connecté)
     navigate(`/payment?level=${certification.level_number}`);
     onOpenChange(false);
   };
@@ -231,11 +226,11 @@ export const CheckoutFlow = ({ open, onOpenChange, certification }: CheckoutFlow
           </Button>
           <Button 
             onClick={handleProceedToPayment} 
-            disabled={loading || promoLoading || !user}
+            disabled={loading || promoLoading}
             className="flex items-center gap-2 flex-1"
           >
             <CreditCard className="h-4 w-4" />
-            {loading ? "Traitement..." : "Continuer"}
+            {user ? "Continuer" : "S'inscrire et continuer"}
           </Button>
         </div>
       </DialogContent>
