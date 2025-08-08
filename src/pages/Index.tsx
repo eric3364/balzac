@@ -21,6 +21,9 @@ interface CertificationPricing {
   badge_color: string;
   badge_background_color: string;
   is_active: boolean;
+  feature_1_text?: string;
+  feature_2_text?: string;
+  feature_3_text?: string;
 }
 
 const Index = () => {
@@ -48,6 +51,9 @@ const Index = () => {
             badge_icon,
             badge_color,
             badge_background_color,
+            feature_1_text,
+            feature_2_text,
+            feature_3_text,
             difficulty_levels!inner(
               level_number,
               name,
@@ -74,7 +80,10 @@ const Index = () => {
           badge_icon: item.badge_icon,
           badge_color: item.badge_color,
           badge_background_color: item.badge_background_color,
-          is_active: item.is_active
+          is_active: item.is_active,
+          feature_1_text: item.feature_1_text,
+          feature_2_text: item.feature_2_text,
+          feature_3_text: item.feature_3_text
         }));
 
         setCertificationPricing(formattedData);
@@ -404,40 +413,27 @@ const Index = () => {
                           )}
                         </div>
 
-                        {/* Features */}
-                        <div className="space-y-2 text-sm text-left">
-                          {isFree ? (
-                            <>
-                              <div className="flex items-center gap-2">
-                                <CheckCircle className="h-4 w-4 text-green-600" />
-                                <span>Accès complet gratuit</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <CheckCircle className="h-4 w-4 text-green-600" />
-                                <span>Certification incluse</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <CheckCircle className="h-4 w-4 text-green-600" />
-                                <span>Idéal pour débuter</span>
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              <div className="flex items-center gap-2">
-                                <Zap className="h-4 w-4 text-primary" />
-                                <span>{cert.free_sessions} sessions d'essai</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <CheckCircle className="h-4 w-4 text-primary" />
-                                <span>Accès complet après achat</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Award className="h-4 w-4 text-primary" />
-                                <span>Certification officielle</span>
-                              </div>
-                            </>
-                          )}
-                        </div>
+                         {/* Features */}
+                         <div className="space-y-2 text-sm text-left">
+                           {cert.feature_1_text && (
+                             <div className="flex items-center gap-2">
+                               {isFree ? <CheckCircle className="h-4 w-4 text-green-600" /> : <Zap className="h-4 w-4 text-primary" />}
+                               <span>{cert.feature_1_text}</span>
+                             </div>
+                           )}
+                           {cert.feature_2_text && (
+                             <div className="flex items-center gap-2">
+                               <CheckCircle className="h-4 w-4 text-primary" />
+                               <span>{cert.feature_2_text}</span>
+                             </div>
+                           )}
+                           {cert.feature_3_text && (
+                             <div className="flex items-center gap-2">
+                               {isFree ? <CheckCircle className="h-4 w-4 text-green-600" /> : <Award className="h-4 w-4 text-primary" />}
+                               <span>{cert.feature_3_text}</span>
+                             </div>
+                           )}
+                         </div>
                       </CardContent>
                     </Card>
                   );

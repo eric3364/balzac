@@ -55,6 +55,9 @@ export type Database = {
           custom_badge_url: string | null
           description: string | null
           difficulty_level_id: string
+          feature_1_text: string | null
+          feature_2_text: string | null
+          feature_3_text: string | null
           free_sessions: number | null
           id: string
           is_active: boolean
@@ -81,6 +84,9 @@ export type Database = {
           custom_badge_url?: string | null
           description?: string | null
           difficulty_level_id: string
+          feature_1_text?: string | null
+          feature_2_text?: string | null
+          feature_3_text?: string | null
           free_sessions?: number | null
           id?: string
           is_active?: boolean
@@ -107,6 +113,9 @@ export type Database = {
           custom_badge_url?: string | null
           description?: string | null
           difficulty_level_id?: string
+          feature_1_text?: string | null
+          feature_2_text?: string | null
+          feature_3_text?: string | null
           free_sessions?: number | null
           id?: string
           is_active?: boolean

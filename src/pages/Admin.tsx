@@ -86,6 +86,9 @@ interface CertificateTemplate {
   created_at: string;
   updated_at: string;
   created_by: string;
+  feature_1_text?: string;
+  feature_2_text?: string;
+  feature_3_text?: string;
 }
 
 interface Question {
@@ -1319,8 +1322,57 @@ const Admin = () => {
                                                 }}
                                                 levelNumber={level.level_number}
                                               />
-                                            </div>
-                                         </div>
+                                             </div>
+
+                                             {/* Configuration des descriptions de fonctionnalités */}
+                                             <div className="space-y-4 border-t pt-4">
+                                               <h4 className="font-medium text-sm">Descriptions de fonctionnalités (affichées sur la page d'accueil)</h4>
+                                               <div className="space-y-3">
+                                                 <div className="space-y-2">
+                                                   <Label>Fonctionnalité 1</Label>
+                                                   <Input 
+                                                     placeholder="Ex: 3 sessions d'essai"
+                                                     value={associatedCert.feature_1_text || ''}
+                                                     onChange={(e) => {
+                                                       setCertificates(prev => prev.map(cert => 
+                                                         cert.id === associatedCert.id 
+                                                           ? { ...cert, feature_1_text: e.target.value }
+                                                           : cert
+                                                       ));
+                                                     }}
+                                                   />
+                                                 </div>
+                                                 <div className="space-y-2">
+                                                   <Label>Fonctionnalité 2</Label>
+                                                   <Input 
+                                                     placeholder="Ex: Accès complet après achat"
+                                                     value={associatedCert.feature_2_text || ''}
+                                                     onChange={(e) => {
+                                                       setCertificates(prev => prev.map(cert => 
+                                                         cert.id === associatedCert.id 
+                                                           ? { ...cert, feature_2_text: e.target.value }
+                                                           : cert
+                                                       ));
+                                                     }}
+                                                   />
+                                                 </div>
+                                                 <div className="space-y-2">
+                                                   <Label>Fonctionnalité 3</Label>
+                                                   <Input 
+                                                     placeholder="Ex: Certification officielle"
+                                                     value={associatedCert.feature_3_text || ''}
+                                                     onChange={(e) => {
+                                                       setCertificates(prev => prev.map(cert => 
+                                                         cert.id === associatedCert.id 
+                                                           ? { ...cert, feature_3_text: e.target.value }
+                                                           : cert
+                                                       ));
+                                                     }}
+                                                   />
+                                                 </div>
+                                               </div>
+                                             </div>
+                                          </div>
                                        )}
                                     </div>
                                     <DialogFooter className="gap-2">
@@ -1337,20 +1389,23 @@ const Admin = () => {
                                             const certToUpdate = certificates.find(cert => cert.id === associatedCert.id);
                                             if (!certToUpdate) return;
 
-                                            const { error } = await supabase
-                                              .from('certificate_templates')
-                                              .update({
-                                                name: certToUpdate.name,
-                                                price_euros: certToUpdate.price_euros,
-                                                min_score_required: certToUpdate.min_score_required,
-                                                free_sessions: certToUpdate.free_sessions,
-                                                description: certToUpdate.description,
-                                                certificate_title: certToUpdate.certificate_title,
-                                                certificate_subtitle: certToUpdate.certificate_subtitle,
-                                                certificate_text: certToUpdate.certificate_text,
-                                                is_active: certToUpdate.is_active,
-                                                updated_at: new Date().toISOString()
-                                              })
+                                             const { error } = await supabase
+                                               .from('certificate_templates')
+                                               .update({
+                                                 name: certToUpdate.name,
+                                                 price_euros: certToUpdate.price_euros,
+                                                 min_score_required: certToUpdate.min_score_required,
+                                                 free_sessions: certToUpdate.free_sessions,
+                                                 description: certToUpdate.description,
+                                                 certificate_title: certToUpdate.certificate_title,
+                                                 certificate_subtitle: certToUpdate.certificate_subtitle,
+                                                 certificate_text: certToUpdate.certificate_text,
+                                                 feature_1_text: certToUpdate.feature_1_text,
+                                                 feature_2_text: certToUpdate.feature_2_text,
+                                                 feature_3_text: certToUpdate.feature_3_text,
+                                                 is_active: certToUpdate.is_active,
+                                                 updated_at: new Date().toISOString()
+                                               })
                                               .eq('id', associatedCert.id);
 
                                             if (error) throw error;
