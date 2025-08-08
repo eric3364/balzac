@@ -1191,10 +1191,12 @@ const Admin = () => {
                                               <Input 
                                                 defaultValue={associatedCert.free_sessions} 
                                                 type="number"
+                                                min="0"
                                                 onChange={(e) => {
+                                                  const value = Math.max(0, parseInt(e.target.value) || 0);
                                                   setCertificates(prev => prev.map(cert => 
                                                     cert.id === associatedCert.id 
-                                                      ? { ...cert, free_sessions: parseInt(e.target.value) || 3 }
+                                                      ? { ...cert, free_sessions: value }
                                                       : cert
                                                   ));
                                                 }}
