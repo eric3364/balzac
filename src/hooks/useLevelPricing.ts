@@ -23,8 +23,7 @@ export const useLevelPricing = () => {
             is_active,
             difficulty_levels!inner(level_number)
           `)
-          .eq('is_active', true)
-          .order('difficulty_levels.level_number');
+          .eq('is_active', true);
 
         if (error) throw error;
         
@@ -33,7 +32,7 @@ export const useLevelPricing = () => {
           price_euros: item.price_euros,
           free_sessions: item.free_sessions,
           is_active: item.is_active
-        }));
+        })).sort((a, b) => a.level - b.level);
         
         setPricing(formattedData);
       } catch (error) {
