@@ -592,10 +592,15 @@ export const UserManagement = () => {
                       </div>
                     </TableCell>
                     <TableCell className="text-center">
-                      <div className="flex flex-col items-center">
+                      <div className="flex flex-col items-center space-y-1">
                         <Badge variant={user.certifications_count > 0 ? "default" : "secondary"}>
                           {user.certifications_count}
                         </Badge>
+                        {user.certifications.length > 0 && (
+                          <div className="text-xs text-muted-foreground">
+                            Dernière: {new Date(user.certifications[0].certified_at).toLocaleDateString('fr-FR')}
+                          </div>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell className="text-center">

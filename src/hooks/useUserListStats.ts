@@ -1,6 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+export interface UserCertification {
+  level: number;
+  score: number;
+  certified_at: string;
+}
+
 export interface UserListStats {
   user_id: string;
   email: string;
@@ -14,6 +20,7 @@ export interface UserListStats {
   total_questions: number;
   correct_answers: number;
   certifications_count: number;
+  certifications: UserCertification[];
   max_level: number;
   avg_score: number;
   time_spent_minutes: number;
@@ -54,6 +61,7 @@ export const useUserListStats = () => {
             total_questions: 0,
             correct_answers: 0,
             certifications_count: 0,
+            certifications: [],
             max_level: 0,
             avg_score: 0,
             time_spent_minutes: 0,
@@ -78,10 +86,11 @@ export const useUserListStats = () => {
             .from('question_attempts')
             .select('is_correct')
             .eq('user_id', user.user_id),
-          supabase
-            .from('user_certifications')
-            .select('level')
-            .eq('user_id', user.user_id),
+            supabase
+              .from('user_certifications')
+              .select('level, score, certified_at')
+              .eq('user_id', user.user_id)
+              .order('certified_at', { ascending: false }),
           supabase.rpc('get_user_max_level', { user_uuid: user.user_id })
         ]);
 
@@ -124,6 +133,11 @@ export const useUserListStats = () => {
           total_questions: totalQuestions,
           correct_answers: correctAnswers,
           certifications_count: certificationsCount,
+          certifications: certificationsData?.map(cert => ({
+            level: cert.level,
+            score: cert.score,
+            certified_at: cert.certified_at
+          })) || [],
           max_level: maxLevel,
           avg_score: avgScore,
           time_spent_minutes: timeSpentMinutes,
