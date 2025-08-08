@@ -156,8 +156,12 @@ export default function Pricing() {
           <PurchaseModal
             open={selectedLevel !== null}
             onOpenChange={(open) => !open && setSelectedLevel(null)}
-            level={selectedLevel!}
-            price={selectedPricing.price_euros}
+            certification={{
+              id: `level-${selectedLevel}`,
+              name: `Certification Niveau ${selectedLevel}`,
+              price_euros: selectedPricing.price_euros,
+              level_number: selectedLevel!
+            }}
             onConfirm={confirmPurchase}
           />
         )}

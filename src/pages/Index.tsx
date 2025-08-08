@@ -7,7 +7,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, Award, Users, CheckCircle, Star, ArrowRight, Shield, Sparkles, TrendingUp, Target, Zap, Clock, Brain, Crown, Trophy } from 'lucide-react';
+import { PurchaseModal } from '@/components/PurchaseModal';
+import { useToast } from '@/components/ui/use-toast';
+import { BookOpen, Award, Users, CheckCircle, Star, ArrowRight, Shield, Sparkles, TrendingUp, Target, Zap, Clock, Brain, Crown, Trophy, ShoppingCart } from 'lucide-react';
 
 interface CertificationPricing {
   id: string;
@@ -35,6 +37,8 @@ const Index = () => {
   const previewMode = searchParams.get('preview') === 'true';
   const [certificationPricing, setCertificationPricing] = useState<CertificationPricing[]>([]);
   const [loadingPricing, setLoadingPricing] = useState(true);
+  const [selectedCertification, setSelectedCertification] = useState<CertificationPricing | null>(null);
+  const { toast } = useToast();
 
   // Load certification pricing data
   useEffect(() => {
@@ -116,6 +120,46 @@ const Index = () => {
       case 'zap': return Zap;
       case 'brain': return Brain;
       default: return Award;
+    }
+  };
+
+  const handlePurchase = (certification: CertificationPricing) => {
+    if (!user) {
+      toast({
+        title: "Connexion requise",
+        description: "Veuillez vous connecter pour effectuer un achat.",
+        variant: "destructive",
+      });
+      navigate('/auth');
+      return;
+    }
+    setSelectedCertification(certification);
+  };
+
+  const confirmPurchase = async (level: number) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('create-payment', {
+        body: { level }
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        window.open(data.url, '_blank');
+        
+        toast({
+          title: "Redirection vers le paiement",
+          description: "Vous avez été redirigé vers Stripe pour finaliser votre achat.",
+        });
+      }
+    } catch (error) {
+      console.error('Erreur lors de la création du paiement:', error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur s'est produite lors de la création du paiement.",
+        variant: "destructive"
+      });
+      throw error;
     }
   };
 
@@ -433,9 +477,22 @@ const Index = () => {
                                <span>{cert.feature_3_text}</span>
                              </div>
                            )}
-                         </div>
-                      </CardContent>
-                    </Card>
+                          </div>
+
+                          {/* Purchase Button */}
+                          <div className="mt-4 pt-3 border-t border-border/50">
+                            <Button
+                              size="sm"
+                              className="w-full"
+                              variant={isFree ? "secondary" : "default"}
+                              onClick={() => isFree ? navigate('/auth') : handlePurchase(cert)}
+                            >
+                              <ShoppingCart className="h-4 w-4 mr-2" />
+                              {isFree ? "Commencer gratuitement" : `Acheter ${cert.price_euros}€`}
+                            </Button>
+                          </div>
+                       </CardContent>
+                     </Card>
                   );
                 })}
               </div>
@@ -503,6 +560,21 @@ const Index = () => {
           </div>
         </div>
       </footer>
+
+      {/* Purchase Modal */}
+      {selectedCertification && (
+        <PurchaseModal
+          open={selectedCertification !== null}
+          onOpenChange={(open) => !open && setSelectedCertification(null)}
+          certification={{
+            id: selectedCertification.id,
+            name: selectedCertification.name,
+            price_euros: selectedCertification.price_euros,
+            level_number: selectedCertification.level_number
+          }}
+          onConfirm={confirmPurchase}
+        />
+      )}
     </div>
   );
 };

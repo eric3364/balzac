@@ -238,6 +238,39 @@ export type Database = {
         }
         Relationships: []
       }
+      promo_codes: {
+        Row: {
+          code: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_used: boolean
+          level: number
+          used_at: string | null
+          used_by: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_used?: boolean
+          level: number
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_used?: boolean
+          level?: number
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Relationships: []
+      }
       question_attempts: {
         Row: {
           attempts_count: number | null
@@ -614,6 +647,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_promo_code: {
+        Args: {
+          code_text: string
+          user_uuid: string
+          certification_level: number
+        }
+        Returns: Json
+      }
       calculate_total_sessions_for_level: {
         Args: { level_num: number; questions_percentage?: number }
         Returns: number
