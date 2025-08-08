@@ -22,6 +22,7 @@ import { useFooterConfig } from '@/hooks/useFooterConfig';
 import { UserManagement } from '@/components/UserManagement';
 import { FooterConfigForm } from '@/components/FooterConfigForm';
 import { QuestionsManager } from '@/components/QuestionsManager';
+import { FinanceManager } from '@/components/FinanceManager';
 
 interface AdminUser {
   id: number;
