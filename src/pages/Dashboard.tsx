@@ -194,40 +194,7 @@ const Dashboard = () => {
           />
         </div>
 
-        {/* Graphiques et visualisations */}
-        <div className="grid gap-6 lg:grid-cols-2 mb-8">
-          {/* Graphique en camembert */}
-          <ProgressChart
-            correctAnswers={userStats.correctAnswers}
-            incorrectAnswers={userStats.incorrectAnswers}
-            loading={userStats.loading}
-          />
-          
-          {/* Jauge de score */}
-          <ScoreGauge
-            score={userStats.progressPercentage}
-            loading={userStats.loading}
-          />
-        </div>
-
-        {/* Graphiques détaillés */}
-        <div className="grid gap-6 lg:grid-cols-2 mb-8">
-          {/* Graphique temps d'étude */}
-          <StudyTimeChart
-            timeSpent={userStats.timeSpent}
-            sessionsCount={userStats.totalTests}
-            loading={userStats.loading}
-          />
-          
-          {/* Heatmap d'activité */}
-          <ActivityHeatmap
-            totalQuestions={userStats.totalQuestions}
-            sessionsCount={userStats.totalTests}
-            loading={userStats.loading}
-          />
-        </div>
-
-        {/* Statistiques détaillées en grille */}
+        {/* Statistiques détaillées en grille - DÉPLACÉES AU-DESSUS */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -282,6 +249,40 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Graphiques et visualisations */}
+        <div className="grid gap-6 lg:grid-cols-2 mb-8">
+          {/* Graphique en camembert */}
+          <ProgressChart
+            correctAnswers={userStats.correctAnswers}
+            incorrectAnswers={userStats.incorrectAnswers}
+            loading={userStats.loading}
+          />
+          
+          {/* Jauge de score */}
+          <ScoreGauge
+            score={userStats.progressPercentage}
+            loading={userStats.loading}
+          />
+        </div>
+
+        {/* Graphiques détaillés */}
+        <div className="grid gap-6 lg:grid-cols-2 mb-8">
+          {/* Graphique temps d'étude */}
+          <StudyTimeChart
+            timeSpent={userStats.timeSpent}
+            sessionsCount={userStats.totalTests}
+            loading={userStats.loading}
+          />
+          
+          {/* Heatmap d'activité */}
+          <ActivityHeatmap
+            totalQuestions={userStats.totalQuestions}
+            sessionsCount={userStats.totalTests}
+            loading={userStats.loading}
+          />
+        </div>
+
       </div>
     </div>
   );
