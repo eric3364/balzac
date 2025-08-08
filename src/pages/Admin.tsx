@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { BadgePreview, BadgeSelector } from '@/components/BadgePreview';
 import { BadgeConfiguration } from '@/components/BadgeConfiguration';
@@ -1421,18 +1421,6 @@ const Admin = () => {
 
                                              // Recharger les certificats
                                              await loadCertificates();
-                                             
-                                             // Fermer le dialog et rediriger vers l'onglet Niveaux & Certifications après un délai
-                                             setTimeout(() => {
-                                               const closeButton = document.querySelector('[data-state="open"] button[aria-label="Close"]') as HTMLButtonElement;
-                                               closeButton?.click();
-                                               
-                                               // Redirection vers l'onglet "levels" après un autre délai
-                                               setTimeout(() => {
-                                                 const levelsTab = document.querySelector('[value="levels"]') as HTMLButtonElement;
-                                                 levelsTab?.click();
-                                               }, 100);
-                                             }, 500);
                                           } catch (error) {
                                             console.error('Erreur lors de la sauvegarde:', error);
                                             toast({
@@ -1446,6 +1434,11 @@ const Admin = () => {
                                         <Save className="h-4 w-4 mr-2" />
                                         Sauvegarder
                                       </Button>
+                                      <DialogClose asChild>
+                                        <Button variant="outline">
+                                          Fermer
+                                        </Button>
+                                      </DialogClose>
                                     </DialogFooter>
                                   </DialogContent>
                                 </Dialog>
