@@ -197,6 +197,20 @@ const Admin = () => {
   const [certificates, setCertificates] = useState<CertificateTemplate[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [questionsStats, setQuestionsStats] = useState<Record<number, number>>({});
+  
+  // États pour la configuration du partage de certifications
+  const [certConfig, setCertConfig] = useState({
+    issuing_organization: '',
+    organization_url: '',
+    organization_logo: '',
+    expiration_months: 24,
+    verification_url_template: '',
+    context_url: 'https://www.w3.org/2018/credentials/v1',
+    credential_type: 'VerifiableCredential',
+    achievement_type: 'Achievement',
+    criteria_narrative: ''
+  });
+  const [savingCertConfig, setSavingCertConfig] = useState(false);
 
   useEffect(() => {
     if (!loading) {
@@ -212,6 +226,7 @@ const Admin = () => {
       loadDifficultyLevels();
       loadCertificates();
       loadQuestions();
+      loadCertConfig();
     }
   }, [isAdmin]);
 
@@ -345,6 +360,91 @@ const Admin = () => {
       setQuestionsStats(stats);
     } catch (error) {
       console.error('Erreur lors du chargement des questions:', error);
+    }
+  };
+
+  // Fonctions pour la configuration du partage de certifications
+  const loadCertConfig = async () => {
+    try {
+      const configKeys = [
+        'cert_issuing_organization',
+        'cert_organization_url', 
+        'cert_organization_logo',
+        'cert_expiration_months',
+        'cert_verification_url_template',
+        'cert_context_url',
+        'cert_credential_type',
+        'cert_achievement_type',
+        'cert_criteria_narrative'
+      ];
+
+      const { data, error } = await supabase
+        .from('site_configuration')
+        .select('config_key, config_value')
+        .in('config_key', configKeys);
+
+      if (error) throw error;
+
+      const config = data?.reduce((acc, item) => {
+        const key = item.config_key.replace('cert_', '');
+        acc[key] = item.config_value;
+        return acc;
+      }, {} as any) || {};
+
+      setCertConfig({
+        issuing_organization: config.issuing_organization || '',
+        organization_url: config.organization_url || '',
+        organization_logo: config.organization_logo || '',
+        expiration_months: parseInt(config.expiration_months) || 24,
+        verification_url_template: config.verification_url_template || '',
+        context_url: config.context_url || 'https://www.w3.org/2018/credentials/v1',
+        credential_type: config.credential_type || 'VerifiableCredential',
+        achievement_type: config.achievement_type || 'Achievement',
+        criteria_narrative: config.criteria_narrative || ''
+      });
+    } catch (error) {
+      console.error('Erreur lors du chargement de la configuration des certifications:', error);
+    }
+  };
+
+  const saveCertConfig = async () => {
+    setSavingCertConfig(true);
+    try {
+      const configEntries = [
+        { key: 'cert_issuing_organization', value: certConfig.issuing_organization },
+        { key: 'cert_organization_url', value: certConfig.organization_url },
+        { key: 'cert_organization_logo', value: certConfig.organization_logo },
+        { key: 'cert_expiration_months', value: certConfig.expiration_months.toString() },
+        { key: 'cert_verification_url_template', value: certConfig.verification_url_template },
+        { key: 'cert_context_url', value: certConfig.context_url },
+        { key: 'cert_credential_type', value: certConfig.credential_type },
+        { key: 'cert_achievement_type', value: certConfig.achievement_type },
+        { key: 'cert_criteria_narrative', value: certConfig.criteria_narrative }
+      ];
+
+      for (const entry of configEntries) {
+        await supabase
+          .from('site_configuration')
+          .upsert({
+            config_key: entry.key,
+            config_value: entry.value,
+            updated_by: user?.id
+          });
+      }
+
+      toast({
+        title: "Configuration sauvegardée",
+        description: "La configuration du partage de certifications a été mise à jour avec succès.",
+      });
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde de la configuration des certifications:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de sauvegarder la configuration.",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingCertConfig(false);
     }
   };
 
@@ -1368,30 +1468,33 @@ const Admin = () => {
                   <div className="space-y-4">
                     <h4 className="font-medium text-sm">Organisation émettrice</h4>
                     <div className="space-y-3">
-                      <div className="space-y-2">
-                        <Label htmlFor="issuing_organization">Nom de l'organisation</Label>
-                        <Input
-                          id="issuing_organization"
-                          placeholder="Mon Organisation"
-                          defaultValue=""
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="organization_url">URL de l'organisation</Label>
-                        <Input
-                          id="organization_url"
-                          placeholder="https://mon-organisation.com"
-                          defaultValue=""
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="organization_logo">Logo de l'organisation (URL)</Label>
-                        <Input
-                          id="organization_logo"
-                          placeholder="https://mon-organisation.com/logo.png"
-                          defaultValue=""
-                        />
-                      </div>
+                       <div className="space-y-2">
+                         <Label htmlFor="issuing_organization">Nom de l'organisation</Label>
+                         <Input
+                           id="issuing_organization"
+                           placeholder="Mon Organisation"
+                           value={certConfig.issuing_organization}
+                           onChange={(e) => setCertConfig({...certConfig, issuing_organization: e.target.value})}
+                         />
+                       </div>
+                       <div className="space-y-2">
+                         <Label htmlFor="organization_url">URL de l'organisation</Label>
+                         <Input
+                           id="organization_url"
+                           placeholder="https://mon-organisation.com"
+                           value={certConfig.organization_url}
+                           onChange={(e) => setCertConfig({...certConfig, organization_url: e.target.value})}
+                         />
+                       </div>
+                       <div className="space-y-2">
+                         <Label htmlFor="organization_logo">Logo de l'organisation (URL)</Label>
+                         <Input
+                           id="organization_logo"
+                           placeholder="https://mon-organisation.com/logo.png"
+                           value={certConfig.organization_logo}
+                           onChange={(e) => setCertConfig({...certConfig, organization_logo: e.target.value})}
+                         />
+                       </div>
                     </div>
                   </div>
 
@@ -1399,29 +1502,31 @@ const Admin = () => {
                   <div className="space-y-4">
                     <h4 className="font-medium text-sm">Paramètres de certification</h4>
                     <div className="space-y-3">
-                      <div className="space-y-2">
-                        <Label htmlFor="expiration_months">Durée de validité (mois)</Label>
-                        <Input
-                          id="expiration_months"
-                          type="number"
-                          placeholder="24"
-                          defaultValue="24"
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Durée avant expiration de la certification (0 = pas d'expiration)
-                        </p>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="verification_url_template">Modèle d'URL de vérification</Label>
-                        <Input
-                          id="verification_url_template"
-                          placeholder="https://mon-site.com/verify/{{credential_id}}"
-                          defaultValue=""
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Utilisez {"{{credential_id}}"} comme placeholder pour l'ID unique
-                        </p>
-                      </div>
+                       <div className="space-y-2">
+                         <Label htmlFor="expiration_months">Durée de validité (mois)</Label>
+                         <Input
+                           id="expiration_months"
+                           type="number"
+                           placeholder="24"
+                           value={certConfig.expiration_months}
+                           onChange={(e) => setCertConfig({...certConfig, expiration_months: parseInt(e.target.value) || 24})}
+                         />
+                         <p className="text-xs text-muted-foreground">
+                           Durée avant expiration de la certification (0 = pas d'expiration)
+                         </p>
+                       </div>
+                       <div className="space-y-2">
+                         <Label htmlFor="verification_url_template">Modèle d'URL de vérification</Label>
+                         <Input
+                           id="verification_url_template"
+                           placeholder="https://mon-site.com/verify/{{credential_id}}"
+                           value={certConfig.verification_url_template}
+                           onChange={(e) => setCertConfig({...certConfig, verification_url_template: e.target.value})}
+                         />
+                         <p className="text-xs text-muted-foreground">
+                           Utilisez {"{{credential_id}}"} comme placeholder pour l'ID unique
+                         </p>
+                       </div>
                     </div>
                   </div>
                 </div>
@@ -1429,49 +1534,57 @@ const Admin = () => {
                 {/* Métadonnées JSON-LD */}
                 <div className="border-t pt-6">
                   <h4 className="font-medium text-sm mb-4">Métadonnées JSON-LD (1EdTech)</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="context_url">URL du contexte</Label>
-                      <Input
-                        id="context_url"
-                        defaultValue="https://www.w3.org/2018/credentials/v1"
-                        placeholder="https://www.w3.org/2018/credentials/v1"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="credential_type">Type de certification</Label>
-                      <Input
-                        id="credential_type"
-                        defaultValue="VerifiableCredential"
-                        placeholder="VerifiableCredential"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="achievement_type">Type d'accomplissement</Label>
-                      <Input
-                        id="achievement_type"
-                        defaultValue="Achievement"
-                        placeholder="Achievement"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="criteria_narrative">Description des critères</Label>
-                      <Input
-                        id="criteria_narrative"
-                        placeholder="A réussi l'évaluation avec un score minimum de {{min_score}}%"
-                        defaultValue=""
-                      />
-                    </div>
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                     <div className="space-y-2">
+                       <Label htmlFor="context_url">URL du contexte</Label>
+                       <Input
+                         id="context_url"
+                         value={certConfig.context_url}
+                         onChange={(e) => setCertConfig({...certConfig, context_url: e.target.value})}
+                         placeholder="https://www.w3.org/2018/credentials/v1"
+                       />
+                     </div>
+                     <div className="space-y-2">
+                       <Label htmlFor="credential_type">Type de certification</Label>
+                       <Input
+                         id="credential_type"
+                         value={certConfig.credential_type}
+                         onChange={(e) => setCertConfig({...certConfig, credential_type: e.target.value})}
+                         placeholder="VerifiableCredential"
+                       />
+                     </div>
+                     <div className="space-y-2">
+                       <Label htmlFor="achievement_type">Type d'accomplissement</Label>
+                       <Input
+                         id="achievement_type"
+                         value={certConfig.achievement_type}
+                         onChange={(e) => setCertConfig({...certConfig, achievement_type: e.target.value})}
+                         placeholder="Achievement"
+                       />
+                     </div>
+                     <div className="space-y-2">
+                       <Label htmlFor="criteria_narrative">Description des critères</Label>
+                       <Input
+                         id="criteria_narrative"
+                         placeholder="A réussi l'évaluation avec un score minimum de {{min_score}}%"
+                         value={certConfig.criteria_narrative}
+                         onChange={(e) => setCertConfig({...certConfig, criteria_narrative: e.target.value})}
+                       />
+                     </div>
                   </div>
                 </div>
 
-                {/* Bouton de sauvegarde */}
-                <div className="flex justify-end pt-4 border-t">
-                  <Button className="flex items-center gap-2">
-                    <Save className="h-4 w-4" />
-                    Sauvegarder la configuration
-                  </Button>
-                </div>
+                 {/* Bouton de sauvegarde */}
+                 <div className="flex justify-end pt-4 border-t">
+                   <Button 
+                     className="flex items-center gap-2" 
+                     onClick={saveCertConfig}
+                     disabled={savingCertConfig}
+                   >
+                     <Save className="h-4 w-4" />
+                     {savingCertConfig ? 'Sauvegarde...' : 'Sauvegarder la configuration'}
+                   </Button>
+                 </div>
               </CardContent>
             </Card>
           </TabsContent>
