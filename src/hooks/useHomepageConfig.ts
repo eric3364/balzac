@@ -1,5 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+
+// Debounce utility
+function useDebounce(callback: Function, delay: number) {
+  const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
+
+  const debouncedCallback = useCallback((...args: any[]) => {
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+    }
+    
+    const newTimer = setTimeout(() => {
+      callback(...args);
+    }, delay);
+    
+    setDebounceTimer(newTimer);
+  }, [callback, delay, debounceTimer]);
+
+  return debouncedCallback;
+}
 
 interface HomepageConfig {
   logoUrl: string;
@@ -173,9 +192,9 @@ export const useHomepageConfig = () => {
     fetchConfig();
   }, []);
 
-  const updateConfig = async (updates: Partial<Omit<HomepageConfig, 'loading'>>) => {
+  const updateConfigToDatabase = async (updates: Partial<Omit<HomepageConfig, 'loading'>>) => {
     try {
-      console.log('Updating homepage config:', updates);
+      console.log('Updating homepage config to database:', updates);
       const configUpdates = Object.entries(updates).map(([key, value]) => {
         let configKey = '';
         
@@ -260,13 +279,24 @@ export const useHomepageConfig = () => {
             .upsert(update, { onConflict: 'config_key' });
         }
       }
-
-      setConfig(prev => ({ ...prev, ...updates }));
+      
       return true;
     } catch (error) {
       console.error('Erreur lors de la mise à jour de la configuration:', error);
       return false;
     }
+  };
+
+  const debouncedUpdateConfig = useDebounce(updateConfigToDatabase, 1000);
+
+  const updateConfig = (updates: Partial<Omit<HomepageConfig, 'loading'>>) => {
+    // Mettre à jour immédiatement l'état local pour la réactivité
+    setConfig(prev => ({ ...prev, ...updates }));
+    
+    // Débouncer la sauvegarde en base de données
+    debouncedUpdateConfig(updates);
+    
+    return Promise.resolve(true);
   };
 
   return { config, updateConfig };
