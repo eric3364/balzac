@@ -366,23 +366,14 @@ const Index = () => {
                         ? 'border-green-200 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20' 
                         : 'border-primary/20 bg-gradient-to-br from-background to-background/50'
                     }`}>
-                      {/* Badge */}
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                        {isFree ? (
-                          <Badge className="bg-green-500 hover:bg-green-600 text-white font-semibold">
-                            GRATUIT
-                          </Badge>
-                        ) : cert.level_number === 1 ? (
-                          <Badge className="bg-primary hover:bg-primary/90 text-white font-semibold">
-                            POPULAIRE
-                          </Badge>
-                        ) : cert.level_number >= 4 ? (
-                          <Badge className="bg-gradient-to-r from-purple-500 to-purple-600 text-white font-semibold">
-                            <Crown className="h-3 w-3 mr-1" />
-                            EXPERT
-                          </Badge>
-                        ) : null}
-                      </div>
+                       {/* Badge */}
+                       <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                         {isFree && (
+                           <Badge className="bg-green-500 hover:bg-green-600 text-white font-semibold">
+                             GRATUIT
+                           </Badge>
+                         )}
+                       </div>
 
                       <CardContent className="pt-4">
                         {/* Level Icon */}
