@@ -49,7 +49,7 @@ const ProgressChart = ({ correctAnswers, incorrectAnswers, loading }: ProgressCh
     },
   ];
 
-  const COLORS = ['hsl(var(--primary))', 'hsl(var(--destructive))'];
+  const COLORS = ['hsl(142 76% 36%)', 'hsl(var(--destructive))'];
 
   const renderCustomTooltip = (props: any) => {
     if (props.active && props.payload) {
