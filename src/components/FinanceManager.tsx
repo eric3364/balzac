@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Euro, Users, ShoppingCart, Gift, TrendingUp, Trash2, Edit } from 'lucide-react';
+import { Plus, Euro, Users, ShoppingCart, Gift, TrendingUp, Trash2, Edit, Settings, CreditCard } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -64,6 +64,21 @@ export const FinanceManager: React.FC = () => {
   const [editLevel, setEditLevel] = useState<string>('');
   const [editDiscount, setEditDiscount] = useState<string>('');
   const [editExpiration, setEditExpiration] = useState('');
+
+  // Stripe configuration
+  const [stripeConfig, setStripeConfig] = useState({
+    publishableKey: '',
+    webhookSecret: '',
+    accountId: '',
+    bankAccount: {
+      country: 'FR',
+      currency: 'EUR',
+      accountNumber: '',
+      routingNumber: '',
+      accountHolderName: '',
+      accountHolderType: 'individual'
+    }
+  });
 
   useEffect(() => {
     loadFinanceData();
@@ -348,6 +363,7 @@ export const FinanceManager: React.FC = () => {
         <TabsList>
           <TabsTrigger value="sales">Ventes</TabsTrigger>
           <TabsTrigger value="promo">Codes promo</TabsTrigger>
+          <TabsTrigger value="stripe">Configuration Stripe</TabsTrigger>
         </TabsList>
 
         <TabsContent value="sales" className="space-y-4">
@@ -615,6 +631,236 @@ export const FinanceManager: React.FC = () => {
                   )}
                 </TableBody>
               </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="stripe" className="space-y-4">
+          {/* Configuration des clés API Stripe */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="h-5 w-5" />
+                Clés API Stripe
+              </CardTitle>
+              <CardDescription>
+                Configurez vos clés API Stripe pour le traitement des paiements
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="publishableKey">Clé publique</Label>
+                  <Input
+                    id="publishableKey"
+                    placeholder="pk_test_..."
+                    value={stripeConfig.publishableKey}
+                    onChange={(e) => setStripeConfig(prev => ({ ...prev, publishableKey: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="webhookSecret">Secret du webhook</Label>
+                  <Input
+                    id="webhookSecret"
+                    type="password"
+                    placeholder="whsec_..."
+                    value={stripeConfig.webhookSecret}
+                    onChange={(e) => setStripeConfig(prev => ({ ...prev, webhookSecret: e.target.value }))}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="accountId">ID du compte Stripe Connect (optionnel)</Label>
+                <Input
+                  id="accountId"
+                  placeholder="acct_..."
+                  value={stripeConfig.accountId}
+                  onChange={(e) => setStripeConfig(prev => ({ ...prev, accountId: e.target.value }))}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Configuration du compte bancaire */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5" />
+                Compte bancaire
+              </CardTitle>
+              <CardDescription>
+                Configurez les informations de votre compte bancaire pour recevoir les paiements
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="country">Pays</Label>
+                  <Select 
+                    value={stripeConfig.bankAccount.country} 
+                    onValueChange={(value) => setStripeConfig(prev => ({ 
+                      ...prev, 
+                      bankAccount: { ...prev.bankAccount, country: value } 
+                    }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="FR">France</SelectItem>
+                      <SelectItem value="BE">Belgique</SelectItem>
+                      <SelectItem value="CH">Suisse</SelectItem>
+                      <SelectItem value="CA">Canada</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="currency">Devise</Label>
+                  <Select 
+                    value={stripeConfig.bankAccount.currency} 
+                    onValueChange={(value) => setStripeConfig(prev => ({ 
+                      ...prev, 
+                      bankAccount: { ...prev.bankAccount, currency: value } 
+                    }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="EUR">EUR</SelectItem>
+                      <SelectItem value="USD">USD</SelectItem>
+                      <SelectItem value="CAD">CAD</SelectItem>
+                      <SelectItem value="CHF">CHF</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="accountNumber">Numéro de compte (IBAN)</Label>
+                  <Input
+                    id="accountNumber"
+                    placeholder="FR76 1234 5678 9012 3456 7890 123"
+                    value={stripeConfig.bankAccount.accountNumber}
+                    onChange={(e) => setStripeConfig(prev => ({ 
+                      ...prev, 
+                      bankAccount: { ...prev.bankAccount, accountNumber: e.target.value } 
+                    }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="routingNumber">Code BIC/SWIFT</Label>
+                  <Input
+                    id="routingNumber"
+                    placeholder="BNPAFRPP"
+                    value={stripeConfig.bankAccount.routingNumber}
+                    onChange={(e) => setStripeConfig(prev => ({ 
+                      ...prev, 
+                      bankAccount: { ...prev.bankAccount, routingNumber: e.target.value } 
+                    }))}
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="accountHolderName">Nom du titulaire</Label>
+                  <Input
+                    id="accountHolderName"
+                    placeholder="Nom complet ou nom de l'entreprise"
+                    value={stripeConfig.bankAccount.accountHolderName}
+                    onChange={(e) => setStripeConfig(prev => ({ 
+                      ...prev, 
+                      bankAccount: { ...prev.bankAccount, accountHolderName: e.target.value } 
+                    }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="accountHolderType">Type de compte</Label>
+                  <Select 
+                    value={stripeConfig.bankAccount.accountHolderType} 
+                    onValueChange={(value) => setStripeConfig(prev => ({ 
+                      ...prev, 
+                      bankAccount: { ...prev.bankAccount, accountHolderType: value } 
+                    }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="individual">Particulier</SelectItem>
+                      <SelectItem value="company">Entreprise</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="flex justify-end pt-4">
+                <Button>
+                  <Settings className="h-4 w-4 mr-2" />
+                  Sauvegarder la configuration
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Informations et liens utiles */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Ressources Stripe</CardTitle>
+              <CardDescription>
+                Liens utiles pour configurer votre compte Stripe
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between p-3 border rounded-lg">
+                <div>
+                  <h4 className="font-medium">Dashboard Stripe</h4>
+                  <p className="text-sm text-muted-foreground">Accédez à votre tableau de bord Stripe</p>
+                </div>
+                <Button variant="outline" asChild>
+                  <a href="https://dashboard.stripe.com" target="_blank" rel="noopener noreferrer">
+                    Ouvrir
+                  </a>
+                </Button>
+              </div>
+              
+              <div className="flex items-center justify-between p-3 border rounded-lg">
+                <div>
+                  <h4 className="font-medium">Clés API</h4>
+                  <p className="text-sm text-muted-foreground">Récupérez vos clés API publiques et secrètes</p>
+                </div>
+                <Button variant="outline" asChild>
+                  <a href="https://dashboard.stripe.com/apikeys" target="_blank" rel="noopener noreferrer">
+                    Voir les clés
+                  </a>
+                </Button>
+              </div>
+              
+              <div className="flex items-center justify-between p-3 border rounded-lg">
+                <div>
+                  <h4 className="font-medium">Webhooks</h4>
+                  <p className="text-sm text-muted-foreground">Configurez les webhooks pour les événements de paiement</p>
+                </div>
+                <Button variant="outline" asChild>
+                  <a href="https://dashboard.stripe.com/webhooks" target="_blank" rel="noopener noreferrer">
+                    Configurer
+                  </a>
+                </Button>
+              </div>
+              
+              <div className="flex items-center justify-between p-3 border rounded-lg">
+                <div>
+                  <h4 className="font-medium">Documentation</h4>
+                  <p className="text-sm text-muted-foreground">Guide complet d'intégration Stripe</p>
+                </div>
+                <Button variant="outline" asChild>
+                  <a href="https://stripe.com/docs" target="_blank" rel="noopener noreferrer">
+                    Consulter
+                  </a>
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
