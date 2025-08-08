@@ -492,12 +492,13 @@ const Admin = () => {
         </div>
 
         <Tabs defaultValue="stats" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="stats">Statistiques</TabsTrigger>
             <TabsTrigger value="students">Apprenants</TabsTrigger>
             <TabsTrigger value="homepage">Page d'accueil</TabsTrigger>
             <TabsTrigger value="levels">Niveaux & Certifications</TabsTrigger>
             <TabsTrigger value="questions">Questions</TabsTrigger>
+            <TabsTrigger value="finance">Finance</TabsTrigger>
             <TabsTrigger value="settings">Paramètres</TabsTrigger>
           </TabsList>
 
@@ -1709,6 +1710,10 @@ const Admin = () => {
             </Card>
 
             <QuestionsManager difficultyLevels={difficultyLevels} />
+          </TabsContent>
+
+          <TabsContent value="finance" className="space-y-6">
+            <FinanceManager />
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-6">
