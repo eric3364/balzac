@@ -1410,17 +1410,21 @@ const Admin = () => {
 
                                             if (error) throw error;
 
-                                            toast({
-                                              title: "Configuration sauvegardée",
-                                              description: "Le certificat a été mis à jour avec succès.",
-                                            });
+                                             toast({
+                                               title: "Configuration sauvegardée",
+                                               description: "Le certificat a été mis à jour avec succès.",
+                                             });
 
-                                            // Recharger les certificats
-                                            loadCertificates();
-                                            
-                                            // Fermer le dialog - méthode plus propre
-                                            const closeButton = document.querySelector('[data-state="open"] button[aria-label="Close"]') as HTMLButtonElement;
-                                            closeButton?.click();
+                                             // Recharger les certificats
+                                             loadCertificates();
+                                             
+                                             // Fermer le dialog et rediriger vers l'onglet Niveaux & Certifications
+                                             const closeButton = document.querySelector('[data-state="open"] button[aria-label="Close"]') as HTMLButtonElement;
+                                             closeButton?.click();
+                                             
+                                             // Redirection vers l'onglet "levels"
+                                             const levelsTab = document.querySelector('[value="levels"]') as HTMLButtonElement;
+                                             levelsTab?.click();
                                           } catch (error) {
                                             console.error('Erreur lors de la sauvegarde:', error);
                                             toast({
