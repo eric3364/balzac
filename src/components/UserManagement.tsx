@@ -7,10 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Edit2, Plus, Download, Upload, Search, Filter } from 'lucide-react';
+import { Trash2, Edit2, Plus, Download, Upload, Search, Filter, Award, Clock, Target, Activity, TrendingUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { SCHOOLS, CLASS_LEVELS, School, ClassLevel } from '@/constants/userData';
+import { useUserListStats, UserListStats } from '@/hooks/useUserListStats';
 
 interface User {
   id: string;
@@ -24,6 +25,9 @@ interface User {
   created_at: string;
 }
 
+type SortField = 'name' | 'email' | 'school' | 'class' | 'certifications' | 'level' | 'tests' | 'score' | 'activity';
+type SortDirection = 'asc' | 'desc';
+
 interface UserFormData {
   email: string;
   first_name: string;
@@ -34,14 +38,16 @@ interface UserFormData {
 }
 
 export const UserManagement = () => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { users: usersWithStats, loading, refetch } = useUserListStats();
+  const [filteredUsers, setFilteredUsers] = useState<UserListStats[]>([]);
   const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [schoolFilter, setSchoolFilter] = useState('all');
   const [classFilter, setClassFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [sortField, setSortField] = useState<SortField>('activity');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [schools] = useState<School[]>([...SCHOOLS]);
   const [classes] = useState<ClassLevel[]>([...CLASS_LEVELS]);
   const { toast } = useToast();
@@ -56,38 +62,13 @@ export const UserManagement = () => {
   });
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  useEffect(() => {
     applyFilters();
-  }, [users, searchTerm, schoolFilter, classFilter]);
-
-  const fetchUsers = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      setUsers(data || []);
-    } catch (error) {
-      console.error('Erreur lors du chargement des utilisateurs:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de charger les utilisateurs",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [usersWithStats, searchTerm, schoolFilter, classFilter, statusFilter, sortField, sortDirection]);
 
   const applyFilters = () => {
-    let filtered = users;
+    let filtered = [...usersWithStats];
 
+    // Filtrage par terme de recherche
     if (searchTerm) {
       filtered = filtered.filter(user => 
         user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -96,20 +77,102 @@ export const UserManagement = () => {
       );
     }
 
+    // Filtrage par école
     if (schoolFilter && schoolFilter !== 'all') {
       filtered = filtered.filter(user => user.school === schoolFilter);
     }
 
+    // Filtrage par classe
     if (classFilter && classFilter !== 'all') {
       filtered = filtered.filter(user => user.class_name === classFilter);
     }
 
+    // Filtrage par statut
+    if (statusFilter && statusFilter !== 'all') {
+      if (statusFilter === 'active') {
+        filtered = filtered.filter(user => user.is_active);
+      } else if (statusFilter === 'inactive') {
+        filtered = filtered.filter(user => !user.is_active);
+      } else if (statusFilter === 'certified') {
+        filtered = filtered.filter(user => user.certifications_count > 0);
+      } else if (statusFilter === 'uncertified') {
+        filtered = filtered.filter(user => user.certifications_count === 0);
+      }
+    }
+
+    // Tri
+    filtered.sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+
+      switch (sortField) {
+        case 'name':
+          aValue = `${a.first_name || ''} ${a.last_name || ''}`.trim().toLowerCase();
+          bValue = `${b.first_name || ''} ${b.last_name || ''}`.trim().toLowerCase();
+          break;
+        case 'email':
+          aValue = a.email.toLowerCase();
+          bValue = b.email.toLowerCase();
+          break;
+        case 'school':
+          aValue = a.school || '';
+          bValue = b.school || '';
+          break;
+        case 'class':
+          aValue = a.class_name || '';
+          bValue = b.class_name || '';
+          break;
+        case 'certifications':
+          aValue = a.certifications_count;
+          bValue = b.certifications_count;
+          break;
+        case 'level':
+          aValue = a.max_level;
+          bValue = b.max_level;
+          break;
+        case 'tests':
+          aValue = a.total_tests;
+          bValue = b.total_tests;
+          break;
+        case 'score':
+          aValue = a.avg_score;
+          bValue = b.avg_score;
+          break;
+        case 'activity':
+          aValue = a.last_activity ? new Date(a.last_activity).getTime() : 0;
+          bValue = b.last_activity ? new Date(b.last_activity).getTime() : 0;
+          break;
+        default:
+          aValue = 0;
+          bValue = 0;
+      }
+
+      if (sortDirection === 'asc') {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+
     setFilteredUsers(filtered);
   };
 
-  const openUserDialog = (user?: User) => {
+  const openUserDialog = (user?: UserListStats) => {
     if (user) {
-      setEditingUser(user);
+      // Convertir UserListStats vers User pour la compatibilité
+      const userForEdit: User = {
+        id: user.user_id || '',
+        user_id: user.user_id,
+        email: user.email,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        school: user.school,
+        class_name: user.class_name,
+        is_active: user.is_active,
+        created_at: user.created_at
+      };
+      
+      setEditingUser(userForEdit);
       setUserForm({
         email: user.email,
         first_name: user.first_name || '',
@@ -176,7 +239,7 @@ export const UserManagement = () => {
       }
 
       setIsUserDialogOpen(false);
-      fetchUsers();
+      refetch();
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
       toast({
@@ -203,7 +266,7 @@ export const UserManagement = () => {
         description: "L'utilisateur a été supprimé avec succès"
       });
 
-      fetchUsers();
+      refetch();
     } catch (error) {
       console.error('Erreur lors de la suppression:', error);
       toast({
@@ -314,7 +377,7 @@ export const UserManagement = () => {
         description: `${usersToImport.length} utilisateur(s) importé(s) avec succès`
       });
 
-      fetchUsers();
+      refetch();
       // Reset file input
       event.target.value = '';
     } catch (error) {
@@ -341,42 +404,94 @@ export const UserManagement = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col lg:flex-row gap-4 mb-6">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Rechercher par nom ou email..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+          {/* Filtres et recherche */}
+          <div className="space-y-4 mb-6">
+            <div className="flex flex-col lg:flex-row gap-4">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Rechercher par nom ou email..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              
+              <Select value={schoolFilter} onValueChange={setSchoolFilter}>
+                <SelectTrigger className="w-full lg:w-[180px]">
+                  <SelectValue placeholder="École" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes les écoles</SelectItem>
+                  {schools.map(school => (
+                    <SelectItem key={school} value={school}>{school}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={classFilter} onValueChange={setClassFilter}>
+                <SelectTrigger className="w-full lg:w-[150px]">
+                  <SelectValue placeholder="Classe" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes les classes</SelectItem>
+                  {classes.map(className => (
+                    <SelectItem key={className} value={className}>{className}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full lg:w-[160px]">
+                  <SelectValue placeholder="Statut" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les statuts</SelectItem>
+                  <SelectItem value="active">Actifs</SelectItem>
+                  <SelectItem value="inactive">Inactifs</SelectItem>
+                  <SelectItem value="certified">Certifiés</SelectItem>
+                  <SelectItem value="uncertified">Non certifiés</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Tri */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="sort-field" className="text-sm font-medium">Trier par:</Label>
+                <Select value={sortField} onValueChange={(value) => setSortField(value as SortField)}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="activity">Dernière activité</SelectItem>
+                    <SelectItem value="name">Nom</SelectItem>
+                    <SelectItem value="email">Email</SelectItem>
+                    <SelectItem value="certifications">Certifications</SelectItem>
+                    <SelectItem value="level">Niveau max</SelectItem>
+                    <SelectItem value="tests">Tests effectués</SelectItem>
+                    <SelectItem value="score">Score moyen</SelectItem>
+                    <SelectItem value="school">École</SelectItem>
+                    <SelectItem value="class">Classe</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Label className="text-sm font-medium">Ordre:</Label>
+                <Select value={sortDirection} onValueChange={(value) => setSortDirection(value as SortDirection)}>
+                  <SelectTrigger className="w-[120px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="desc">Décroissant</SelectItem>
+                    <SelectItem value="asc">Croissant</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
-            
-            <Select value={schoolFilter} onValueChange={setSchoolFilter}>
-              <SelectTrigger className="w-full lg:w-[200px]">
-                <SelectValue placeholder="Filtrer par école" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toutes les écoles</SelectItem>
-                {schools.map(school => (
-                  <SelectItem key={school} value={school}>{school}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={classFilter} onValueChange={setClassFilter}>
-              <SelectTrigger className="w-full lg:w-[200px]">
-                <SelectValue placeholder="Filtrer par classe" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toutes les classes</SelectItem>
-                {classes.map(className => (
-                  <SelectItem key={className} value={className}>{className}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
 
           <div className="flex flex-wrap gap-2 mb-6">
@@ -416,30 +531,124 @@ export const UserManagement = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Nom</TableHead>
-                  <TableHead>École</TableHead>
-                  <TableHead>Classe</TableHead>
+                  <TableHead>Apprenant</TableHead>
+                  <TableHead>École / Classe</TableHead>
+                  <TableHead className="text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <Award className="h-4 w-4" />
+                      Certifs
+                    </div>
+                  </TableHead>
+                  <TableHead className="text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <TrendingUp className="h-4 w-4" />
+                      Niveau
+                    </div>
+                  </TableHead>
+                  <TableHead className="text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <Target className="h-4 w-4" />
+                      Tests
+                    </div>
+                  </TableHead>
+                  <TableHead className="text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <Activity className="h-4 w-4" />
+                      Score
+                    </div>
+                  </TableHead>
+                  <TableHead className="text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      Temps
+                    </div>
+                  </TableHead>
                   <TableHead>Statut</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>{user.email}</TableCell>
+                  <TableRow key={user.user_id || user.email}>
                     <TableCell>
-                      {[user.first_name, user.last_name].filter(Boolean).join(' ') || '-'}
+                      <div>
+                        <div className="font-medium">
+                          {[user.first_name, user.last_name].filter(Boolean).join(' ') || 'Sans nom'}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {user.email}
+                        </div>
+                        {user.last_activity && (
+                          <div className="text-xs text-muted-foreground">
+                            Dernière activité: {new Date(user.last_activity).toLocaleDateString('fr-FR')}
+                          </div>
+                        )}
+                      </div>
                     </TableCell>
-                    <TableCell>{user.school || '-'}</TableCell>
-                    <TableCell>{user.class_name || '-'}</TableCell>
                     <TableCell>
-                      <Badge variant={user.is_active ? "default" : "secondary"}>
-                        {user.is_active ? "Actif" : "Inactif"}
+                      <div className="text-sm">
+                        <div>{user.school || '-'}</div>
+                        <div className="text-muted-foreground">{user.class_name || '-'}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex flex-col items-center">
+                        <Badge variant={user.certifications_count > 0 ? "default" : "secondary"}>
+                          {user.certifications_count}
+                        </Badge>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge variant="outline">
+                        N{user.max_level}
                       </Badge>
                     </TableCell>
+                    <TableCell className="text-center">
+                      <div className="text-sm">
+                        <div className="font-medium">{user.total_tests}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {user.total_questions} Q
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="text-sm">
+                        <div className="font-medium">{user.avg_score}%</div>
+                        <div className="text-xs text-muted-foreground">
+                          {user.correct_answers}/{user.total_questions}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="text-sm">
+                        {user.time_spent_minutes > 0 ? (
+                          <>
+                            <div className="font-medium">
+                              {Math.floor(user.time_spent_minutes / 60)}h{String(user.time_spent_minutes % 60).padStart(2, '0')}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {user.time_spent_minutes} min
+                            </div>
+                          </>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
+                      <div className="space-y-1">
+                        <Badge variant={user.is_active ? "default" : "secondary"}>
+                          {user.is_active ? "Actif" : "Inactif"}
+                        </Badge>
+                        {user.certifications_count > 0 && (
+                          <Badge variant="outline" className="text-xs">
+                            Certifié
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
                         <Button
                           variant="outline"
                           size="sm"
@@ -450,7 +659,7 @@ export const UserManagement = () => {
                         <Button
                           variant="destructive"
                           size="sm"
-                          onClick={() => deleteUser(user.id)}
+                          onClick={() => deleteUser(user.user_id || '')}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
