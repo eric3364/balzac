@@ -426,13 +426,18 @@ const Admin = () => {
       ];
 
       for (const entry of configEntries) {
-        await supabase
+        const { error } = await supabase
           .from('site_configuration')
           .upsert({
             config_key: entry.key,
             config_value: entry.value,
             updated_by: user?.id
           });
+        
+        if (error) {
+          console.error(`Erreur lors de la sauvegarde de ${entry.key}:`, error);
+          throw error;
+        }
       }
 
       toast({
