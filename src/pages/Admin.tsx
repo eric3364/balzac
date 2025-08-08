@@ -432,6 +432,8 @@ const Admin = () => {
             config_key: entry.key,
             config_value: entry.value,
             updated_by: user?.id
+          }, {
+            onConflict: 'config_key'
           });
         
         if (error) {
