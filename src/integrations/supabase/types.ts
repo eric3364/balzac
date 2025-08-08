@@ -242,6 +242,7 @@ export type Database = {
         Row: {
           code: string
           created_at: string
+          discount_percentage: number
           expires_at: string | null
           id: string
           is_used: boolean
@@ -252,6 +253,7 @@ export type Database = {
         Insert: {
           code: string
           created_at?: string
+          discount_percentage?: number
           expires_at?: string | null
           id?: string
           is_used?: boolean
@@ -262,6 +264,7 @@ export type Database = {
         Update: {
           code?: string
           created_at?: string
+          discount_percentage?: number
           expires_at?: string | null
           id?: string
           is_used?: boolean

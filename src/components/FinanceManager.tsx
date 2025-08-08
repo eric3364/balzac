@@ -25,6 +25,7 @@ interface PromoCode {
   id: string;
   code: string;
   level: number;
+  discount_percentage: number;
   is_used: boolean;
   used_by: string | null;
   used_at: string | null;
@@ -54,12 +55,14 @@ export const FinanceManager: React.FC = () => {
   // Promo code form
   const [newPromoCode, setNewPromoCode] = useState('');
   const [selectedLevel, setSelectedLevel] = useState<string>('');
+  const [discountPercentage, setDiscountPercentage] = useState<string>('100');
   const [expirationDate, setExpirationDate] = useState('');
   
   // Edit promo code
   const [editingPromo, setEditingPromo] = useState<PromoCode | null>(null);
   const [editCode, setEditCode] = useState('');
   const [editLevel, setEditLevel] = useState<string>('');
+  const [editDiscount, setEditDiscount] = useState<string>('');
   const [editExpiration, setEditExpiration] = useState('');
 
   useEffect(() => {
@@ -118,10 +121,20 @@ export const FinanceManager: React.FC = () => {
   };
 
   const createPromoCode = async () => {
-    if (!newPromoCode.trim() || !selectedLevel) {
+    if (!newPromoCode.trim() || !selectedLevel || !discountPercentage) {
       toast({
         title: "Erreur",
         description: "Veuillez remplir tous les champs obligatoires.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const discountValue = parseInt(discountPercentage);
+    if (isNaN(discountValue) || discountValue < 0 || discountValue > 100) {
+      toast({
+        title: "Erreur",
+        description: "Le pourcentage de réduction doit être entre 0 et 100.",
         variant: "destructive",
       });
       return;
@@ -133,6 +146,7 @@ export const FinanceManager: React.FC = () => {
         .insert({
           code: newPromoCode.trim().toUpperCase(),
           level: parseInt(selectedLevel),
+          discount_percentage: discountValue,
           expires_at: expirationDate ? new Date(expirationDate).toISOString() : null
         });
 
@@ -145,6 +159,7 @@ export const FinanceManager: React.FC = () => {
 
       setNewPromoCode('');
       setSelectedLevel('');
+      setDiscountPercentage('100');
       setExpirationDate('');
       loadFinanceData();
       
@@ -194,6 +209,7 @@ export const FinanceManager: React.FC = () => {
     setEditingPromo(promo);
     setEditCode(promo.code);
     setEditLevel(promo.level.toString());
+    setEditDiscount(promo.discount_percentage.toString());
     setEditExpiration(promo.expires_at ? new Date(promo.expires_at).toISOString().slice(0, 16) : '');
   };
 
@@ -201,14 +217,25 @@ export const FinanceManager: React.FC = () => {
     setEditingPromo(null);
     setEditCode('');
     setEditLevel('');
+    setEditDiscount('');
     setEditExpiration('');
   };
 
   const updatePromoCode = async () => {
-    if (!editingPromo || !editCode.trim() || !editLevel) {
+    if (!editingPromo || !editCode.trim() || !editLevel || !editDiscount) {
       toast({
         title: "Erreur",
         description: "Veuillez remplir tous les champs obligatoires.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const discountValue = parseInt(editDiscount);
+    if (isNaN(discountValue) || discountValue < 0 || discountValue > 100) {
+      toast({
+        title: "Erreur",
+        description: "Le pourcentage de réduction doit être entre 0 et 100.",
         variant: "destructive",
       });
       return;
@@ -220,6 +247,7 @@ export const FinanceManager: React.FC = () => {
         .update({
           code: editCode.trim().toUpperCase(),
           level: parseInt(editLevel),
+          discount_percentage: discountValue,
           expires_at: editExpiration ? new Date(editExpiration).toISOString() : null
         })
         .eq('id', editingPromo.id);
@@ -376,7 +404,7 @@ export const FinanceManager: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="promoCode">Code promo</Label>
                   <Input
@@ -402,6 +430,19 @@ export const FinanceManager: React.FC = () => {
                       <SelectItem value="5">Niveau 5</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="discount">% de réduction</Label>
+                  <Input
+                    id="discount"
+                    type="number"
+                    min="0"
+                    max="100"
+                    placeholder="100"
+                    value={discountPercentage}
+                    onChange={(e) => setDiscountPercentage(e.target.value)}
+                  />
                 </div>
                 
                 <div className="space-y-2">
@@ -438,6 +479,7 @@ export const FinanceManager: React.FC = () => {
                   <TableRow>
                     <TableHead>Code</TableHead>
                     <TableHead>Niveau</TableHead>
+                    <TableHead>Réduction</TableHead>
                     <TableHead>Statut</TableHead>
                     <TableHead>Créé le</TableHead>
                     <TableHead>Expire le</TableHead>
@@ -448,7 +490,7 @@ export const FinanceManager: React.FC = () => {
                 <TableBody>
                   {promoCodes.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                         Aucun code promo créé pour le moment
                       </TableCell>
                     </TableRow>
@@ -482,6 +524,22 @@ export const FinanceManager: React.FC = () => {
                           </Select>
                         ) : (
                           `Niveau ${promo.level}`
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {editingPromo?.id === promo.id ? (
+                          <Input
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={editDiscount}
+                            onChange={(e) => setEditDiscount(e.target.value)}
+                            className="w-20"
+                          />
+                        ) : (
+                          <Badge variant="outline">
+                            {promo.discount_percentage}%
+                          </Badge>
                         )}
                       </TableCell>
                       <TableCell>
