@@ -1569,13 +1569,14 @@ const Admin = () => {
                     <div className="space-y-3">
                        <div className="space-y-2">
                          <Label htmlFor="expiration_months">Durée de validité (mois)</Label>
-                         <Input
-                           id="expiration_months"
-                           type="number"
-                           placeholder="24"
-                           value={certConfig.expiration_months}
-                           onChange={(e) => setCertConfig({...certConfig, expiration_months: parseInt(e.target.value) || 24})}
-                         />
+                          <Input
+                            id="expiration_months"
+                            type="number"
+                            min="0"
+                            placeholder="24"
+                            value={certConfig.expiration_months}
+                            onChange={(e) => setCertConfig({...certConfig, expiration_months: Math.max(0, parseInt(e.target.value) || 24)})}
+                          />
                          <p className="text-xs text-muted-foreground">
                            Durée avant expiration de la certification (0 = pas d'expiration)
                          </p>
