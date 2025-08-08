@@ -184,31 +184,6 @@ const StudyTimeChart = ({ timeSpent, sessionsCount, loading }: StudyTimeChartPro
           </div>
         </div>
 
-        {/* Objectifs */}
-        <div className="space-y-3">
-          <h4 className="text-sm font-medium flex items-center gap-2">
-            <Target className="h-4 w-4" />
-            Objectifs d'étude
-          </h4>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-              <span className="text-sm">Objectif quotidien (30min)</span>
-              <span className={`text-sm font-medium ${
-                averageSessionTime >= 30 ? 'text-green-600' : 'text-yellow-600'
-              }`}>
-                {averageSessionTime >= 30 ? '✓ Atteint' : `${30 - averageSessionTime}min restantes`}
-              </span>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-              <span className="text-sm">Objectif hebdomadaire (3h)</span>
-              <span className={`text-sm font-medium ${
-                timeSpent >= 180 ? 'text-green-600' : 'text-yellow-600'
-              }`}>
-                {timeSpent >= 180 ? '✓ Atteint' : `${formatTime(180 - timeSpent)} restantes`}
-              </span>
-            </div>
-          </div>
-        </div>
       </CardContent>
     </Card>
   );
