@@ -42,7 +42,18 @@ export const CheckoutFlow = ({ open, onOpenChange, certification }: CheckoutFlow
     onOpenChange(false);
   };
 
-  const handlePurchase = async () => {
+  const handleProceedToPayment = () => {
+    if (!user) {
+      handleAuthRequired();
+      return;
+    }
+    
+    // Rediriger vers la page de paiement
+    navigate(`/payment?level=${certification.level_number}`);
+    onOpenChange(false);
+  };
+
+  const handleQuickPayment = async () => {
     if (!user) {
       handleAuthRequired();
       return;
@@ -219,12 +230,12 @@ export const CheckoutFlow = ({ open, onOpenChange, certification }: CheckoutFlow
             Annuler
           </Button>
           <Button 
-            onClick={handlePurchase} 
+            onClick={handleProceedToPayment} 
             disabled={loading || promoLoading || !user}
             className="flex items-center gap-2 flex-1"
           >
             <CreditCard className="h-4 w-4" />
-            {loading ? "Traitement..." : `Payer ${certification.price_euros}€`}
+            {loading ? "Traitement..." : "Continuer"}
           </Button>
         </div>
       </DialogContent>
