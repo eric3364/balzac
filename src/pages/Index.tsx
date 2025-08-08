@@ -176,7 +176,7 @@ const Index = () => {
       <section className="relative overflow-hidden"
                style={{
                  background: 'linear-gradient(135deg, hsl(var(--primary)/0.1) 0%, hsl(var(--primary)/0.05) 50%, transparent 100%)',
-                 minHeight: '20vh'
+                 minHeight: '10vh'
                }}>
         {/* Animated background elements */}
         <div className="absolute inset-0 overflow-hidden">
@@ -196,7 +196,7 @@ const Index = () => {
           </div>
         )}
         
-        <div className="relative z-10 container mx-auto px-4 py-16 text-center">
+        <div className="relative z-10 container mx-auto px-4 py-8 text-center">
           <div className="max-w-5xl mx-auto">
             
             <h1 className="text-5xl md:text-7xl font-bold mb-8 text-foreground animate-fade-in bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent"
