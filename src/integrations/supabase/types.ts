@@ -496,7 +496,11 @@ export type Database = {
         Row: {
           certified_at: string | null
           created_at: string | null
+          credential_id: string
+          expiration_date: string | null
           id: string
+          issuing_organization: string | null
+          json_ld_badge: Json | null
           level: number
           score: number
           user_id: string
@@ -504,7 +508,11 @@ export type Database = {
         Insert: {
           certified_at?: string | null
           created_at?: string | null
+          credential_id?: string
+          expiration_date?: string | null
           id?: string
+          issuing_organization?: string | null
+          json_ld_badge?: Json | null
           level: number
           score: number
           user_id: string
@@ -512,7 +520,11 @@ export type Database = {
         Update: {
           certified_at?: string | null
           created_at?: string | null
+          credential_id?: string
+          expiration_date?: string | null
           id?: string
+          issuing_organization?: string | null
+          json_ld_badge?: Json | null
           level?: number
           score?: number
           user_id?: string
@@ -596,6 +608,10 @@ export type Database = {
       calculate_total_sessions_for_level: {
         Args: { level_num: number; questions_percentage?: number }
         Returns: number
+      }
+      generate_credential_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       get_free_sessions_for_level: {
         Args: { level_num: number }

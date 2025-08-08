@@ -46,15 +46,7 @@ const VerifyCertification = () => {
             credential_id,
             expiration_date,
             issuing_organization,
-            profiles!user_id (
-              full_name
-            ),
-            difficulty_levels!inner (
-              name
-            ),
-            certificate_templates!inner (
-              certificate_title
-            )
+            user_id
           `)
           .eq('credential_id', credentialId)
           .maybeSingle();
@@ -67,6 +59,20 @@ const VerifyCertification = () => {
           return;
         }
 
+        // Récupérer les informations supplémentaires
+        const [profileResult, levelResult, templateResult] = await Promise.all([
+          supabase.from('profiles').select('full_name').eq('id', data.user_id).maybeSingle(),
+          supabase.from('difficulty_levels').select('name').eq('level_number', data.level).maybeSingle(),
+          supabase
+            .from('certificate_templates')
+            .select('certificate_title')
+            .eq('difficulty_level_id', 
+              '(SELECT id FROM difficulty_levels WHERE level_number = ' + data.level + ')'
+            )
+            .eq('is_active', true)
+            .maybeSingle()
+        ]);
+
         // Vérifier si la certification est encore valide
         const now = new Date();
         const expirationDate = data.expiration_date ? new Date(data.expiration_date) : null;
@@ -74,15 +80,15 @@ const VerifyCertification = () => {
 
         setCertification({
           id: data.id,
-          user_name: (data.profiles as any)?.full_name || 'Utilisateur inconnu',
+          user_name: profileResult.data?.full_name || 'Utilisateur inconnu',
           level: data.level,
-          level_name: (data.difficulty_levels as any)?.name || `Niveau ${data.level}`,
+          level_name: levelResult.data?.name || `Niveau ${data.level}`,
           score: data.score,
           certified_at: data.certified_at,
           credential_id: data.credential_id,
           expiration_date: data.expiration_date,
           issuing_organization: data.issuing_organization || 'Organisation',
-          certificate_title: (data.certificate_templates as any)?.certificate_title || 'Certification',
+          certificate_title: templateResult.data?.certificate_title || 'Certification',
           is_valid: isValid
         });
       } catch (error) {
