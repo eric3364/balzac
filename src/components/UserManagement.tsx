@@ -279,7 +279,12 @@ export const UserManagement = () => {
 
   const exportToCSV = () => {
     const csvContent = [
-      ['Email', 'Prénom', 'Nom', 'École', 'Classe', 'Actif', 'Date de création'],
+      [
+        'Email', 'Prénom', 'Nom', 'École', 'Classe', 'Actif', 'Date de création',
+        'Total Tests', 'Total Questions', 'Réponses Correctes', 'Score Moyen (%)',
+        'Niveau Maximum', 'Nombre Certifications', 'Détails Certifications',
+        'Temps Total (minutes)', 'Dernière Activité'
+      ],
       ...filteredUsers.map(user => [
         user.email,
         user.first_name || '',
@@ -287,7 +292,18 @@ export const UserManagement = () => {
         user.school || '',
         user.class_name || '',
         user.is_active ? 'Oui' : 'Non',
-        new Date(user.created_at).toLocaleDateString('fr-FR')
+        new Date(user.created_at).toLocaleDateString('fr-FR'),
+        user.total_tests.toString(),
+        user.total_questions.toString(),
+        user.correct_answers.toString(),
+        user.avg_score.toString(),
+        user.max_level.toString(),
+        user.certifications_count.toString(),
+        user.certifications.map(cert => 
+          `N${cert.level} (${cert.score}% - ${new Date(cert.certified_at).toLocaleDateString('fr-FR')})`
+        ).join('; '),
+        user.time_spent_minutes.toString(),
+        user.last_activity ? new Date(user.last_activity).toLocaleDateString('fr-FR') : ''
       ])
     ].map(row => row.join(',')).join('\n');
 
@@ -295,7 +311,7 @@ export const UserManagement = () => {
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `apprenants_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `apprenants_statistiques_${new Date().toISOString().split('T')[0]}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
