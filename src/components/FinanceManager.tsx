@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Euro, Users, ShoppingCart, Gift, TrendingUp } from 'lucide-react';
+import { Plus, Euro, Users, ShoppingCart, Gift, TrendingUp, Trash2, Edit } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -55,6 +55,12 @@ export const FinanceManager: React.FC = () => {
   const [newPromoCode, setNewPromoCode] = useState('');
   const [selectedLevel, setSelectedLevel] = useState<string>('');
   const [expirationDate, setExpirationDate] = useState('');
+  
+  // Edit promo code
+  const [editingPromo, setEditingPromo] = useState<PromoCode | null>(null);
+  const [editCode, setEditCode] = useState('');
+  const [editLevel, setEditLevel] = useState<string>('');
+  const [editExpiration, setEditExpiration] = useState('');
 
   useEffect(() => {
     loadFinanceData();
@@ -149,6 +155,92 @@ export const FinanceManager: React.FC = () => {
         description: error.message === 'duplicate key value violates unique constraint "promo_codes_code_key"' 
           ? "Ce code promo existe déjà." 
           : "Impossible de créer le code promo.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const deletePromoCode = async (promoId: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce code promo ?')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('promo_codes')
+        .delete()
+        .eq('id', promoId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Code promo supprimé",
+        description: "Le code promo a été supprimé avec succès.",
+      });
+
+      loadFinanceData();
+      
+    } catch (error: any) {
+      console.error('Erreur lors de la suppression du code promo:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer le code promo.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const startEditPromo = (promo: PromoCode) => {
+    setEditingPromo(promo);
+    setEditCode(promo.code);
+    setEditLevel(promo.level.toString());
+    setEditExpiration(promo.expires_at ? new Date(promo.expires_at).toISOString().slice(0, 16) : '');
+  };
+
+  const cancelEdit = () => {
+    setEditingPromo(null);
+    setEditCode('');
+    setEditLevel('');
+    setEditExpiration('');
+  };
+
+  const updatePromoCode = async () => {
+    if (!editingPromo || !editCode.trim() || !editLevel) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez remplir tous les champs obligatoires.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('promo_codes')
+        .update({
+          code: editCode.trim().toUpperCase(),
+          level: parseInt(editLevel),
+          expires_at: editExpiration ? new Date(editExpiration).toISOString() : null
+        })
+        .eq('id', editingPromo.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Code promo modifié",
+        description: `Le code ${editCode.toUpperCase()} a été modifié avec succès.`,
+      });
+
+      cancelEdit();
+      loadFinanceData();
+      
+    } catch (error: any) {
+      console.error('Erreur lors de la modification du code promo:', error);
+      toast({
+        title: "Erreur",
+        description: error.message === 'duplicate key value violates unique constraint "promo_codes_code_key"' 
+          ? "Ce code promo existe déjà." 
+          : "Impossible de modifier le code promo.",
         variant: "destructive",
       });
     }
@@ -350,13 +442,41 @@ export const FinanceManager: React.FC = () => {
                     <TableHead>Créé le</TableHead>
                     <TableHead>Expire le</TableHead>
                     <TableHead>Utilisé par</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {promoCodes.map((promo) => (
                     <TableRow key={promo.id}>
-                      <TableCell className="font-mono font-semibold">{promo.code}</TableCell>
-                      <TableCell>Niveau {promo.level}</TableCell>
+                      <TableCell className="font-mono font-semibold">
+                        {editingPromo?.id === promo.id ? (
+                          <Input
+                            value={editCode}
+                            onChange={(e) => setEditCode(e.target.value)}
+                            className="uppercase font-mono"
+                          />
+                        ) : (
+                          promo.code
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {editingPromo?.id === promo.id ? (
+                          <Select value={editLevel} onValueChange={setEditLevel}>
+                            <SelectTrigger className="w-32">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="1">Niveau 1</SelectItem>
+                              <SelectItem value="2">Niveau 2</SelectItem>
+                              <SelectItem value="3">Niveau 3</SelectItem>
+                              <SelectItem value="4">Niveau 4</SelectItem>
+                              <SelectItem value="5">Niveau 5</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          `Niveau ${promo.level}`
+                        )}
+                      </TableCell>
                       <TableCell>
                         <Badge 
                           variant={promo.is_used ? 'secondary' : 'default'}
@@ -366,7 +486,16 @@ export const FinanceManager: React.FC = () => {
                       </TableCell>
                       <TableCell>{formatDate(promo.created_at)}</TableCell>
                       <TableCell>
-                        {promo.expires_at ? formatDate(promo.expires_at) : 'Jamais'}
+                        {editingPromo?.id === promo.id ? (
+                          <Input
+                            type="datetime-local"
+                            value={editExpiration}
+                            onChange={(e) => setEditExpiration(e.target.value)}
+                            className="w-48"
+                          />
+                        ) : (
+                          promo.expires_at ? formatDate(promo.expires_at) : 'Jamais'
+                        )}
                       </TableCell>
                       <TableCell>
                         {promo.used_by ? (
@@ -374,6 +503,47 @@ export const FinanceManager: React.FC = () => {
                             {promo.used_at ? formatDate(promo.used_at) : 'Utilisé'}
                           </span>
                         ) : '-'}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {editingPromo?.id === promo.id ? (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="default"
+                                onClick={updatePromoCode}
+                              >
+                                Sauvegarder
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={cancelEdit}
+                              >
+                                Annuler
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => startEditPromo(promo)}
+                                disabled={promo.is_used}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => deletePromoCode(promo.id)}
+                                disabled={promo.is_used}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
