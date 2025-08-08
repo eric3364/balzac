@@ -133,16 +133,8 @@ const Index = () => {
   };
 
   const handlePurchase = (certification: CertificationPricing) => {
-    if (!user) {
-      toast({
-        title: "Connexion requise",
-        description: "Veuillez vous connecter pour effectuer un achat.",
-        variant: "destructive",
-      });
-      navigate('/auth');
-      return;
-    }
-    setSelectedCertification(certification);
+    // Rediriger directement vers la page de paiement (avec ou sans utilisateur connecté)
+    navigate(`/payment?level=${certification.level_number}`);
   };
 
   const confirmPurchase = async (level: number) => {
@@ -494,7 +486,7 @@ const Index = () => {
                               size="sm"
                               className="w-full"
                               variant={isFree ? "secondary" : "default"}
-                              onClick={() => isFree ? navigate('/auth') : handlePurchase(cert)}
+                              onClick={() => isFree ? navigate('/auth') : navigate(`/payment?level=${cert.level_number}`)}
                             >
                               <ShoppingCart className="h-4 w-4 mr-2" />
                               {isFree ? "Commencer gratuitement" : `Acheter ${cert.price_euros}€`}

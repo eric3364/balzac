@@ -32,13 +32,10 @@ export const CheckoutFlow = ({ open, onOpenChange, certification }: CheckoutFlow
   const { applyPromoCode, loading: promoLoading } = usePromoCode();
 
   const handleAuthRequired = () => {
-    // Stocker les informations de certification pour après l'inscription
+    // Plus besoin de rediriger vers /auth, on va directement vers payment
+    // Stocker les informations de certification pour la page de paiement
     localStorage.setItem('pendingPurchase', JSON.stringify(certification));
-    toast({
-      title: "Inscription requise",
-      description: "Veuillez vous inscrire pour continuer votre achat.",
-    });
-    navigate('/auth');
+    navigate(`/payment?level=${certification.level_number}`);
     onOpenChange(false);
   };
 
