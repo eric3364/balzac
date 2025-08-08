@@ -22,6 +22,8 @@ interface HomepageConfig {
   ctaTitle: string;
   ctaDescription: string;
   ctaButton: string;
+  ctaBadge: string;
+  ctaSubDescription: string;
   loading: boolean;
 }
 
@@ -47,6 +49,8 @@ export const useHomepageConfig = () => {
     ctaTitle: 'Prêt à certifier vos compétences ?',
     ctaDescription: 'Rejoignez des milliers d\'apprenants qui ont déjà validé leur maîtrise du français',
     ctaButton: 'Commencer maintenant',
+    ctaBadge: 'Commencez dès maintenant',
+    ctaSubDescription: 'Démarrez gratuitement avec le niveau 1 puis progressez à votre rythme',
     loading: true,
   });
 
@@ -58,7 +62,7 @@ export const useHomepageConfig = () => {
           'site_title', 'site_subtitle', 'hero_title', 'hero_description',
           'hero_cta_primary', 'hero_cta_secondary', 'features_title', 'features_description',
           'stat1_number', 'stat1_label', 'stat2_number', 'stat2_label', 'stat3_number', 'stat3_label',
-          'cta_title', 'cta_description', 'cta_button'
+          'cta_title', 'cta_description', 'cta_button', 'cta_badge', 'cta_sub_description'
         ];
         
         const { data } = await supabase
@@ -146,6 +150,12 @@ export const useHomepageConfig = () => {
             case 'cta_button':
               configMap.ctaButton = value;
               break;
+            case 'cta_badge':
+              configMap.ctaBadge = value;
+              break;
+            case 'cta_sub_description':
+              configMap.ctaSubDescription = value;
+              break;
           }
         });
 
@@ -228,6 +238,12 @@ export const useHomepageConfig = () => {
             break;
           case 'ctaButton':
             configKey = 'cta_button';
+            break;
+          case 'ctaBadge':
+            configKey = 'cta_badge';
+            break;
+          case 'ctaSubDescription':
+            configKey = 'cta_sub_description';
             break;
           default:
             return null;

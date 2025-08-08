@@ -758,6 +758,24 @@ const Admin = () => {
                         placeholder="Ex: Commencer maintenant"
                       />
                     </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="ctaBadge">Texte du badge</Label>
+                      <Input
+                        id="ctaBadge"
+                        value={homepageAssets.ctaBadge}
+                        onChange={(e) => updateHomepageAssets({ ctaBadge: e.target.value })}
+                        placeholder="Ex: Commencez dès maintenant"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="ctaSubDescription">Sous-description</Label>
+                      <Input
+                        id="ctaSubDescription"
+                        value={homepageAssets.ctaSubDescription}
+                        onChange={(e) => updateHomepageAssets({ ctaSubDescription: e.target.value })}
+                        placeholder="Ex: Démarrez gratuitement avec le niveau 1"
+                      />
+                    </div>
                   </div>
                 </div>
 

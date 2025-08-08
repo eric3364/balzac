@@ -463,14 +463,14 @@ const Index = () => {
           <div className="max-w-4xl mx-auto">
             <div className="inline-flex items-center gap-2 bg-white/20 text-white px-4 py-2 rounded-full text-sm font-medium mb-8">
               <Sparkles className="h-4 w-4" />
-              Commencez dès maintenant
+              {homepageAssets.ctaBadge}
             </div>
             
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
               {homepageAssets.ctaTitle}
             </h2>
             <p className="text-xl text-white/90 mb-10 max-w-3xl mx-auto leading-relaxed">
-              Démarrez gratuitement avec le niveau 1 puis progressez à votre rythme
+              {homepageAssets.ctaSubDescription}
             </p>
             
           </div>
