@@ -75,13 +75,13 @@ const Dashboard = () => {
         {/* Section des badges de certification */}
         <CertificationBadges />
 
-        {/* Sessions de formation */}
+        {/* Sessions de test */}
         <div className="mb-8">
           <Card>
             <CardHeader>
-              <CardTitle>Sessions de formation</CardTitle>
+              <CardTitle>Sessions de test</CardTitle>
               <CardDescription>
-                Choisissez un niveau pour commencer votre formation par sessions progressives
+                Choisissez un niveau pour commencer vos tests par sessions progressives
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
