@@ -145,15 +145,6 @@ const Dashboard = () => {
                 </div>
               )}
               
-              <div className="pt-4 border-t">
-                <Button 
-                  variant="default" 
-                  className="w-full sm:w-auto" 
-                  onClick={() => navigate('/test')}
-                >
-                  Mode test libre (ancien système)
-                </Button>
-              </div>
             </CardContent>
           </Card>
         </div>
