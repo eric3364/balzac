@@ -1,13 +1,8 @@
-name: Deploy to OVH (SFTP)
+name: build-and-deploy
 
 on:
   push:
-    branches: [ "main", "principal" ]
-  workflow_dispatch:
-
-concurrency:
-  group: deploy-ovh
-  cancel-in-progress: true
+    branches: [ main ]
 
 jobs:
   build-and-deploy:
@@ -20,26 +15,30 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: 20
 
       - name: Install deps
-        run: npm install --legacy-peer-deps
+        run: npm ci
 
       - name: Build
         run: npm run build
 
       - name: Check build output
         run: |
-          test -d dist && echo "dist/ OK" || (echo "dist/ manquant"; ls -la; exit 1)
+          test -d dist
+          test -f dist/index.html || (echo "index.html manquant dans dist" && exit 1)
+          ls -la dist
 
-      # >>> Envoie **le contenu** de dist/ dans www/
       - name: Upload via SFTP
         uses: wlixcc/SFTP-Deploy-Action@v1.2.4
         with:
-          server: ${{ secrets.SFTP_HOST }}       # ssh.cluster100.hosting.ovh.net
-          username: ${{ secrets.SFTP_USER }}     # ex: balzaci
-          password: ${{ secrets.SFTP_PASSWORD }}
-          port: 22
-          local_path: ./dist/*                   # note le /* pour le contenu
-          remote_path: ./www/                    # note le / final pour dossier
-          delete_remote_files: true
+          server: ${{ secrets.SFTP_HOST }}       # ex: ftp.cluster0XX.hosting.ovh.net
+          port: ${{ secrets.SFTP_PORT || 22 }}
+          username: ${{ secrets.SFTP_USERNAME }}
+          # Utilise l'un OU l'autre selon ton choix :
+          # password: ${{ secrets.SFTP_PASSWORD }}
+          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          local_path: './dist/*'
+          remote_path: 'www'                     # ✅ PAS ".www" ; dossier exact vu sur ta capture
+          delete_remote_files: false             # On ne wipe pas tout le dossier
+          sftpArgs: '-o StrictHostKeyChecking=no -o ConnectTimeout=30'
