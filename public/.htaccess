@@ -1,9 +1,39 @@
-# Redirection HTTP -> HTTPS
+# --- HTTPS (et option WWW -> apex) ---
 RewriteEngine On
 RewriteCond %{HTTPS} !=on
 RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-# Fallback SPA (React/Vite) : enlève ce bloc si TON SITE n'est PAS une SPA
+# (Optionnel) forcer sans www
+#RewriteCond %{HTTP_HOST} ^www\.(.*)$ [NC]
+#RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
+
+# --- SPA fallback (React/Vite) ---
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule . /index.html [L]
+
+# --- Compression ---
+AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css application/javascript application/json image/svg+xml
+
+# --- Cache (assets long, HTML court) ---
+<IfModule mod_expires.c>
+  ExpiresActive On
+  # 1 an pour les assets versionnés
+  ExpiresByType image/png "access plus 1 year"
+  ExpiresByType image/jpeg "access plus 1 year"
+  ExpiresByType image/svg+xml "access plus 1 year"
+  ExpiresByType text/css "access plus 1 year"
+  ExpiresByType application/javascript "access plus 1 year"
+  # HTML : pas de cache long
+  ExpiresByType text/html "access plus 0 seconds"
+</IfModule>
+
+# --- Petites protections ---
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+  Header set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+  # Active HSTS après avoir confirmé que tout le trafic est bien en HTTPS
+  # Header set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+</IfModule>
