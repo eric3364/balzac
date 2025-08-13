@@ -6,20 +6,12 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
-    # RÉGLAGES À FOURNIR DANS Settings > Secrets and variables > Actions
-    # - SFTP_HOST (ex: ssh.cluster0XX.hosting.ovh.net)
-    # - SFTP_PORT (ex: 22)
-    # - SFTP_USERNAME
-    # - SFTP_PASSWORD  (laisser vide si vous utilisez la clé)
-    # - SSH_PRIVATE_KEY (laisser vide si vous utilisez le mot de passe)
+    timeout-minutes: 15
     env:
       HOST: ${{ secrets.SFTP_HOST }}
       PORT: ${{ secrets.SFTP_PORT }}
       USER: ${{ secrets.SFTP_USERNAME }}
-      PASSWORD: ${{ secrets.SFTP_PASSWORD }}
-      PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-      REMOTE_DIR: /home/balzaci/www
+      REMOTE_PATH: /home/balzaci/www
 
     steps:
       - name: Checkout
@@ -29,50 +21,40 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
 
       - name: Install deps
-        run: npm ci
+        run: npm ci --no-audit --fund=false
 
       - name: Build
         run: npm run build
 
       - name: Check build output
         run: |
-          set -euxo pipefail
-          test -d dist
           test -f dist/index.html
-          du -sh dist || true
-          ls -la dist | head -n 200
+          ls -la dist | head -n 100
 
-      - name: Install lftp
-        run: sudo apt-get update && sudo apt-get install -y lftp
-
-      - name: Prepare SSH key if provided
+      - name: Assert secrets are set
         run: |
-          set -euxo pipefail
-          if [ -n "${PRIVATE_KEY}" ]; then
-            echo "${PRIVATE_KEY}" > id_rsa
-            chmod 600 id_rsa
-          fi
+          test -n "$HOST" || (echo "Missing HOST secret" && exit 1)
+          test -n "$PORT" || (echo "Missing PORT secret" && exit 1)
+          test -n "$USER" || (echo "Missing USER secret" && exit 1)
 
-      - name: Probe remote (lists $REMOTE_DIR)
-        run: |
-          set -euxo pipefail
-          echo "HOST=${HOST} USER=${USER} PORT=${PORT} REMOTE_DIR=${REMOTE_DIR}"
-          if [ -n "${PASSWORD}" ]; then
-            # Auth par mot de passe
-            lftp -d -e "set sftp:auto-confirm yes; open -u ${USER},${PASSWORD} sftp://${HOST}:${PORT}; cls -l ${REMOTE_DIR}; bye"
-          else
-            # Auth par clé privée
-            lftp -d -e "set sftp:auto-confirm yes; set sftp:connect-program \"ssh -i id_rsa -o StrictHostKeyChecking=no\"; open sftp://${USER}@${HOST}:${PORT}; cls -l ${REMOTE_DIR}; bye"
-          fi
+      - name: Add SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Deploy (mirror -R dist -> $REMOTE_DIR)
-        run: |
-          set -euxo pipefail
-          # On évite d'écraser .htaccess
-          if [ -n "${PASSWORD}" ]; then
-            lftp -e "set sftp:auto-confirm yes; open -u ${USER},${PASSWORD} sftp://${HOST}:${PORT}; mirror -R --only-newer --verbose=2 --exclude-glob .htaccess dist ${REMOTE_DIR}; bye"
-          else
-            lftp -e "set sftp:auto-confirm yes; set sftp:connect-program \"ssh -i id_rsa -o StrictHostKeyChecking=no\"; open sftp://${USER}@${HOST}:${PORT}; mirror -R --only-newer --verbose=2 --exclude-glob .htaccess dist ${REMOTE_DIR}; bye"
-          fi
+      - name: Test SSH and target path
+        run: ssh -o StrictHostKeyChecking=no -p "$PORT" "$USER@$HOST" "mkdir -p '$REMOTE_PATH' && echo OK && ls -la '$REMOTE_PATH'"
+
+      - name: Deploy via rsync (preserve .htaccess)
+        uses: burnett01/rsync-deployments@5.2.1
+        with:
+          switches: -avzr --delete --exclude='.htaccess'
+          path: dist/
+          remote_path: ${{ env.REMOTE_PATH }}/
+          remote_host: ${{ env.HOST }}
+          remote_user: ${{ env.USER }}
+          remote_port: ${{ env.PORT }}
+          remote_key: ${{ secrets.SSH_PRIVATE_KEY }}
