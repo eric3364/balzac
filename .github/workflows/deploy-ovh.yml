@@ -11,7 +11,7 @@ jobs:
     # - SFTP_HOST (ex: ssh.cluster0XX.hosting.ovh.net)
     # - SFTP_PORT (ex: 22)
     # - SFTP_USERNAME
-    # - SFTP_PASSWORD  (laisser vide si vous utilisez la clé!)
+    # - SFTP_PASSWORD  (laisser vide si vous utilisez la clé)
     # - SSH_PRIVATE_KEY (laisser vide si vous utilisez le mot de passe)
     env:
       HOST: ${{ secrets.SFTP_HOST }}
