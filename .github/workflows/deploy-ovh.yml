@@ -1,4 +1,4 @@
-name: Deploy to OVH (FTP)
+- name: Upload via SFTP
 
 on:
   push:
