@@ -1,4 +1,4 @@
-- name: Upload via SFTP
+name: Upload via SFTP
 
 on:
   push:
