@@ -1,5 +1,4 @@
 name: build-and-deploy
-
 on:
   push:
     branches: [ main ]
@@ -29,16 +28,25 @@ jobs:
           test -f dist/index.html || (echo "index.html manquant dans dist" && exit 1)
           ls -la dist
 
-      - name: Upload via SFTP
-        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
+      # Charge ta clé privée SSH (celle dont la PUB est autorisée chez OVH)
+      - name: Add SSH key
+        uses: webfactory/ssh-agent@v0.9.0
         with:
-          server: ${{ secrets.SFTP_HOST }}       # ex: ftp.cluster0XX.hosting.ovh.net
-          port: ${{ secrets.SFTP_PORT || 22 }}
-          username: ${{ secrets.SFTP_USERNAME }}
-          # Utilise l'un OU l'autre selon ton choix :
-          # password: ${{ secrets.SFTP_PASSWORD }}
-          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
-          local_path: './dist/*'
-          remote_path: 'www'                     # ✅ PAS ".www" ; dossier exact vu sur ta capture
-          delete_remote_files: false             # On ne wipe pas tout le dossier
-          sftpArgs: '-o StrictHostKeyChecking=no -o ConnectTimeout=30'
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      # Teste la connexion et la présence du dossier cible
+      - name: Test SSH connection
+        run: |
+          ssh -o StrictHostKeyChecking=no -p ${{ secrets.SFTP_PORT }} ${{ secrets.SFTP_USERNAME }}@${{ secrets.SFTP_HOST }} "echo Connected && ls -la /home/balzaci/www"
+
+      # Déploiement verbeux + exclusion du .htaccess + nettoyage des fichiers retirés du build
+      - name: Deploy via rsync over SSH
+        uses: burnett01/rsync-deployments@5.2.1
+        with:
+          switches: -avzr --delete --exclude='.htaccess'
+          path: dist/
+          remote_path: /home/balzaci/www/
+          remote_host: ${{ secrets.SFTP_HOST }}
+          remote_user: ${{ secrets.SFTP_USERNAME }}
+          remote_port: ${{ secrets.SFTP_PORT }}
+          remote_key: ${{ secrets.SSH_PRIVATE_KEY }}
