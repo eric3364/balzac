@@ -32,12 +32,12 @@ jobs:
       - name: Build
         run: npm run build
 
-      # 4.1) Vérifier que le dossier dist/ existe
+      # 4.1) Vérifier que dist/ existe
       - name: Check build output
         run: |
           test -d dist && echo "dist/ OK" || (echo "dist/ manquant"; ls -la; exit 1)
 
-      # 5) Upload en SFTP vers OVH (chemin RELATIF au HOME)
+      # 5) Upload SFTP (envoie le dossier dist ENTIER dans www)
       - name: Upload via SFTP
         uses: wlixcc/SFTP-Deploy-Action@v1.2.4
         with:
@@ -45,6 +45,6 @@ jobs:
           username: ${{ secrets.SFTP_USER }}     # ex: balzaci
           password: ${{ secrets.SFTP_PASSWORD }}
           port: 22
-          local_path: ./dist/*                   # contenu du build Vite
-          remote_path: ./www/                    # dossier 'www' (sans point), relatif au HOME
-          delete_remote_files: false             # repasse à true quand tout est OK
+          local_path: ./dist                     # <<< pas de /* ici
+          remote_path: ./www                     # <<< pas de / final
+          delete_remote_files: false             # remets à true une fois validé
