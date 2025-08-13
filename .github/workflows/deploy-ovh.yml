@@ -1,4 +1,5 @@
 name: build-and-deploy
+
 on:
   push:
     branches: [ main ]
@@ -27,81 +28,19 @@ jobs:
           set -euxo pipefail
           test -d dist
           test -f dist/index.html
-          du -sh dist || true
-          ls -la dist | head -n 200
+          ls -la dist | head -n 100
 
-      # === DIAG SSH (si tu as une clé) ===
-      - name: Add SSH key (if provided)
-        if: ${{ secrets.SSH_PRIVATE_KEY != '' }}
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Verbose SSH check (if key provided)
-        if: ${{ secrets.SSH_PRIVATE_KEY != '' }}
-        run: |
-          set -euxo pipefail
-          echo "Host: ${HOST}  User: ${USER}  Port: ${PORT}"
-          ssh -vvv -o StrictHostKeyChecking=no -p "${PORT}" "${USER}@${HOST}" "echo OK && pwd && ls -la /home/balzaci && ls -la /home/balzaci/www"
-        env:
-          HOST: ${{ secrets.SFTP_HOST }}
-          USER: ${{ secrets.SFTP_USERNAME }}
-          PORT: ${{ secrets.SFTP_PORT }}
-
-      # === DIAG SFTP (fonctionne même sans clé) ===
-      - name: Install lftp
-        run: sudo apt-get update && sudo apt-get install -y lftp
-
-      - name: Verbose SFTP list
-        run: |
-          set -euxo pipefail
-          echo "set sftp:auto-confirm yes" > sftp.rc
-          echo "set net:max-retries 1" >> sftp.rc
-          echo "set net:timeout 20" >> sftp.rc
-          # Essai avec mot de passe si fourni, sinon avec clé
-          if [ -n "${PASSWORD}" ]; then
-            lftp -d -f sftp.rc -e "open -u ${USER},${PASSWORD} sftp://${HOST}:${PORT}; ls -la /home/balzaci/www; bye" || true
-          else
-            # lftp utilisera l'agent SSH si la clé est chargée
-            lftp -d -f sftp.rc -e "open sftp://${USER}@${HOST}:${PORT}; ls -la /home/balzaci/www; bye" || true
-          fi
-        env:
-          HOST: ${{ secrets.SFTP_HOST }}
-          USER: ${{ secrets.SFTP_USERNAME }}
-          PORT: ${{ secrets.SFTP_PORT }}
-          PASSWORD: ${{ secrets.SFTP_PASSWORD }}
-
-      - name: Save diag logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: deploy-diag-logs
-          path: .
-          retention-days: 3
-
-      # === DEPLOIEMENT (rsync via clé SSH si dispo, sinon SFTP/password) ===
-      - name: Deploy with rsync over SSH (preferred)
-        if: ${{ secrets.SSH_PRIVATE_KEY != '' }}
-        uses: burnett01/rsync-deployments@5.2.1
-        with:
-          switches: -avzr --delete --exclude='.htaccess'
-          path: dist/
-          remote_path: /home/balzaci/www/
-          remote_host: ${{ secrets.SFTP_HOST }}
-          remote_user: ${{ secrets.SFTP_USERNAME }}
-          remote_port: ${{ secrets.SFTP_PORT }}
-          remote_key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Deploy with SFTP/password (fallback)
-        if: ${{ secrets.SSH_PRIVATE_KEY == '' && secrets.SFTP_PASSWORD != '' }}
+      - name: Upload via SFTP to OVH
         uses: wlixcc/SFTP-Deploy-Action@v1.2.4
         with:
-          server: ${{ secrets.SFTP_HOST }}
-          port: ${{ secrets.SFTP_PORT }}
+          server: ${{ secrets.SFTP_HOST }}        # ex: ssh.cluster0XX.hosting.ovh.net
+          port: 22                                # OVH SSH/SFTP = 22
           username: ${{ secrets.SFTP_USERNAME }}
-          password: ${{ secrets.SFTP_PASSWORD }}
+          # → Renseigne l'un OU l'autre :
+          password: ${{ secrets.SFTP_PASSWORD }}  # (laisser vide si clé)
+          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}  # (laisser vide si mot de passe)
           local_path: './dist/*'
-          remote_path: '/home/balzaci/www'
-          delete_remote_files: false
-          exclude: '.htaccess'
+          remote_path: '/home/balzaci/www'        # ✅ chemin confirmé
+          delete_remote_files: false              # évite le grand ménage par défaut
+          exclude: '.htaccess'                    # préserve tes redirections
           sftpArgs: '-o StrictHostKeyChecking=no -o ConnectTimeout=30'
