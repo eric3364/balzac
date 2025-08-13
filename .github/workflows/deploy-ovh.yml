@@ -10,7 +10,8 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+
 
       # Si ton projet N'A PAS de build (site HTML/CSS simple), supprime ces 3 étapes
       - name: Setup Node
