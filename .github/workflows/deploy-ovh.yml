@@ -2,7 +2,12 @@ name: Upload via SFTP
 
 on:
   push:
-    branches: [ "main", "principal" ]   # déclenche sur main OU principal
+    branches: [ "main", "principal" ]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-ovh
+  cancel-in-progress: true
 
 jobs:
   build-and-deploy:
@@ -13,29 +18,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 2) Installe Node (NE GARDE PAS ces 3 étapes si ton site n'a pas de build)
+      # 2) Environnement Node
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
+      # 3) Installer les dépendances (tolérant aux peer deps)
       - name: Install deps
         run: npm install --legacy-peer-deps
 
+      # 4) Build du site
       - name: Build
         run: npm run build
 
-      # 3) Envoie le dossier de build vers OVH
-      # Vite => dist/   |  Create React App => build/
+      # 5) Upload du build vers OVH en SFTP
       - name: Upload via SFTP
-      uses: wlixcc/SFTP-Deploy-Action@v1.2.4
-      with:
-        server: ${{ secrets.SFTP_HOST }}
-        username: ${{ secrets.SFTP_USER }}
-        password: ${{ secrets.SFTP_PASSWORD }}
-        port: 22
-        local_path: dist/*          # ou build/* si CRA
-        remote_path: /home/balzaci/www/
-        sftp_only: true
-        delete_remote_files: true
-
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
+        with:
+          server: ${{ secrets.SFTP_HOST }}
+          username: ${{ secrets.SFTP_USER }}
+          password: ${{ secrets.SFTP_PASSWORD }}
+          port: 22
+          local_path: dist/*              # ou build/* si CRA
+          remote_path: /home/balzaci/www/
+          sftp_only: true
+          delete_remote_files: true
