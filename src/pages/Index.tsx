@@ -210,9 +210,6 @@ const Index = () => {
             <Button variant="ghost" onClick={() => navigate('/auth')}>
               Connexion
             </Button>
-            <Button onClick={() => navigate('/auth')}>
-              Commencer
-            </Button>
           </div>
         </div>
       </header>
