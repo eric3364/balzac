@@ -203,12 +203,12 @@ const Index = () => {
             </div>
           </div>
           <div className="flex items-center gap-4">
+            <Button variant="ghost" onClick={() => navigate('/auth')}>
+              Connexion
+            </Button>
             <Button variant="ghost" onClick={() => navigate('/admin-auth')}>
               <Shield className="mr-2 h-4 w-4" />
               Administration
-            </Button>
-            <Button variant="ghost" onClick={() => navigate('/auth')}>
-              Connexion
             </Button>
           </div>
         </div>
