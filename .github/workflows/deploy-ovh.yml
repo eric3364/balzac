@@ -1,5 +1,4 @@
 name: build-and-deploy
-
 on:
   push:
     branches: [ main ]
@@ -7,6 +6,20 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+
+    # RÉGLAGES À FOURNIR DANS Settings > Secrets and variables > Actions
+    # - SFTP_HOST (ex: ssh.cluster0XX.hosting.ovh.net)
+    # - SFTP_PORT (ex: 22)
+    # - SFTP_USERNAME
+    # - SFTP_PASSWORD  (laisser vide si vous utilisez la clé)
+    # - SSH_PRIVATE_KEY (laisser vide si vous utilisez le mot de passe)
+    env:
+      HOST: ${{ secrets.SFTP_HOST }}
+      PORT: ${{ secrets.SFTP_PORT }}
+      USER: ${{ secrets.SFTP_USERNAME }}
+      PASSWORD: ${{ secrets.SFTP_PASSWORD }}
+      PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      REMOTE_DIR: /home/balzaci/www
 
     steps:
       - name: Checkout
@@ -28,19 +41,38 @@ jobs:
           set -euxo pipefail
           test -d dist
           test -f dist/index.html
-          ls -la dist | head -n 100
+          du -sh dist || true
+          ls -la dist | head -n 200
 
-      - name: Upload via SFTP to OVH
-        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
-        with:
-          server: ${{ secrets.SFTP_HOST }}        # ex: ssh.cluster0XX.hosting.ovh.net
-          port: 22                                # OVH SSH/SFTP = 22
-          username: ${{ secrets.SFTP_USERNAME }}
-          # → Renseigne l'un OU l'autre :
-          password: ${{ secrets.SFTP_PASSWORD }}  # (laisser vide si clé)
-          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}  # (laisser vide si mot de passe)
-          local_path: './dist/*'
-          remote_path: '/home/balzaci/www'        # ✅ chemin confirmé
-          delete_remote_files: false              # évite le grand ménage par défaut
-          exclude: '.htaccess'                    # préserve tes redirections
-          sftpArgs: '-o StrictHostKeyChecking=no -o ConnectTimeout=30'
+      - name: Install lftp
+        run: sudo apt-get update && sudo apt-get install -y lftp
+
+      - name: Prepare SSH key if provided
+        run: |
+          set -euxo pipefail
+          if [ -n "${PRIVATE_KEY}" ]; then
+            echo "${PRIVATE_KEY}" > id_rsa
+            chmod 600 id_rsa
+          fi
+
+      - name: Probe remote (lists $REMOTE_DIR)
+        run: |
+          set -euxo pipefail
+          echo "HOST=${HOST} USER=${USER} PORT=${PORT} REMOTE_DIR=${REMOTE_DIR}"
+          if [ -n "${PASSWORD}" ]; then
+            # Auth par mot de passe
+            lftp -d -e "set sftp:auto-confirm yes; open -u ${USER},${PASSWORD} sftp://${HOST}:${PORT}; cls -l ${REMOTE_DIR}; bye"
+          else
+            # Auth par clé privée
+            lftp -d -e "set sftp:auto-confirm yes; set sftp:connect-program \"ssh -i id_rsa -o StrictHostKeyChecking=no\"; open sftp://${USER}@${HOST}:${PORT}; cls -l ${REMOTE_DIR}; bye"
+          fi
+
+      - name: Deploy (mirror -R dist -> $REMOTE_DIR)
+        run: |
+          set -euxo pipefail
+          # On évite d'écraser .htaccess
+          if [ -n "${PASSWORD}" ]; then
+            lftp -e "set sftp:auto-confirm yes; open -u ${USER},${PASSWORD} sftp://${HOST}:${PORT}; mirror -R --only-newer --verbose=2 --exclude-glob .htaccess dist ${REMOTE_DIR}; bye"
+          else
+            lftp -e "set sftp:auto-confirm yes; set sftp:connect-program \"ssh -i id_rsa -o StrictHostKeyChecking=no\"; open sftp://${USER}@${HOST}:${PORT}; mirror -R --only-newer --verbose=2 --exclude-glob .htaccess dist ${REMOTE_DIR}; bye"
+          fi
