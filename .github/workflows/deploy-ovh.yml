@@ -2,18 +2,18 @@ name: Deploy to OVH (FTP)
 
 on:
   push:
-    branches: [ "main", "principal" ]   # déclenche si tu pushes sur main OU principal
+    branches: [ "main", "principal" ]   # déclenche sur main OU principal
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
+      # 1) Récupère le code du repo
       - name: Checkout
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        uses: actions/checkout@v4
 
-
-      # Si ton projet N'A PAS de build (site HTML/CSS simple), supprime ces 3 étapes
+      # 2) Installe Node (NE GARDE PAS ces 3 étapes si ton site n'a pas de build)
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -25,14 +25,15 @@ jobs:
       - name: Build
         run: npm run build
 
-      # Vite -> dist/ (Create React App -> build/)
+      # 3) Envoie le dossier de build vers OVH
+      # Vite => dist/   |  Create React App => build/
       - name: Upload via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           port: ${{ secrets.FTP_PORT }}
-          local-dir: dist/
+          local-dir: dist/                 # change en build/ si CRA
           server-dir: ${{ secrets.FTP_DIR }}/
           dangerous-clean-slate: true
