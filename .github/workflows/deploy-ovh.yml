@@ -41,7 +41,7 @@ jobs:
           test -n "$USER" || (echo "Missing USER secret" && exit 1)
 
       - name: Add SSH key
-        uses: webfactory/ssh-agent@v0.9.0
+        uses: webfactory/ssh-agent@v0.8.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
