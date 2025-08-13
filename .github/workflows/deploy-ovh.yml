@@ -42,4 +42,4 @@ jobs:
           port: 22
           local_path: ./dist/*                   # note le /* pour le contenu
           remote_path: ./www/                    # note le / final pour dossier
-          delete_remote_files: false
+          delete_remote_files: true
