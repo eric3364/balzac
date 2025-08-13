@@ -27,13 +27,15 @@ jobs:
 
       # 3) Envoie le dossier de build vers OVH
       # Vite => dist/   |  Create React App => build/
-      - name: Upload via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          port: ${{ secrets.FTP_PORT }}
-          local-dir: dist/                 # change en build/ si CRA
-          server-dir: ${{ secrets.FTP_DIR }}/
-          dangerous-clean-slate: true
+      - name: Upload via SFTP
+      uses: wlixcc/SFTP-Deploy-Action@v1.2.4
+      with:
+        server: ${{ secrets.SFTP_HOST }}
+        username: ${{ secrets.SFTP_USER }}
+        password: ${{ secrets.SFTP_PASSWORD }}
+        port: 22
+        local_path: dist/*          # ou build/* si CRA
+        remote_path: /home/balzaci/www/
+        sftp_only: true
+        delete_remote_files: true
+
