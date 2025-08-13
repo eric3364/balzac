@@ -1,4 +1,4 @@
-name: Upload via SFTP
+name: Deploy to OVH (SFTP)
 
 on:
   push:
@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1) Récupère le code du repo
+      # 1) Récupère le code
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -28,19 +28,19 @@ jobs:
       - name: Install deps
         run: npm install --legacy-peer-deps
 
-      # 4) Build du site
+      # 4) Build du site (Vite → dist/)
       - name: Build
         run: npm run build
 
-      # 5) Upload du build vers OVH en SFTP
+      # 5) Upload en SFTP vers OVH
       - name: Upload via SFTP
         uses: wlixcc/SFTP-Deploy-Action@v1.2.4
         with:
-          server: ${{ secrets.SFTP_HOST }}
-          username: ${{ secrets.SFTP_USER }}
+          server: ${{ secrets.SFTP_HOST }}       # ex: ssh.cluster100.hosting.ovh.net
+          username: ${{ secrets.SFTP_USER }}     # ex: balzaci
           password: ${{ secrets.SFTP_PASSWORD }}
           port: 22
-          local_path: dist/*              # ou build/* si CRA
-          remote_path: /home/balzaci/www/
+          local_path: dist/*                     # ou build/* si CRA
+          remote_path: ./www/                    # IMPORTANT: dossier 'www' (sans le point)
           sftp_only: true
-          delete_remote_files: true
+          delete_remote_files: false             # passe à true quand tout est OK
