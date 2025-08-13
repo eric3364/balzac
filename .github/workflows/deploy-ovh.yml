@@ -34,20 +34,24 @@ jobs:
           test -f dist/index.html
           ls -la dist | head -n 100
 
+      # --- DIAG SSH CLAIR ---
       - name: Assert secrets are set
         run: |
-          test -n "$HOST" || (echo "Missing HOST secret" && exit 1)
-          test -n "$PORT" || (echo "Missing PORT secret" && exit 1)
-          test -n "$USER" || (echo "Missing USER secret" && exit 1)
+          test -n "$HOST" || (echo "::error::Missing HOST secret" && exit 1)
+          test -n "$PORT" || (echo "::error::Missing PORT secret" && exit 1)
+          test -n "$USER" || (echo "::error::Missing USER secret" && exit 1)
 
       - name: Add SSH key
-        uses: webfactory/ssh-agent@v0.8.0
+        uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Test SSH and target path
-        run: ssh -o StrictHostKeyChecking=no -p "$PORT" "$USER@$HOST" "mkdir -p '$REMOTE_PATH' && echo OK && ls -la '$REMOTE_PATH'"
+      - name: SSH fingerprint + whoami (verbose)
+        run: |
+          set -euxo pipefail
+          ssh -vvv -o StrictHostKeyChecking=no -p "$PORT" "$USER@$HOST" "whoami && pwd && ls -la /home/balzaci && ls -la /home/balzaci/www"
 
+      # --- DEPLOIEMENT ---
       - name: Deploy via rsync (preserve .htaccess)
         uses: burnett01/rsync-deployments@5.2.1
         with:
