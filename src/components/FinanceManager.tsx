@@ -40,10 +40,17 @@ interface Stats {
   averageOrderValue: number;
 }
 
+interface CertificationLevel {
+  level_number: number;
+  name: string;
+  cert_name: string;
+}
+
 export const FinanceManager: React.FC = () => {
   const { toast } = useToast();
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [promoCodes, setPromoCodes] = useState<PromoCode[]>([]);
+  const [certificationLevels, setCertificationLevels] = useState<CertificationLevel[]>([]);
   const [stats, setStats] = useState<Stats>({
     totalRevenue: 0,
     totalSales: 0,
@@ -105,6 +112,28 @@ export const FinanceManager: React.FC = () => {
 
       if (promoError) throw promoError;
       setPromoCodes(promoData || []);
+
+      // Charger les niveaux de certification actifs
+      const { data: levelsData, error: levelsError } = await supabase
+        .from('difficulty_levels')
+        .select(`
+          level_number,
+          name,
+          certificate_templates!inner(name)
+        `)
+        .eq('is_active', true)
+        .eq('certificate_templates.is_active', true)
+        .order('level_number');
+
+      if (levelsError) throw levelsError;
+      
+      const formattedLevels = levelsData?.map(level => ({
+        level_number: level.level_number,
+        name: level.name,
+        cert_name: level.certificate_templates[0]?.name || level.name
+      })) || [];
+      
+      setCertificationLevels(formattedLevels);
 
       // Calculer les statistiques
       const completedPurchases = purchasesData?.filter(p => p.status === 'completed') || [];
@@ -439,11 +468,11 @@ export const FinanceManager: React.FC = () => {
                       <SelectValue placeholder="Choisir un niveau" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">Niveau 1</SelectItem>
-                      <SelectItem value="2">Niveau 2</SelectItem>
-                      <SelectItem value="3">Niveau 3</SelectItem>
-                      <SelectItem value="4">Niveau 4</SelectItem>
-                      <SelectItem value="5">Niveau 5</SelectItem>
+                      {certificationLevels.map((level) => (
+                        <SelectItem key={level.level_number} value={level.level_number.toString()}>
+                          Niveau {level.level_number} - {level.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -531,11 +560,11 @@ export const FinanceManager: React.FC = () => {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="1">Niveau 1</SelectItem>
-                              <SelectItem value="2">Niveau 2</SelectItem>
-                              <SelectItem value="3">Niveau 3</SelectItem>
-                              <SelectItem value="4">Niveau 4</SelectItem>
-                              <SelectItem value="5">Niveau 5</SelectItem>
+                              {certificationLevels.map((level) => (
+                                <SelectItem key={level.level_number} value={level.level_number.toString()}>
+                                  Niveau {level.level_number} - {level.name}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         ) : (
