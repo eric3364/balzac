@@ -179,9 +179,115 @@ export default function Payment() {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8">
+          {/* Récapitulatif de commande */}
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-primary" />
+                  Récapitulatif de commande
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-semibold">{certification.name}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Niveau {certification.level}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    {promoApplied ? (
+                      <div className="space-y-1">
+                        <p className="text-sm line-through text-muted-foreground">
+                          {certification.price_euros}€
+                        </p>
+                        <Badge variant="secondary" className="text-green-600">
+                          Gratuit
+                        </Badge>
+                      </div>
+                    ) : (
+                      <p className="font-semibold">{certification.price_euros}€</p>
+                    )}
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-2 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <Zap className="h-4 w-4" />
+                    <span>Accès immédiat après paiement</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Shield className="h-4 w-4" />
+                    <span>Code d'accès envoyé par email</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="h-4 w-4" />
+                    <span>Paiement sécurisé</span>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="flex justify-between items-center text-lg font-semibold">
+                  <span>Total</span>
+                  <span className="text-primary">{finalPrice}€</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Code promo */}
+            {!promoApplied && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Gift className="h-4 w-4 text-green-600" />
+                    Code promo
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex gap-2">
+                    <Input
+                      value={promoCode}
+                      onChange={(e) => setPromoCode(e.target.value)}
+                      placeholder="Entrez votre code promo"
+                      disabled={promoLoading}
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={handleApplyPromoCode}
+                      disabled={promoLoading || !promoCode.trim()}
+                    >
+                      {promoLoading ? "..." : "Appliquer"}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Certains codes promo permettent d'obtenir la certification gratuitement.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {promoApplied && (
+              <Card className="border-green-200 bg-green-50">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-2 text-green-700">
+                    <Check className="h-4 w-4" />
+                    <span className="font-medium">Code promo appliqué</span>
+                  </div>
+                  <p className="text-sm text-green-600 mt-1">
+                    Votre certification est maintenant gratuite !
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
           {/* Section Connexion/Inscription si non connecté */}
           {!user && (
-            <div className="lg:col-span-2">
+            <div>
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -301,112 +407,6 @@ export default function Payment() {
               </Card>
             </div>
           )}
-
-          {/* Récapitulatif de commande */}
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-primary" />
-                  Récapitulatif de commande
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-semibold">{certification.name}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Niveau {certification.level}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    {promoApplied ? (
-                      <div className="space-y-1">
-                        <p className="text-sm line-through text-muted-foreground">
-                          {certification.price_euros}€
-                        </p>
-                        <Badge variant="secondary" className="text-green-600">
-                          Gratuit
-                        </Badge>
-                      </div>
-                    ) : (
-                      <p className="font-semibold">{certification.price_euros}€</p>
-                    )}
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div className="space-y-2 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <Zap className="h-4 w-4" />
-                    <span>Accès immédiat après paiement</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Shield className="h-4 w-4" />
-                    <span>Code d'accès envoyé par email</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="h-4 w-4" />
-                    <span>Paiement sécurisé</span>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div className="flex justify-between items-center text-lg font-semibold">
-                  <span>Total</span>
-                  <span className="text-primary">{finalPrice}€</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Code promo */}
-            {!promoApplied && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <Gift className="h-4 w-4 text-green-600" />
-                    Code promo
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex gap-2">
-                    <Input
-                      value={promoCode}
-                      onChange={(e) => setPromoCode(e.target.value)}
-                      placeholder="Entrez votre code promo"
-                      disabled={promoLoading}
-                    />
-                    <Button
-                      variant="outline"
-                      onClick={handleApplyPromoCode}
-                      disabled={promoLoading || !promoCode.trim()}
-                    >
-                      {promoLoading ? "..." : "Appliquer"}
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Certains codes promo permettent d'obtenir la certification gratuitement.
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-
-            {promoApplied && (
-              <Card className="border-green-200 bg-green-50">
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-2 text-green-700">
-                    <Check className="h-4 w-4" />
-                    <span className="font-medium">Code promo appliqué</span>
-                  </div>
-                  <p className="text-sm text-green-600 mt-1">
-                    Votre certification est maintenant gratuite !
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
 
           {/* Informations de paiement - Affiché seulement si connecté */}
           {user && (
