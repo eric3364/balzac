@@ -20,12 +20,14 @@ export default function Payment() {
   const { user, signIn, signUp } = useAuth();
   const { toast } = useToast();
   const { pricing } = useLevelPricing();
-  const { applyPromoCode, loading: promoLoading } = usePromoCode();
+  const { applyPromoCode, checkPromoCode, loading: promoLoading } = usePromoCode();
 
   const [level, setLevel] = useState<number | null>(null);
   const [certification, setCertification] = useState<any>(null);
   const [promoCode, setPromoCode] = useState('');
   const [promoApplied, setPromoApplied] = useState(false);
+  const [promoValidated, setPromoValidated] = useState(false);
+  const [promoDiscount, setPromoDiscount] = useState(0);
   const [finalPrice, setFinalPrice] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
@@ -96,7 +98,32 @@ export default function Payment() {
     setAuthLoading(false);
   };
 
+  const handleCheckPromoCode = async () => {
+    if (!level) return;
+    
+    const { valid, discount } = await checkPromoCode(promoCode, level);
+    if (valid) {
+      setPromoValidated(true);
+      setPromoDiscount(discount);
+      const newPrice = certification.price_euros * (1 - discount / 100);
+      setFinalPrice(newPrice);
+      toast({
+        title: "Code promo validé !",
+        description: `Réduction de ${discount}% appliquée. ${!user ? 'Connectez-vous pour finaliser.' : ''}`,
+      });
+    }
+  };
+
   const handleApplyPromoCode = async () => {
+    if (!user) {
+      toast({
+        title: "Connexion requise",
+        description: "Veuillez vous connecter pour finaliser l'application du code promo.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!level) return;
     
     const success = await applyPromoCode(promoCode, level);
@@ -197,13 +224,13 @@ export default function Payment() {
                     </p>
                   </div>
                   <div className="text-right">
-                    {promoApplied ? (
+                    {promoValidated || promoApplied ? (
                       <div className="space-y-1">
                         <p className="text-sm line-through text-muted-foreground">
                           {certification.price_euros}€
                         </p>
                         <Badge variant="secondary" className="text-green-600">
-                          Gratuit
+                          {promoApplied ? 'Gratuit' : `${finalPrice}€`}
                         </Badge>
                       </div>
                     ) : (
@@ -233,7 +260,9 @@ export default function Payment() {
 
                 <div className="flex justify-between items-center text-lg font-semibold">
                   <span>Total</span>
-                  <span className="text-primary">{finalPrice}€</span>
+                  <span className="text-primary">
+                    {promoApplied ? '0€' : `${finalPrice || certification.price_euros}€`}
+                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -257,14 +286,18 @@ export default function Payment() {
                     />
                     <Button
                       variant="outline"
-                      onClick={handleApplyPromoCode}
+                      onClick={promoValidated && !user ? handleApplyPromoCode : handleCheckPromoCode}
                       disabled={promoLoading || !promoCode.trim()}
                     >
-                      {promoLoading ? "..." : "Appliquer"}
+                      {promoLoading ? "..." : 
+                        (promoValidated && !user ? "Appliquer" : 
+                         promoValidated ? "✓ Validé" : "Vérifier")}
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Certains codes promo permettent d'obtenir la certification gratuitement.
+                    {promoValidated && !user ? 
+                      "Connectez-vous pour appliquer définitivement le code promo." :
+                      "Certains codes promo permettent d'obtenir la certification gratuitement."}
                   </p>
                 </CardContent>
               </Card>
