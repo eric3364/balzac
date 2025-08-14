@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.12 (cd3cf9e)"
@@ -661,9 +661,9 @@ export type Database = {
     Functions: {
       apply_promo_code: {
         Args: {
+          certification_level: number
           code_text: string
           user_uuid: string
-          certification_level: number
         }
         Returns: Json
       }
@@ -685,20 +685,20 @@ export type Database = {
       }
       get_session_questions: {
         Args: {
-          user_uuid: string
           level_num: number
-          session_num: number
           questions_percentage?: number
+          session_num: number
+          user_uuid: string
         }
         Returns: {
-          id: number
-          content: string
-          type: string
-          level: number
-          rule: string
           answer: string
           choices: string[]
+          content: string
           explanation: string
+          id: number
+          level: number
+          rule: string
+          type: string
         }[]
       }
       get_user_max_level: {
@@ -710,7 +710,7 @@ export type Database = {
         Returns: boolean
       }
       user_has_purchased_level: {
-        Args: { user_uuid: string; level_num: number }
+        Args: { level_num: number; user_uuid: string }
         Returns: boolean
       }
     }
