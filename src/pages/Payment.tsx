@@ -292,7 +292,7 @@ export default function Payment() {
                           />
                         </div>
                         <Button type="submit" className="w-full" disabled={authLoading}>
-                          {authLoading ? 'Inscription...' : "S'inscrire et continuer"}
+                          {authLoading ? 'Inscription...' : "S'inscrire et payer"}
                         </Button>
                       </form>
                     </TabsContent>
