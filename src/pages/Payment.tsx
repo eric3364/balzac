@@ -190,7 +190,7 @@ export default function Payment() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Tabs defaultValue="signin" className="w-full">
+                  <Tabs defaultValue="signup" className="w-full">
                     <TabsList className="grid w-full grid-cols-2">
                       <TabsTrigger value="signin" className="flex items-center gap-2">
                         <User className="h-4 w-4" />
