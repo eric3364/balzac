@@ -30,14 +30,14 @@ jobs:
           # placer .htaccess à la racine du site
           if [ -f public/.htaccess ]; then cp public/.htaccess deploy/.htaccess; fi
 
-           - name: Deploy via FTPS
+      - name: Deploy via FTPS
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: ${{ FTP_SERVER }}
-          username: ${{ FTP_USER }}
-          password: ${{ FTP_PASSWORD }}
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftps
-          port: ${{ FTP_PORT }}
+          port: ${{ secrets.FTP_PORT }}
           local-dir: deploy
           server-dir: /www
           dangerous-clean-slate: true
