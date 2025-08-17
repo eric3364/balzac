@@ -40,4 +40,4 @@ jobs:
           local_path: ./deploy/*
           remote_path: www/
           sftp_only: true
-          delete_remote_files: true
+          delete_remote_files: false
