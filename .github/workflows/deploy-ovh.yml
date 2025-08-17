@@ -30,18 +30,22 @@ jobs:
           # placer .htaccess à la racine du site
           if [ -f public/.htaccess ]; then cp public/.htaccess deploy/.htaccess; fi
 
-      - name: Deploy via FTPS
+           - name: Deploy via SFTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USER }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftps
-          port: ${{ secrets.FTP_PORT }}
+          server: ${{ secrets.SFTP_HOST }}          # ex: ssh.cluster100.hosting.ovh.net
+          username: ${{ secrets.SFTP_USERNAME }}    # ex: balzaci
+          password: ${{ secrets.SFTP_PASSWORD }}    # ton mot de passe SSH/SFTP
+          protocol: sftp
+          port: ${{ secrets.SFTP_PORT }}            # 22
           local-dir: ./deploy/
-          server-dir: /www/
+          server-dir: /home/balzaci/www/            # chemin complet côté OVH
           dangerous-clean-slate: true
           exclude: |
+            **/.git*
+            **/node_modules/**
+            **/.github/**
+
             **/.git*
             **/node_modules/**
             **/.github/**
