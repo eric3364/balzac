@@ -25,7 +25,7 @@ jobs:
 
       - name: Prepare deploy folder
         run: |
-          mkdir deploy
+          mkdir -p deploy
           cp -r dist/* deploy/
           # placer .htaccess à la racine du site
           if [ -f public/.htaccess ]; then cp public/.htaccess deploy/.htaccess; fi
@@ -38,8 +38,8 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftps
           port: ${{ secrets.FTP_PORT }}
-          local-dir: deploy
-          server-dir: /www
+          local-dir: ./deploy/
+          server-dir: /www/
           dangerous-clean-slate: true
           exclude: |
             **/.git*
