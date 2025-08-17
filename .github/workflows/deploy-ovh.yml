@@ -1,4 +1,5 @@
-name: build-and-deploy
+name: Deploy to OVH (FTPS)
+
 on:
   push:
     branches: [ main ]
@@ -6,12 +7,6 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    env:
-      HOST: ${{ secrets.SFTP_HOST }}
-      PORT: ${{ secrets.SFTP_PORT }}
-      USER: ${{ secrets.SFTP_USERNAME }}
-      REMOTE_PATH: /home/balzaci/www
 
     steps:
       - name: Checkout
@@ -21,44 +16,32 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
 
       - name: Install deps
-        run: npm ci --no-audit --fund=false
+        run: npm ci
 
       - name: Build
         run: npm run build
 
-      - name: Check build output
+      - name: Prepare deploy folder
         run: |
-          test -f dist/index.html
-          ls -la dist | head -n 100
+          mkdir deploy
+          cp -r dist/* deploy/
+          # placer .htaccess à la racine du site
+          if [ -f public/.htaccess ]; then cp public/.htaccess deploy/.htaccess; fi
 
-      # --- DIAG SSH CLAIR ---
-      - name: Assert secrets are set
-        run: |
-          test -n "$HOST" || (echo "::error::Missing HOST secret" && exit 1)
-          test -n "$PORT" || (echo "::error::Missing PORT secret" && exit 1)
-          test -n "$USER" || (echo "::error::Missing USER secret" && exit 1)
-
-      - name: Add SSH key
-        uses: webfactory/ssh-agent@v0.9.0
+      - name: Deploy via FTPS
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: SSH fingerprint + whoami (verbose)
-        run: |
-          set -euxo pipefail
-          ssh -vvv -o StrictHostKeyChecking=no -p "$PORT" "$USER@$HOST" "whoami && pwd && ls -la /home/balzaci && ls -la /home/balzaci/www"
-
-      # --- DEPLOIEMENT ---
-      - name: Deploy via rsync (preserve .htaccess)
-        uses: burnett01/rsync-deployments@5.2.1
-        with:
-          switches: -avzr --delete --exclude='.htaccess'
-          path: dist/
-          remote_path: ${{ env.REMOTE_PATH }}/
-          remote_host: ${{ env.HOST }}
-          remote_user: ${{ env.USER }}
-          remote_port: ${{ env.PORT }}
-          remote_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          port: ${{ secrets.FTP_PORT }}
+          local-dir: deploy
+          server-dir: /www
+          dangerous-clean-slate: true
+          exclude: |
+            **/.git*
+            **/node_modules/**
+            **/.github/**
