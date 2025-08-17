@@ -18,7 +18,7 @@ jobs:
           node-version: 20
 
       - name: Install deps
-        run: npm ci
+        run: npm install
 
       - name: Build
         run: npm run build
@@ -35,13 +35,4 @@ jobs:
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftps
-          port: ${{ secrets.FTP_PORT }}
-          local-dir: deploy
-          server-dir: /www
-          dangerous-clean-slate: true
-          exclude: |
-            **/.git*
-            **/node_modules/**
-            **/.github/**
+          password: ${{ secrets.FTP_PASSWORD_
