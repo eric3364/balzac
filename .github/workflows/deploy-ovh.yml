@@ -29,7 +29,7 @@ jobs:
           if [ -f public/.htaccess ]; then cp public/.htaccess deploy/.htaccess; fi
 
       # Déploiement SFTP (wlixcc)
-      - name: Deploy via SFTP
+            - name: Deploy via SFTP
         uses: wlixcc/SFTP-Deploy-Action@v1.2.5
         with:
           server: ${{ secrets.SFTP_HOST }}          # ssh.cluster100.hosting.ovh.net
@@ -37,5 +37,6 @@ jobs:
           username: ${{ secrets.SFTP_USERNAME }}    # balzaci
           password: ${{ secrets.SFTP_PASSWORD }}    # mot de passe SFTP/SSH
           local_path: ./deploy/*
-          remote_path: /home/balzaci/www/
-          delete_remote_files: true                 # clean slate
+          remote_path: www/                         # <-- important : SANS slash au début
+          delete_remote_files: true
+
