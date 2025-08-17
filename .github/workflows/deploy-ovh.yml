@@ -30,16 +30,16 @@ jobs:
           # placer .htaccess à la racine du site
           if [ -f public/.htaccess ]; then cp public/.htaccess deploy/.htaccess; fi
 
-      - name: Deploy via SFTP
+      - name: Deploy via FTPS (legacy)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: ${{ secrets.SFTP_HOST }}          # ssh.cluster100.hosting.ovh.net
-          username: ${{ secrets.SFTP_USERNAME }}    # balzaci
-          password: ${{ secrets.SFTP_PASSWORD }}    # mot de passe SFTP/SSH
-          protocol: sftp
-          port: ${{ secrets.SFTP_PORT }}            # 22
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps-legacy
+          port: ${{ secrets.FTP_PORT }}
           local-dir: ./deploy/
-          server-dir: /home/balzaci/www/
+          server-dir: www/
           dangerous-clean-slate: true
           exclude: |
             **/.git*
