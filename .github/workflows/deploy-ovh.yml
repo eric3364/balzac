@@ -1,4 +1,4 @@
-name: Deploy to OVH (FTPS)
+name: Deploy to OVH (SFTP)
 
 on:
   push:
@@ -7,7 +7,6 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,25 +26,16 @@ jobs:
         run: |
           mkdir -p deploy
           cp -r dist/* deploy/
-          # placer .htaccess à la racine du site
           if [ -f public/.htaccess ]; then cp public/.htaccess deploy/.htaccess; fi
 
-            - name: Deploy via FTPS
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      # Déploiement SFTP (wlixcc)
+      - name: Deploy via SFTP
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.5
         with:
-          server: ${{ secrets.FTP_SERVER }}     # ftp.cluster100.hosting.ovh.net
-          username: ${{ secrets.FTP_USER }}     # balzaci
-          password: ${{ secrets.FTP_PASSWORD }} # mot de passe FTP
-          protocol: ftps                        # <-- passe en FTPS "normal"
-          port: ${{ secrets.FTP_PORT }}         # 21
-          local-dir: ./deploy/
-          server-dir: www/
-          dangerous-clean-slate: true
-          exclude: |
-            **/.git*
-            **/node_modules/**
-            **/.github/**
-
-            **/.git*
-            **/node_modules/**
-            **/.github/**
+          server: ${{ secrets.SFTP_HOST }}          # ssh.cluster100.hosting.ovh.net
+          port: ${{ secrets.SFTP_PORT }}            # 22
+          username: ${{ secrets.SFTP_USERNAME }}    # balzaci
+          password: ${{ secrets.SFTP_PASSWORD }}    # mot de passe SFTP/SSH
+          local_path: ./deploy/*
+          remote_path: /home/balzaci/www/
+          delete_remote_files: true                 # clean slate
