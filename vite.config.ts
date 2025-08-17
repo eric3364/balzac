@@ -10,7 +10,9 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
   },
   plugins: [
-    react(),
+    react({
+      jsxRuntime: 'automatic',
+    }),
     mode === 'development' && componentTagger(),
   ].filter(Boolean),
   resolve: {
@@ -20,9 +22,29 @@ export default defineConfig(({ mode }) => ({
   },
   build: { 
     outDir: 'dist', 
-    assetsDir: 'assets'
+    assetsDir: 'assets',
+    rollupOptions: {
+      onwarn(warning, warn) {
+        if (warning.code === 'MODULE_LEVEL_DIRECTIVE') {
+          return;
+        }
+        warn(warning);
+      },
+    },
   },
   optimizeDeps: {
     include: ['react', 'react-dom']
+  },
+  esbuild: {
+    jsx: 'automatic',
+    jsxDev: mode === 'development',
+    target: 'esnext',
+    loader: 'tsx',
+    include: /src\/.*\.[tj]sx?$/,
+    exclude: [],
+    jsxInject: `import React from 'react'`
+  },
+  define: {
+    __DEV__: mode === 'development'
   }
 }))
