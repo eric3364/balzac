@@ -1,11 +1,14 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
-  base: '/',              // site servi depuis la racine du domaine
-  build: { 
-    outDir: 'dist',
-    assetsDir: 'assets'   // JS/CSS/images iront dans /assets
+  base: '/',
+  build: { outDir: 'dist', assetsDir: 'assets' },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
   },
 })
