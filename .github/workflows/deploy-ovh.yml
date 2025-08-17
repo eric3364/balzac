@@ -17,26 +17,27 @@ jobs:
           node-version: 20
 
       - name: Install deps
-        run: npm install
+        run: npm ci
 
       - name: Build
         run: npm run build
 
       - name: Prepare deploy folder
+        shell: bash
         run: |
+          rm -rf deploy
           mkdir -p deploy
           cp -r dist/* deploy/
           if [ -f public/.htaccess ]; then cp public/.htaccess deploy/.htaccess; fi
 
-      # Déploiement SFTP (wlixcc)
-            - name: Deploy via SFTP
+      - name: Deploy via SFTP
         uses: wlixcc/SFTP-Deploy-Action@v1.2.5
         with:
-          server: ${{ secrets.SFTP_HOST }}          # ssh.cluster100.hosting.ovh.net
-          port: ${{ secrets.SFTP_PORT }}            # 22
-          username: ${{ secrets.SFTP_USERNAME }}    # balzaci
-          password: ${{ secrets.SFTP_PASSWORD }}    # mot de passe SFTP/SSH
+          server: ${{ secrets.SFTP_HOST }}
+          port: ${{ secrets.SFTP_PORT }}
+          username: ${{ secrets.SFTP_USERNAME }}
+          password: ${{ secrets.SFTP_PASSWORD }}
           local_path: ./deploy/*
-          remote_path: www/                         # <-- important : SANS slash au début
+          remote_path: www/
+          sftp_only: true
           delete_remote_files: true
-
