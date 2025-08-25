@@ -146,22 +146,22 @@ const AlternativeIndex = () => {
               <span>Nouvelle expérience de certification</span>
             </div>
             
-            <h1 className="text-5xl md:text-7xl font-extrabold leading-tight">
+            <h1 className="text-3xl md:text-4xl font-extrabold leading-tight">
               <span className="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
                 {config.heroTitle}
               </span>
             </h1>
             
-            <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
               {config.heroDescription}
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-              <Button size="lg" className="px-8 py-6 text-lg" onClick={() => navigate('/auth')}>
+              <Button size="default" className="px-6 py-3" onClick={() => navigate('/auth')}>
                 Commencer maintenant
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
-              <Button variant="outline" size="lg" className="px-8 py-6 text-lg">
+              <Button variant="outline" size="default" className="px-6 py-3">
                 Découvrir les certifications
               </Button>
             </div>
