@@ -123,8 +123,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         title: "Déconnexion",
         description: "À bientôt sur Balzac Certification !"
       });
-      // Redirection via window.location pour éviter les problèmes de hooks
-      window.location.href = '/';
     } catch (error: any) {
       toast({
         title: "Erreur",
