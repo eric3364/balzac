@@ -216,7 +216,7 @@ const Index = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-16 lg:py-24">
+      <section className="relative overflow-hidden py-8 lg:py-12">
         {/* Dynamic Background */}
         <div className="absolute inset-0">
           <div 
@@ -246,25 +246,25 @@ const Index = () => {
         
         <div className="relative z-10 container mx-auto px-4 text-center">
           <div className="max-w-6xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full mb-8 animate-fade-in">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full mb-4 animate-fade-in">
               <Sparkles className="h-5 w-5 text-primary" />
               <span className="text-sm font-semibold text-primary">Plateforme de certification nouvelle génération</span>
             </div>
             
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-8 leading-none animate-fade-in"
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 leading-none animate-fade-in"
                 style={{ animationDelay: '0.2s' }}>
               <span className="gradient-text">{homepageAssets.heroTitle}</span>
             </h1>
             
-            <p className="text-xl md:text-2xl lg:text-3xl text-muted-foreground mb-12 leading-relaxed font-medium max-w-4xl mx-auto animate-fade-in"
+            <p className="text-lg md:text-xl lg:text-2xl text-muted-foreground mb-6 leading-relaxed font-medium max-w-4xl mx-auto animate-fade-in"
                style={{ animationDelay: '0.4s' }}>
               {homepageAssets.heroDescription}
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in" style={{ animationDelay: '0.6s' }}>
               <Button 
-                size="lg" 
-                className="text-lg px-8 py-6 hero-glow hover:scale-105 transition-all duration-300"
+                size="default" 
+                className="px-6 py-3 hero-glow hover:scale-105 transition-all duration-300"
                 onClick={() => navigate('/auth')}
               >
                 <Star className="mr-2 h-5 w-5" />
@@ -272,8 +272,8 @@ const Index = () => {
               </Button>
               <Button 
                 variant="outline" 
-                size="lg" 
-                className="text-lg px-8 py-6 bg-background/50 backdrop-blur-sm hover:scale-105 transition-all duration-300"
+                size="default" 
+                className="px-6 py-3 bg-background/50 backdrop-blur-sm hover:scale-105 transition-all duration-300"
                 onClick={() => navigate('/pricing')}
               >
                 Voir les tarifs
