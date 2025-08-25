@@ -689,6 +689,26 @@ const SessionTest = () => {
           <Progress value={progressPercentage} className="h-2" />
         </div>
 
+        {/* Message d'avertissement pour les réponses */}
+        {currentQuestionIndex === 0 && (
+          <div className="mb-6 max-w-2xl mx-auto">
+            <Card className="border-amber-200 bg-amber-50">
+              <CardContent className="pt-4">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm text-amber-800">
+                    <p className="font-medium mb-2">⚠️ Important - Instructions pour les réponses</p>
+                    <p>
+                      Attention vos réponses doivent être écrites parfaitement en respectant la casse et la ponctuation éventuelle. 
+                      Vous ne pouvez-pas répondre réponse 1, 2 ou 3 ou bien A, B, C. !
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">
