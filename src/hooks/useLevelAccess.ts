@@ -68,7 +68,7 @@ export const useLevelAccess = () => {
 
         access.push({
           level,
-          isUnlocked,
+          isUnlocked: Boolean((level === 1 || previousLevelValidated) && hasAccess),
           isCompleted: hasCertification || (levelProgress?.is_level_completed ?? false),
           currentSessionNumber: Number(levelProgress?.current_session_number) || parseFloat(`${level}.1`)
         });

@@ -169,7 +169,7 @@ export const UserManagement = () => {
         school: user.school,
         class_name: user.class_name,
         is_active: user.is_active,
-        created_at: user.created_at
+        created_at: user.created_at || ''
       };
       
       setEditingUser(userForEdit);
@@ -292,7 +292,7 @@ export const UserManagement = () => {
         user.school || '',
         user.class_name || '',
         user.is_active ? 'Oui' : 'Non',
-        new Date(user.created_at).toLocaleDateString('fr-FR'),
+        user.created_at ? new Date(user.created_at).toLocaleDateString('fr-FR') : '-',
         user.total_tests.toString(),
         user.total_questions.toString(),
         user.correct_answers.toString(),
@@ -300,7 +300,7 @@ export const UserManagement = () => {
         user.max_level.toString(),
         user.certifications_count.toString(),
         user.certifications.map(cert => 
-          `N${cert.level} (${cert.score}% - ${new Date(cert.certified_at).toLocaleDateString('fr-FR')})`
+          `N${cert.level} (${cert.score}% - ${cert.certified_at ? new Date(cert.certified_at).toLocaleDateString('fr-FR') : '-'})`
         ).join('; '),
         user.time_spent_minutes.toString(),
         user.last_activity ? new Date(user.last_activity).toLocaleDateString('fr-FR') : ''
@@ -614,7 +614,7 @@ export const UserManagement = () => {
                         </Badge>
                         {user.certifications.length > 0 && (
                           <div className="text-xs text-muted-foreground">
-                            Dernière: {new Date(user.certifications[0].certified_at).toLocaleDateString('fr-FR')}
+                            Dernière: {user.certifications[0].certified_at ? new Date(user.certifications[0].certified_at).toLocaleDateString('fr-FR') : '-'}
                           </div>
                         )}
                       </div>

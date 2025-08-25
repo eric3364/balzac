@@ -29,7 +29,7 @@ interface AdminUser {
   email: string;
   is_super_admin: boolean;
   user_id: string | null;
-  created_at: string;
+  created_at: string | null;
 }
 
 interface UserStats {
@@ -56,12 +56,12 @@ interface DifficultyLevel {
   id: string;
   level_number: number;
   name: string;
-  description: string;
-  color: string;
+  description: string | null;
+  color: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
-  created_by: string;
+  created_by: string | null;
 }
 
 interface CertificateTemplate {
@@ -155,7 +155,11 @@ const Admin = () => {
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      setAdministrators(data || []);
+      setAdministrators((data || []).map(admin => ({
+        ...admin,
+        is_super_admin: admin.is_super_admin || false,
+        created_at: admin.created_at || ''
+      })));
     } catch (error) {
       console.error('Erreur lors du chargement des administrateurs:', error);
     }
@@ -327,7 +331,12 @@ const Admin = () => {
         .order('level_number', { ascending: true });
 
       if (error) throw error;
-      setDifficultyLevels(data || []);
+      setDifficultyLevels((data || []).map(level => ({
+        ...level,
+        description: level.description || '',
+        color: level.color || '#6366f1',
+        created_by: level.created_by || ''
+      })));
     } catch (error) {
       console.error('Erreur lors du chargement des niveaux:', error);
     }
