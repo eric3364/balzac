@@ -370,7 +370,7 @@ const Index = () => {
                 </div>
                 <CardTitle className="text-lg mb-2 gradient-text">Excellence garantie</CardTitle>
                 <CardDescription className="text-sm leading-snug text-muted-foreground">
-                  Méthodes pédagogiques basées sur les sciences cognitives
+                  Méthodes pédagogiques éprouvées basées sur les dernières recherches en sciences cognitives
                 </CardDescription>
               </CardHeader>
             </Card>
