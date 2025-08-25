@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType {
   user: User | null;
@@ -20,6 +21,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -123,6 +125,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         title: "Déconnexion",
         description: "À bientôt sur Balzac Certification !"
       });
+      // Rediriger vers la page d'accueil après déconnexion
+      navigate('/');
     } catch (error: any) {
       toast({
         title: "Erreur",
