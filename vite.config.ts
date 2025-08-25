@@ -1,12 +1,11 @@
-/// <reference types="vite/client" />
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
-import { componentTagger } from "lovable-tagger"
+import { componentTagger } from 'lovable-tagger'
 
 export default defineConfig(({ mode }) => ({
   server: {
-    host: "::",
+    host: '::',
     port: 8080,
   },
   plugins: [
@@ -15,25 +14,26 @@ export default defineConfig(({ mode }) => ({
   ].filter(Boolean),
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      '@': path.resolve(__dirname, './src'),
     },
   },
-  build: { 
-    outDir: 'dist', 
+  build: {
+    outDir: 'dist',
     assetsDir: 'assets',
     rollupOptions: {
       onwarn(warning, warn) {
         if (warning.code === 'MODULE_LEVEL_DIRECTIVE') {
-          return;
+          return
         }
-        warn(warning);
+        warn(warning)
       },
     },
+    sourcemap: true
   },
   optimizeDeps: {
-    include: ['react', 'react-dom']
+    include: ['react', 'react-dom'],
   },
   define: {
-    __DEV__: mode === 'development'
-  }
+    __DEV__: mode === 'development',
+  },
 }))
