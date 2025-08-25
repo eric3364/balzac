@@ -4,8 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 interface DifficultyLevel {
   level_number: number;
   name: string;
-  color: string;
-  description?: string;
+  color: string | null;
+  description?: string | null;
 }
 
 export const useDifficultyLevels = () => {
@@ -23,7 +23,10 @@ export const useDifficultyLevels = () => {
 
       if (error) throw error;
 
-      setDifficultyLevels(data || []);
+      setDifficultyLevels((data || []).map(level => ({
+        ...level,
+        color: level.color || '#6366f1'
+      })));
     } catch (error) {
       console.error('Erreur lors du chargement des niveaux de difficulté:', error);
     } finally {

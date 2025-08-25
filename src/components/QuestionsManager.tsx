@@ -15,14 +15,14 @@ import { useToast } from '@/hooks/use-toast';
 
 interface Question {
   id: number;
-  level: number;
-  content: string;
-  type: string;
+  level: number | null;
+  content: string | null;
+  type: string | null;
   rule: string | null;
-  answer: string;
+  answer: string | null;
   choices: string[] | null;
   explanation: string | null;
-  created_at: string;
+  created_at: string | null;
 }
 
 interface DifficultyLevel {
@@ -67,7 +67,10 @@ export const QuestionsManager: React.FC<QuestionsManagerProps> = ({ difficultyLe
         .order('id', { ascending: true });
 
       if (error) throw error;
-      setQuestions(data || []);
+      setQuestions((data || []).map(q => ({
+        ...q,
+        choices: q.answer ? JSON.parse(q.answer || '[]') : null
+      })));
     } catch (error) {
       console.error('Erreur lors du chargement des questions:', error);
       toast({
@@ -85,8 +88,8 @@ export const QuestionsManager: React.FC<QuestionsManagerProps> = ({ difficultyLe
 
     if (searchTerm) {
       filtered = filtered.filter(q => 
-        q.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        q.answer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (q.content || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (q.answer || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         q.rule?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
@@ -252,7 +255,7 @@ export const QuestionsManager: React.FC<QuestionsManagerProps> = ({ difficultyLe
             <SelectContent>
               <SelectItem value="all">Tous les types</SelectItem>
               {questionTypes.map((type) => (
-                <SelectItem key={type} value={type}>
+                <SelectItem key={type} value={type || ''}>
                   {type}
                 </SelectItem>
               ))}
@@ -276,7 +279,7 @@ export const QuestionsManager: React.FC<QuestionsManagerProps> = ({ difficultyLe
             </TableHeader>
             <TableBody>
               {currentQuestions.map((question) => {
-                const levelInfo = getLevelInfo(question.level);
+                const levelInfo = getLevelInfo(question.level || 1);
                 return (
                   <TableRow key={question.id}>
                     <TableCell className="font-mono text-sm">
@@ -295,11 +298,11 @@ export const QuestionsManager: React.FC<QuestionsManagerProps> = ({ difficultyLe
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="secondary">{question.type}</Badge>
+                      <Badge variant="secondary">{question.type || 'N/A'}</Badge>
                     </TableCell>
                     <TableCell className="max-w-md">
-                      <p className="truncate" title={question.content}>
-                        {question.content}
+                      <p className="truncate" title={question.content || ''}>
+                        {question.content || '-'}
                       </p>
                     </TableCell>
                     <TableCell className="max-w-32">
@@ -308,8 +311,8 @@ export const QuestionsManager: React.FC<QuestionsManagerProps> = ({ difficultyLe
                       </p>
                     </TableCell>
                     <TableCell className="max-w-32">
-                      <p className="truncate font-medium" title={question.answer}>
-                        {question.answer}
+                      <p className="truncate font-medium" title={question.answer || ''}>
+                        {question.answer || '-'}
                       </p>
                     </TableCell>
                     <TableCell className="text-right">
@@ -403,11 +406,11 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
   useEffect(() => {
     if (question) {
       setFormData({
-        content: question.content,
-        type: question.type,
-        level: question.level,
+        content: question.content || '',
+        type: question.type || 'multiple_choice',
+        level: question.level || 1,
         rule: question.rule || '',
-        answer: question.answer,
+        answer: question.answer || '',
         choices: question.choices || [],
         explanation: question.explanation || ''
       });

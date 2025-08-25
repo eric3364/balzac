@@ -17,7 +17,7 @@ interface Purchase {
   price_paid: number;
   status: string;
   purchased_at: string;
-  payment_method: string;
+  payment_method: string | null;
   user_id: string;
 }
 
@@ -102,7 +102,10 @@ export const FinanceManager: React.FC = () => {
         .order('purchased_at', { ascending: false });
 
       if (purchasesError) throw purchasesError;
-      setPurchases(purchasesData || []);
+      setPurchases((purchasesData || []).map(p => ({
+        ...p,
+        payment_method: p.payment_method || 'stripe'
+      })));
 
       // Charger les codes promo
       const { data: promoData, error: promoError } = await supabase
@@ -130,7 +133,7 @@ export const FinanceManager: React.FC = () => {
       const formattedLevels = levelsData?.map(level => ({
         level_number: level.level_number,
         name: level.name,
-        cert_name: level.certificate_templates[0]?.name || level.name
+        cert_name: (level.certificate_templates as any)?.[0]?.name || level.name
       })) || [];
       
       setCertificationLevels(formattedLevels);

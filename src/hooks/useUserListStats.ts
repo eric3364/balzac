@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 export interface UserCertification {
   level: number;
   score: number;
-  certified_at: string;
+  certified_at: string | null;
 }
 
 export interface UserListStats {
@@ -15,7 +15,7 @@ export interface UserListStats {
   school: string | null;
   class_name: string | null;
   is_active: boolean;
-  created_at: string;
+  created_at: string | null;
   total_tests: number;
   total_questions: number;
   correct_answers: number;
@@ -55,8 +55,8 @@ export const useUserListStats = () => {
             last_name: user.last_name,
             school: user.school,
             class_name: user.class_name,
-            is_active: user.is_active,
-            created_at: user.created_at,
+            is_active: user.is_active || false,
+            created_at: user.created_at || '',
             total_tests: 0,
             total_questions: 0,
             correct_answers: 0,
@@ -116,7 +116,7 @@ export const useUserListStats = () => {
         }, 0) || 0;
 
         // Dernière activité
-        const lastActivity = sessionsData?.length > 0 
+        const lastActivity = (sessionsData && sessionsData.length > 0)
           ? sessionsData[sessionsData.length - 1]?.started_at 
           : null;
 
@@ -127,16 +127,16 @@ export const useUserListStats = () => {
           last_name: user.last_name,
           school: user.school,
           class_name: user.class_name,
-          is_active: user.is_active,
-          created_at: user.created_at,
+          is_active: user.is_active || false,
+          created_at: user.created_at || '',
           total_tests: totalTests,
           total_questions: totalQuestions,
           correct_answers: correctAnswers,
           certifications_count: certificationsCount,
-          certifications: certificationsData?.map(cert => ({
+          certifications: certificationsData?.filter(cert => cert.certified_at).map(cert => ({
             level: cert.level,
             score: cert.score,
-            certified_at: cert.certified_at
+            certified_at: cert.certified_at!
           })) || [],
           max_level: maxLevel,
           avg_score: avgScore,

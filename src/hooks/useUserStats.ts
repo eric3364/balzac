@@ -83,6 +83,7 @@ export const useUserStats = () => {
 
         const timeSpent = validSessions.reduce((total, session) => {
           console.log('Processing session:', session.id);
+          if (!session.started_at || !session.ended_at) return total;
           const start = new Date(session.started_at);
           const end = new Date(session.ended_at);
           const sessionDuration = Math.round((end.getTime() - start.getTime()) / (1000 * 60)); // en minutes

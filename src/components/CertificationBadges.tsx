@@ -12,7 +12,7 @@ interface Certification {
   id: string;
   level: number;
   score: number;
-  certified_at: string;
+  certified_at: string | null;
   timeSpent?: number; // en minutes
 }
 
@@ -20,15 +20,15 @@ interface CertificateTemplate {
   id: string;
   name: string;
   certificate_title: string;
-  badge_icon: string;
-  badge_color: string;
-  badge_background_color: string;
-  badge_size?: string;
+  badge_icon: string | null;
+  badge_color: string | null;
+  badge_background_color: string | null;
+  badge_size?: string | null;
   difficulty_level_id: string;
   difficulty_levels: {
     level_number: number;
     name: string;
-    color: string;
+    color: string | null;
   };
 }
 
@@ -88,6 +88,7 @@ const CertificationBadges = () => {
           }) || [];
 
           const timeSpent = levelSessions.reduce((total, session) => {
+            if (!session.started_at || !session.ended_at) return total;
             const start = new Date(session.started_at);
             const end = new Date(session.ended_at);
             const sessionDuration = Math.round((end.getTime() - start.getTime()) / (1000 * 60));
@@ -105,8 +106,17 @@ const CertificationBadges = () => {
           };
         });
 
-        setCertifications(certificationsWithTime);
-        setTemplates(certificateTemplates || []);
+        setCertifications(certificationsWithTime.filter(cert => cert.certified_at));
+        setTemplates((certificateTemplates || []).map(template => ({
+          ...template,
+          badge_icon: template.badge_icon || 'award',
+          badge_color: template.badge_color || '#6366f1',
+          badge_background_color: template.badge_background_color || '#ffffff',
+          difficulty_levels: {
+            ...template.difficulty_levels,
+            color: template.difficulty_levels?.color || '#6366f1'
+          }
+        })));
         setDifficultyLevels(difficultyLevels || []);
       } catch (error) {
         console.error('Erreur lors du chargement des certifications:', error);
@@ -249,7 +259,7 @@ const CertificationBadges = () => {
 
                     {/* Date */}
                     <div className="text-xs text-muted-foreground text-center">
-                      {format(new Date(certification.certified_at), 'dd MMM yyyy', { locale: fr })}
+                      {certification.certified_at && format(new Date(certification.certified_at), 'dd MMM yyyy', { locale: fr })}
                     </div>
 
                     {/* Perfect Score Indicator */}

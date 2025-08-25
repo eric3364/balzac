@@ -82,8 +82,8 @@ export const useSessionProgress = (level: number) => {
             .update({ 
               total_sessions_for_level: correctTotalSessions,
               // Réajuster la progression si nécessaire
-              completed_sessions: Math.min(existingProgress.completed_sessions, correctTotalSessions),
-              current_session_number: Math.min(existingProgress.current_session_number, correctTotalSessions)
+              completed_sessions: Math.min(existingProgress.completed_sessions || 0, correctTotalSessions),
+              current_session_number: Math.min(Number(existingProgress.current_session_number) || 1, correctTotalSessions)
             })
             .eq('user_id', user.id)
             .eq('level', level)
@@ -103,50 +103,56 @@ export const useSessionProgress = (level: number) => {
         .eq('level', level)
         .eq('is_remediated', false);
 
-      setProgress({
-        level: progressData.level,
-        currentSessionNumber: progressData.current_session_number,
-        totalSessionsForLevel: progressData.total_sessions_for_level,
-        completedSessions: progressData.completed_sessions,
-        isLevelCompleted: progressData.is_level_completed,
-        failedQuestionsCount: failedQuestions?.length || 0
-      });
-
-      console.log('Progress data:', progressData);
-      console.log('Total sessions for level:', progressData.total_sessions_for_level);
-
-      // Générer la liste des sessions disponibles avec numérotation simplifiée
-      const sessions: SessionInfo[] = [];
-      
-      // Sessions régulières numérotées de 1 à totalSessionsForLevel
-      for (let i = 1; i <= progressData.total_sessions_for_level; i++) {
-        const sessionNumber = i;
-        const isFirstSession = i === 1;
-        
-        // Une session est disponible si :
-        // - C'est la première session du niveau OU
-        // - La session précédente a été complétée avec succès
-        const isAvailable = isFirstSession || i <= progressData.current_session_number;
-        
-        sessions.push({
-          sessionNumber,
-          sessionType: 'regular',
-          questionsCount: 0, // À calculer
-          isAvailable
+      if (progressData) {
+        setProgress({
+          level: progressData.level,
+          currentSessionNumber: Number(progressData.current_session_number) || 1,
+          totalSessionsForLevel: progressData.total_sessions_for_level || 5,
+          completedSessions: progressData.completed_sessions || 0,
+          isLevelCompleted: progressData.is_level_completed || false,
+          failedQuestionsCount: failedQuestions?.length || 0
         });
       }
 
-      // Session de rattrapage si des questions ont échoué
-      if (failedQuestions && failedQuestions.length > 0 && progressData.completed_sessions === progressData.total_sessions_for_level) {
-        sessions.push({
-          sessionNumber: 99, // Session de rattrapage
-          sessionType: 'remedial',
-          questionsCount: failedQuestions.length,
-          isAvailable: true
-        });
-      }
+      if (progressData) {
+        console.log('Progress data:', progressData);
+        console.log('Total sessions for level:', progressData.total_sessions_for_level);
 
-      setAvailableSessions(sessions);
+        // Générer la liste des sessions disponibles avec numérotation simplifiée
+        const sessions: SessionInfo[] = [];
+        const totalSessions = progressData.total_sessions_for_level || 5;
+        const currentSession = Number(progressData.current_session_number) || 1;
+        
+        // Sessions régulières numérotées de 1 à totalSessionsForLevel
+        for (let i = 1; i <= totalSessions; i++) {
+          const sessionNumber = i;
+          const isFirstSession = i === 1;
+          
+          // Une session est disponible si :
+          // - C'est la première session du niveau OU
+          // - La session précédente a été complétée avec succès
+          const isAvailable = isFirstSession || i <= currentSession;
+          
+          sessions.push({
+            sessionNumber,
+            sessionType: 'regular',
+            questionsCount: 0, // À calculer
+            isAvailable
+          });
+        }
+
+        // Session de rattrapage si des questions ont échoué
+        if (failedQuestions && failedQuestions.length > 0 && (progressData.completed_sessions || 0) === totalSessions) {
+          sessions.push({
+            sessionNumber: 99, // Session de rattrapage
+            sessionType: 'remedial',
+            questionsCount: failedQuestions.length,
+            isAvailable: true
+          });
+        }
+
+        setAvailableSessions(sessions);
+      }
 
     } catch (error) {
       console.error('Erreur lors du chargement de la progression:', error);

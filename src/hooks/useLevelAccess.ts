@@ -63,14 +63,14 @@ export const useLevelAccess = () => {
         // Le niveau est accessible si:
         // - C'est le niveau 1 OU le niveau précédent est validé (a une certification) 
         // - ET (niveau gratuit OU utilisateur a acheté OU il reste des sessions gratuites)
-        const hasAccess = isFreeLevel || hasValidPurchase(level) || (levelProgress?.completed_sessions || 0) < freeSessions;
+        const hasAccess = (isFreeLevel ?? false) || hasValidPurchase(level) || (levelProgress?.completed_sessions || 0) < freeSessions;
         const isUnlocked = (level === 1 || previousLevelValidated) && hasAccess;
 
         access.push({
           level,
           isUnlocked,
-          isCompleted: hasCertification || levelProgress?.is_level_completed || false,
-          currentSessionNumber: levelProgress?.current_session_number || parseFloat(`${level}.1`)
+          isCompleted: hasCertification || (levelProgress?.is_level_completed ?? false),
+          currentSessionNumber: Number(levelProgress?.current_session_number) || parseFloat(`${level}.1`)
         });
       }
 
