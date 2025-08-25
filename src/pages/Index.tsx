@@ -180,33 +180,34 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       {/* Header */}
-      <header className="border-b bg-background/80 backdrop-blur-md sticky top-0 z-50 shadow-sm"
-               style={{
-                 background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.9) 100%)'
-               }}>
+      <header className="border-b bg-card/80 backdrop-blur-md sticky top-0 z-50 shadow-lg">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {homepageAssets.logoUrl ? (
-              <img 
-                src={homepageAssets.logoUrl} 
-                alt="Logo Balzac Certification" 
-                className="h-8 w-8 object-contain"
-              />
+              <div className="p-2 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl">
+                <img 
+                  src={homepageAssets.logoUrl} 
+                  alt="Logo Balzac Certification" 
+                  className="h-8 w-8 object-contain"
+                />
+              </div>
             ) : (
-              <BookOpen className="h-8 w-8 text-primary" />
+              <div className="p-2 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl">
+                <BookOpen className="h-8 w-8 text-primary" />
+              </div>
             )}
             <div>
-              <h1 className="text-2xl font-bold text-primary">{homepageAssets.siteTitle}</h1>
-              <p className="text-sm text-muted-foreground">{homepageAssets.siteSubtitle}</p>
+              <h1 className="text-2xl font-bold gradient-text">{homepageAssets.siteTitle}</h1>
+              <p className="text-sm text-muted-foreground font-medium">{homepageAssets.siteSubtitle}</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => navigate('/auth')}>
+            <Button variant="outline" className="hover:bg-primary/10 hover:text-primary transition-all duration-300" onClick={() => navigate('/auth')}>
               Connexion
             </Button>
-            <Button variant="ghost" onClick={() => navigate('/admin-auth')}>
+            <Button variant="outline" className="hover:bg-primary/10 hover:text-primary transition-all duration-300" onClick={() => navigate('/admin-auth')}>
               <Shield className="mr-2 h-4 w-4" />
               Administration
             </Button>
@@ -215,16 +216,21 @@ const Index = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden"
-               style={{
-                 background: 'linear-gradient(135deg, hsl(var(--primary)/0.1) 0%, hsl(var(--primary)/0.05) 50%, transparent 100%)',
-                 minHeight: '10vh'
-               }}>
+      <section className="relative overflow-hidden py-16 lg:py-24">
+        {/* Dynamic Background */}
+        <div className="absolute inset-0">
+          <div 
+            className="w-full h-full opacity-60"
+            style={{ background: 'var(--gradient-hero)' }}
+          ></div>
+        </div>
+        
         {/* Animated background elements */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-blue-500/5 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/20 rounded-full blur-3xl animate-float"></div>
+          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
+          <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-blue-500/15 rounded-full blur-2xl animate-pulse-slow"></div>
+          <div className="absolute bottom-1/4 left-1/4 w-72 h-72 bg-pink-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '4s' }}></div>
         </div>
         
         {homepageAssets.bannerUrl && (
@@ -232,26 +238,48 @@ const Index = () => {
             <img 
               src={homepageAssets.bannerUrl} 
               alt={homepageAssets.bannerAlt}
-              className="w-full h-full object-cover opacity-30"
+              className="w-full h-full object-cover opacity-20"
             />
-            <div className="absolute inset-0 bg-gradient-to-br from-background/20 to-background/60"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-background/30 to-background/70"></div>
           </div>
         )}
         
-        <div className="relative z-10 container mx-auto px-4 py-8 text-center">
-          <div className="max-w-5xl mx-auto">
+        <div className="relative z-10 container mx-auto px-4 text-center">
+          <div className="max-w-6xl mx-auto">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full mb-8 animate-fade-in">
+              <Sparkles className="h-5 w-5 text-primary" />
+              <span className="text-sm font-semibold text-primary">Plateforme de certification nouvelle génération</span>
+            </div>
             
-            <h1 className="text-5xl md:text-7xl font-bold mb-8 text-foreground animate-fade-in bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent"
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-8 leading-none animate-fade-in"
                 style={{ animationDelay: '0.2s' }}>
-              {homepageAssets.heroTitle}
+              <span className="gradient-text">{homepageAssets.heroTitle}</span>
             </h1>
             
-            <p className="text-xl md:text-2xl text-muted-foreground mb-12 leading-relaxed font-medium max-w-3xl mx-auto animate-fade-in"
+            <p className="text-xl md:text-2xl lg:text-3xl text-muted-foreground mb-12 leading-relaxed font-medium max-w-4xl mx-auto animate-fade-in"
                style={{ animationDelay: '0.4s' }}>
               {homepageAssets.heroDescription}
             </p>
             
-
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in" style={{ animationDelay: '0.6s' }}>
+              <Button 
+                size="lg" 
+                className="text-lg px-8 py-6 hero-glow hover:scale-105 transition-all duration-300"
+                onClick={() => navigate('/auth')}
+              >
+                <Star className="mr-2 h-5 w-5" />
+                Commencer maintenant
+              </Button>
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="text-lg px-8 py-6 bg-background/50 backdrop-blur-sm hover:scale-105 transition-all duration-300"
+                onClick={() => navigate('/pricing')}
+              >
+                Voir les tarifs
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </div>
           </div>
         </div>
       </section>
@@ -275,73 +303,73 @@ const Index = () => {
           </div>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <Card className="group border-0 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-gradient-to-br from-background to-background/50 backdrop-blur-sm">
+            <Card className="group card-elegant hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 hover:scale-105">
               <CardHeader className="text-center p-8">
-                <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                  <Brain className="h-8 w-8 text-blue-600" />
+                <div className="mx-auto w-20 h-20 bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
+                  <Brain className="h-10 w-10 text-blue-600" />
                 </div>
-                <CardTitle className="text-xl mb-4">Tests adaptatifs intelligents</CardTitle>
-                <CardDescription className="text-base leading-relaxed">
+                <CardTitle className="text-2xl mb-4 gradient-text">Tests adaptatifs intelligents</CardTitle>
+                <CardDescription className="text-lg leading-relaxed text-muted-foreground">
                   Des évaluations personnalisées qui s'adaptent à votre niveau avec l'IA pour un apprentissage optimal et progressif
                 </CardDescription>
               </CardHeader>
             </Card>
 
-            <Card className="group border-0 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-gradient-to-br from-background to-background/50 backdrop-blur-sm">
+            <Card className="group card-elegant hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 hover:scale-105">
               <CardHeader className="text-center p-8">
-                <div className="mx-auto w-16 h-16 bg-gradient-to-br from-yellow-500/20 to-yellow-600/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                  <Award className="h-8 w-8 text-yellow-600" />
+                <div className="mx-auto w-20 h-20 bg-gradient-to-br from-yellow-500/20 to-yellow-600/20 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
+                  <Award className="h-10 w-10 text-yellow-600" />
                 </div>
-                <CardTitle className="text-xl mb-4">Certifications reconnues</CardTitle>
-                <CardDescription className="text-base leading-relaxed">
+                <CardTitle className="text-2xl mb-4 gradient-text">Certifications reconnues</CardTitle>
+                <CardDescription className="text-lg leading-relaxed text-muted-foreground">
                   Obtenez des certifications officielles valorisables dans votre parcours professionnel et académique
                 </CardDescription>
               </CardHeader>
             </Card>
 
-            <Card className="group border-0 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-gradient-to-br from-background to-background/50 backdrop-blur-sm">
+            <Card className="group card-elegant hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 hover:scale-105">
               <CardHeader className="text-center p-8">
-                <div className="mx-auto w-16 h-16 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                  <TrendingUp className="h-8 w-8 text-green-600" />
+                <div className="mx-auto w-20 h-20 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
+                  <TrendingUp className="h-10 w-10 text-green-600" />
                 </div>
-                <CardTitle className="text-xl mb-4">Progression en temps réel</CardTitle>
-                <CardDescription className="text-base leading-relaxed">
+                <CardTitle className="text-2xl mb-4 gradient-text">Progression en temps réel</CardTitle>
+                <CardDescription className="text-lg leading-relaxed text-muted-foreground">
                   Suivez vos progrès avec des tableaux de bord détaillés et des statistiques personnalisées
                 </CardDescription>
               </CardHeader>
             </Card>
 
-            <Card className="group border-0 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-gradient-to-br from-background to-background/50 backdrop-blur-sm">
+            <Card className="group card-elegant hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 hover:scale-105">
               <CardHeader className="text-center p-8">
-                <div className="mx-auto w-16 h-16 bg-gradient-to-br from-purple-500/20 to-purple-600/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                  <Clock className="h-8 w-8 text-purple-600" />
+                <div className="mx-auto w-20 h-20 bg-gradient-to-br from-purple-500/20 to-purple-600/20 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
+                  <Clock className="h-10 w-10 text-purple-600" />
                 </div>
-                <CardTitle className="text-xl mb-4">Apprentissage flexible</CardTitle>
-                <CardDescription className="text-base leading-relaxed">
+                <CardTitle className="text-2xl mb-4 gradient-text">Apprentissage flexible</CardTitle>
+                <CardDescription className="text-lg leading-relaxed text-muted-foreground">
                   Apprenez à votre rythme, où que vous soyez, avec un accès 24h/24 à tous nos contenus
                 </CardDescription>
               </CardHeader>
             </Card>
 
-            <Card className="group border-0 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-gradient-to-br from-background to-background/50 backdrop-blur-sm">
+            <Card className="group card-elegant hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 hover:scale-105">
               <CardHeader className="text-center p-8">
-                <div className="mx-auto w-16 h-16 bg-gradient-to-br from-red-500/20 to-red-600/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                  <Users className="h-8 w-8 text-red-600" />
+                <div className="mx-auto w-20 h-20 bg-gradient-to-br from-red-500/20 to-red-600/20 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
+                  <Users className="h-10 w-10 text-red-600" />
                 </div>
-                <CardTitle className="text-xl mb-4">Communauté active</CardTitle>
-                <CardDescription className="text-base leading-relaxed">
+                <CardTitle className="text-2xl mb-4 gradient-text">Communauté active</CardTitle>
+                <CardDescription className="text-lg leading-relaxed text-muted-foreground">
                   Rejoignez une communauté d'apprenants motivés et bénéficiez d'un accompagnement personnalisé
                 </CardDescription>
               </CardHeader>
             </Card>
 
-            <Card className="group border-0 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-gradient-to-br from-background to-background/50 backdrop-blur-sm">
+            <Card className="group card-elegant hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 hover:scale-105">
               <CardHeader className="text-center p-8">
-                <div className="mx-auto w-16 h-16 bg-gradient-to-br from-indigo-500/20 to-indigo-600/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                  <Sparkles className="h-8 w-8 text-indigo-600" />
+                <div className="mx-auto w-20 h-20 bg-gradient-to-br from-indigo-500/20 to-indigo-600/20 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
+                  <Sparkles className="h-10 w-10 text-indigo-600" />
                 </div>
-                <CardTitle className="text-xl mb-4">Excellence garantie</CardTitle>
-                <CardDescription className="text-base leading-relaxed">
+                <CardTitle className="text-2xl mb-4 gradient-text">Excellence garantie</CardTitle>
+                <CardDescription className="text-lg leading-relaxed text-muted-foreground">
                   Méthodes pédagogiques éprouvées basées sur les dernières recherches en sciences cognitives
                 </CardDescription>
               </CardHeader>
