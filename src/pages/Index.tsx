@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useHomepageConfig } from '@/hooks/useHomepageConfig';
-import { useFooterConfig } from '@/hooks/useFooterConfig';
+import { SiteFooter } from '@/components/SiteFooter';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,7 +33,7 @@ const Index = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { config: homepageAssets } = useHomepageConfig();
-  const { config: footerConfig } = useFooterConfig();
+  
   const [searchParams] = useSearchParams();
   const previewMode = searchParams.get('preview') === 'true';
   const [certificationPricing, setCertificationPricing] = useState<CertificationPricing[]>([]);
@@ -560,32 +560,8 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t bg-gradient-to-br from-background to-muted/10">
-        <div className="container mx-auto px-4 py-12">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center gap-2 mb-6 md:mb-0">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary/80 rounded-lg flex items-center justify-center">
-                <BookOpen className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <span className="font-bold text-lg">{footerConfig.company_name}</span>
-                <p className="text-sm text-muted-foreground">Excellence en français</p>
-              </div>
-            </div>
-            <div className="text-center md:text-right">
-              <p className="text-sm text-muted-foreground mb-2">
-                {footerConfig.copyright_text}
-              </p>
-              <div className="flex items-center justify-center md:justify-end gap-4 text-xs text-muted-foreground">
-                <span>🔒 100% Sécurisé</span>
-                <span>⚡ Support 24/7</span>
-                <span>🎯 Certifié</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
+      {/* Site Footer */}
+      <SiteFooter />
 
       {/* Checkout Flow */}
       {selectedCertification && (

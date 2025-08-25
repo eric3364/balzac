@@ -14,6 +14,7 @@ import SessionProgress from "./pages/SessionProgress";
 import Admin from "./pages/Admin";
 import AdminAuth from "./pages/AdminAuth";
 import NotFound from "./pages/NotFound";
+import { LegalPage } from "./pages/LegalPage";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ const App = () => (
           <Route path="/session-progress" element={<SessionProgress />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin-auth" element={<AdminAuth />} />
+          <Route path="/legal/:slug" element={<LegalPage />} />
           {/* catch-all */}
           <Route path="*" element={<NotFound />} />
         </Routes>

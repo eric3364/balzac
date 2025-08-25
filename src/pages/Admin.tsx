@@ -18,11 +18,11 @@ import { Users, Settings, BarChart3, Shield, ArrowLeft, Save, Plus, Edit2, Trash
 import { useToast } from '@/hooks/use-toast';
 import { HomepageAssetUploader } from '@/components/HomepageAssetUploader';
 import { useHomepageConfig } from '@/hooks/useHomepageConfig';
-import { useFooterConfig } from '@/hooks/useFooterConfig';
 import { UserManagement } from '@/components/UserManagement';
-import { FooterConfigForm } from '@/components/FooterConfigForm';
 import { QuestionsManager } from '@/components/QuestionsManager';
 import { FinanceManager } from '@/components/FinanceManager';
+import { FooterManager } from '@/components/FooterManager';
+import { LegalPageManager } from '@/components/LegalPageManager';
 
 interface AdminUser {
   id: number;
@@ -109,7 +109,6 @@ const Admin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { config: homepageAssets, updateConfig: updateHomepageAssets } = useHomepageConfig();
-  const { config: footerConfig, updateConfig: updateFooterConfig } = useFooterConfig();
   const [isAdmin, setIsAdmin] = useState(false);
   const [administrators, setAdministrators] = useState<AdminUser[]>([]);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
@@ -823,210 +822,19 @@ const Admin = () => {
                   </div>
                 </div>
 
-                {/* Section Footer & Mentions légales */}
-                <div className="space-y-4 border-t pt-6">
-                  <h3 className="text-lg font-medium">Footer & Mentions légales</h3>
-                  
-                  {/* Informations de l'entreprise */}
-                  <div className="space-y-4">
-                    <h4 className="font-medium text-sm border-b pb-2">Informations de l'entreprise</h4>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="company_name">Nom de l'entreprise</Label>
-                        <Input
-                          id="company_name"
-                          value={footerConfig.company_name}
-                          onChange={(e) => updateFooterConfig({
-                            company_name: e.target.value
-                          })}
-                          placeholder="Balzac Certification"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="company_email">Email de contact</Label>
-                        <Input
-                          id="company_email"
-                          type="email"
-                          value={footerConfig.company_email}
-                          onChange={(e) => updateFooterConfig({
-                            company_email: e.target.value
-                          })}
-                          placeholder="contact@balzac-certification.fr"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="company_phone">Téléphone</Label>
-                        <Input
-                          id="company_phone"
-                          value={footerConfig.company_phone}
-                          onChange={(e) => updateFooterConfig({
-                            company_phone: e.target.value
-                          })}
-                          placeholder="+33 1 23 45 67 89"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="company_address">Adresse</Label>
-                        <Input
-                          id="company_address"
-                          value={footerConfig.company_address}
-                          onChange={(e) => updateFooterConfig({
-                            company_address: e.target.value
-                          })}
-                          placeholder="123 Rue de la Formation, Paris"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Réseaux sociaux */}
-                  <div className="space-y-4">
-                    <h4 className="font-medium text-sm border-b pb-2">Réseaux sociaux</h4>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="social_facebook">Facebook</Label>
-                        <Input
-                          id="social_facebook"
-                          value={footerConfig.social_links.facebook}
-                          onChange={(e) => updateFooterConfig({
-                            social_links: {
-                              ...footerConfig.social_links,
-                              facebook: e.target.value
-                            }
-                          })}
-                          placeholder="https://facebook.com/balzac-certification"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="social_twitter">Twitter/X</Label>
-                        <Input
-                          id="social_twitter"
-                          value={footerConfig.social_links.twitter}
-                          onChange={(e) => updateFooterConfig({
-                            social_links: {
-                              ...footerConfig.social_links,
-                              twitter: e.target.value
-                            }
-                          })}
-                          placeholder="https://twitter.com/balzac_cert"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="social_linkedin">LinkedIn</Label>
-                        <Input
-                          id="social_linkedin"
-                          value={footerConfig.social_links.linkedin}
-                          onChange={(e) => updateFooterConfig({
-                            social_links: {
-                              ...footerConfig.social_links,
-                              linkedin: e.target.value
-                            }
-                          })}
-                          placeholder="https://linkedin.com/company/balzac-certification"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="social_instagram">Instagram</Label>
-                        <Input
-                          id="social_instagram"
-                          value={footerConfig.social_links.instagram}
-                          onChange={(e) => updateFooterConfig({
-                            social_links: {
-                              ...footerConfig.social_links,
-                              instagram: e.target.value
-                            }
-                          })}
-                          placeholder="https://instagram.com/balzac_certification"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Mentions légales */}
-                  <div className="space-y-4">
-                    <h4 className="font-medium text-sm border-b pb-2">Mentions légales</h4>
-                    
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="mentions_legales">Mentions légales</Label>
-                        <Textarea
-                          id="mentions_legales"
-                          value={footerConfig.mentions_legales}
-                          onChange={(e) => updateFooterConfig({
-                            mentions_legales: e.target.value
-                          })}
-                          placeholder="Saisissez les mentions légales..."
-                          rows={4}
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="politique_confidentialite">Politique de confidentialité</Label>
-                        <Textarea
-                          id="politique_confidentialite"
-                          value={footerConfig.politique_confidentialite}
-                          onChange={(e) => updateFooterConfig({
-                            politique_confidentialite: e.target.value
-                          })}
-                          placeholder="Saisissez la politique de confidentialité..."
-                          rows={4}
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="conditions_utilisation">Conditions d'utilisation</Label>
-                        <Textarea
-                          id="conditions_utilisation"
-                          value={footerConfig.conditions_utilisation}
-                          onChange={(e) => updateFooterConfig({
-                            conditions_utilisation: e.target.value
-                          })}
-                          placeholder="Saisissez les conditions d'utilisation..."
-                          rows={4}
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="copyright_text">Texte de copyright</Label>
-                        <Input
-                          id="copyright_text"
-                          value={footerConfig.copyright_text}
-                          onChange={(e) => updateFooterConfig({
-                            copyright_text: e.target.value
-                          })}
-                          placeholder="© 2024 Balzac Certification. Tous droits réservés."
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
                 <div className="pt-6 border-t">
                   <Button 
                     onClick={async () => {
                       await updateHomepageAssets({});
-                      await updateFooterConfig({});
                       toast({
                         title: "Configuration sauvegardée",
-                        description: "Les modifications de la page d'accueil et du footer ont été enregistrées."
+                        description: "Les modifications de la page d'accueil ont été enregistrées."
                       });
                     }}
                     className="w-full md:w-auto"
                   >
                     <Save className="h-4 w-4 mr-2" />
-                    Sauvegarder toutes les modifications
+                    Sauvegarder les modifications
                   </Button>
                 </div>
               </CardContent>

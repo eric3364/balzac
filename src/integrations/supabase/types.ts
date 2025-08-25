@@ -202,6 +202,66 @@ export type Database = {
         }
         Relationships: []
       }
+      footer_settings: {
+        Row: {
+          copyright_text: string
+          created_at: string
+          id: string
+          legal_link_enabled: boolean
+          legal_link_label: string
+          updated_at: string
+        }
+        Insert: {
+          copyright_text?: string
+          created_at?: string
+          id?: string
+          legal_link_enabled?: boolean
+          legal_link_label?: string
+          updated_at?: string
+        }
+        Update: {
+          copyright_text?: string
+          created_at?: string
+          id?: string
+          legal_link_enabled?: boolean
+          legal_link_label?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      legal_page: {
+        Row: {
+          content: string | null
+          created_at: string
+          id: string
+          published_at: string | null
+          slug: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          published_at?: string | null
+          slug?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          published_at?: string | null
+          slug?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
