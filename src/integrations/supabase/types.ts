@@ -202,8 +202,45 @@ export type Database = {
         }
         Relationships: []
       }
+      footer_links: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          is_legal: boolean
+          label: string
+          sort_order: number
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_legal?: boolean
+          label: string
+          sort_order?: number
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_legal?: boolean
+          label?: string
+          sort_order?: number
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       footer_settings: {
         Row: {
+          company_address: string | null
+          company_email: string | null
+          company_phone: string | null
+          cookie_management_url: string | null
           copyright_text: string
           created_at: string
           id: string
@@ -212,6 +249,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          company_address?: string | null
+          company_email?: string | null
+          company_phone?: string | null
+          cookie_management_url?: string | null
           copyright_text?: string
           created_at?: string
           id?: string
@@ -220,12 +261,49 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          company_address?: string | null
+          company_email?: string | null
+          company_phone?: string | null
+          cookie_management_url?: string | null
           copyright_text?: string
           created_at?: string
           id?: string
           legal_link_enabled?: boolean
           legal_link_label?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      footer_social_links: {
+        Row: {
+          created_at: string
+          icon: string
+          id: string
+          is_active: boolean
+          name: string
+          sort_order: number
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          sort_order?: number
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          sort_order?: number
+          updated_at?: string
+          url?: string
         }
         Relationships: []
       }

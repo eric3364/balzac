@@ -41,18 +41,29 @@ export const useFooterSettings = () => {
       const { data: settingsData, error: settingsError } = await supabase
         .from('footer_settings')
         .select('*')
-        .single();
+        .maybeSingle();
 
-      if (settingsError && settingsError.code !== 'PGRST116') {
+      if (settingsError) {
         throw settingsError;
       }
 
-      // Temporary: use empty arrays since tables don't exist yet
-      const socialData: SocialLink[] = [];
-      const linksData: FooterLink[] = [];
+      const { data: socialData, error: socialError } = await supabase
+        .from('footer_social_links')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order');
 
-      // Temporary: use default values since tables don't exist yet
-      const mappedSettings: FooterSettings = {
+      if (socialError) throw socialError;
+
+      const { data: linksData, error: linksError } = await supabase
+        .from('footer_links')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order');
+
+      if (linksError) throw linksError;
+
+      const mappedSettings: FooterSettings = settingsData || {
         id: '',
         copyright_text: '© 2025 NEXT-U – Tous droits réservés.',
         company_address: null,
@@ -64,8 +75,8 @@ export const useFooterSettings = () => {
       };
 
       setSettings(mappedSettings);
-      setSocialLinks(socialData);
-      setFooterLinks(linksData);
+      setSocialLinks(socialData || []);
+      setFooterLinks(linksData || []);
     } catch (error) {
       console.error('Erreur lors du chargement des paramètres du footer:', error);
     } finally {
@@ -90,9 +101,12 @@ export const useFooterSettings = () => {
 
   const addSocialLink = async (link: Omit<SocialLink, 'id'>) => {
     try {
-      // Temporary: functionality disabled until tables are created
-      console.log('Social link would be added:', link);
-      throw new Error('Tables not yet created');
+      const { error } = await supabase
+        .from('footer_social_links')
+        .insert([link]);
+
+      if (error) throw error;
+      await loadSettings();
     } catch (error) {
       console.error('Erreur lors de l\'ajout du lien social:', error);
       throw error;
@@ -101,9 +115,13 @@ export const useFooterSettings = () => {
 
   const updateSocialLink = async (id: string, updates: Partial<SocialLink>) => {
     try {
-      // Temporary: functionality disabled until tables are created
-      console.log('Social link would be updated:', id, updates);
-      throw new Error('Tables not yet created');
+      const { error } = await supabase
+        .from('footer_social_links')
+        .update({...updates, updated_at: new Date().toISOString()})
+        .eq('id', id);
+
+      if (error) throw error;
+      await loadSettings();
     } catch (error) {
       console.error('Erreur lors de la mise à jour du lien social:', error);
       throw error;
@@ -112,9 +130,13 @@ export const useFooterSettings = () => {
 
   const deleteSocialLink = async (id: string) => {
     try {
-      // Temporary: functionality disabled until tables are created
-      console.log('Social link would be deleted:', id);
-      throw new Error('Tables not yet created');
+      const { error } = await supabase
+        .from('footer_social_links')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      await loadSettings();
     } catch (error) {
       console.error('Erreur lors de la suppression du lien social:', error);
       throw error;
@@ -123,9 +145,12 @@ export const useFooterSettings = () => {
 
   const addFooterLink = async (link: Omit<FooterLink, 'id'>) => {
     try {
-      // Temporary: functionality disabled until tables are created
-      console.log('Footer link would be added:', link);
-      throw new Error('Tables not yet created');
+      const { error } = await supabase
+        .from('footer_links')
+        .insert([link]);
+
+      if (error) throw error;
+      await loadSettings();
     } catch (error) {
       console.error('Erreur lors de l\'ajout du lien:', error);
       throw error;
@@ -134,9 +159,13 @@ export const useFooterSettings = () => {
 
   const updateFooterLink = async (id: string, updates: Partial<FooterLink>) => {
     try {
-      // Temporary: functionality disabled until tables are created
-      console.log('Footer link would be updated:', id, updates);
-      throw new Error('Tables not yet created');
+      const { error } = await supabase
+        .from('footer_links')
+        .update({...updates, updated_at: new Date().toISOString()})
+        .eq('id', id);
+
+      if (error) throw error;
+      await loadSettings();
     } catch (error) {
       console.error('Erreur lors de la mise à jour du lien:', error);
       throw error;
@@ -145,9 +174,13 @@ export const useFooterSettings = () => {
 
   const deleteFooterLink = async (id: string) => {
     try {
-      // Temporary: functionality disabled until tables are created
-      console.log('Footer link would be deleted:', id);
-      throw new Error('Tables not yet created');
+      const { error } = await supabase
+        .from('footer_links')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      await loadSettings();
     } catch (error) {
       console.error('Erreur lors de la suppression du lien:', error);
       throw error;
