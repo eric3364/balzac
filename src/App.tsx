@@ -20,10 +20,10 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      {/* Toaster Sonner (notifications) */}
-      <Toaster richColors position="top-right" />
-      <BrowserRouter>
+    <BrowserRouter>
+      <AuthProvider>
+        {/* Toaster Sonner (notifications) */}
+        <Toaster richColors position="top-right" />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/alternative" element={<AlternativeIndex />} />
@@ -40,8 +40,8 @@ const App = () => (
           {/* catch-all */}
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+      </AuthProvider>
+    </BrowserRouter>
   </QueryClientProvider>
 );
 
