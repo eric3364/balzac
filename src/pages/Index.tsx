@@ -308,9 +308,9 @@ const Index = () => {
                 <div className="mx-auto w-12 h-12 bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
                   <Brain className="h-6 w-6 text-blue-600" />
                 </div>
-                <CardTitle className="text-lg mb-2 gradient-text">Tests adaptatifs intelligents</CardTitle>
+                <CardTitle className="text-lg mb-2 gradient-text">{homepageAssets.feature1Title}</CardTitle>
                 <CardDescription className="text-sm leading-snug text-muted-foreground">
-                  Évaluations personnalisées adaptées à votre niveau avec l'IA
+                  {homepageAssets.feature1Description}
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -320,9 +320,9 @@ const Index = () => {
                 <div className="mx-auto w-12 h-12 bg-gradient-to-br from-yellow-500/20 to-yellow-600/20 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
                   <Award className="h-6 w-6 text-yellow-600" />
                 </div>
-                <CardTitle className="text-lg mb-2 gradient-text">Certifications reconnues</CardTitle>
+                <CardTitle className="text-lg mb-2 gradient-text">{homepageAssets.feature2Title}</CardTitle>
                 <CardDescription className="text-sm leading-snug text-muted-foreground">
-                  Certifications officielles valorisables professionnellement
+                  {homepageAssets.feature2Description}
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -332,9 +332,9 @@ const Index = () => {
                 <div className="mx-auto w-12 h-12 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
                   <TrendingUp className="h-6 w-6 text-green-600" />
                 </div>
-                <CardTitle className="text-lg mb-2 gradient-text">Progression en temps réel</CardTitle>
+                <CardTitle className="text-lg mb-2 gradient-text">{homepageAssets.feature3Title}</CardTitle>
                 <CardDescription className="text-sm leading-snug text-muted-foreground">
-                  Tableaux de bord détaillés et statistiques personnalisées
+                  {homepageAssets.feature3Description}
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -344,9 +344,9 @@ const Index = () => {
                 <div className="mx-auto w-12 h-12 bg-gradient-to-br from-purple-500/20 to-purple-600/20 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
                   <Clock className="h-6 w-6 text-purple-600" />
                 </div>
-                <CardTitle className="text-lg mb-2 gradient-text">Apprentissage flexible</CardTitle>
+                <CardTitle className="text-lg mb-2 gradient-text">{homepageAssets.feature4Title}</CardTitle>
                 <CardDescription className="text-sm leading-snug text-muted-foreground">
-                  Apprenez à votre rythme avec un accès 24h/24
+                  {homepageAssets.feature4Description}
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -356,9 +356,9 @@ const Index = () => {
                 <div className="mx-auto w-12 h-12 bg-gradient-to-br from-red-500/20 to-red-600/20 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
                   <Users className="h-6 w-6 text-red-600" />
                 </div>
-                <CardTitle className="text-lg mb-2 gradient-text">Communauté active</CardTitle>
+                <CardTitle className="text-lg mb-2 gradient-text">{homepageAssets.feature5Title}</CardTitle>
                 <CardDescription className="text-sm leading-snug text-muted-foreground">
-                  Communauté d'apprenants et accompagnement personnalisé
+                  {homepageAssets.feature5Description}
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -368,9 +368,9 @@ const Index = () => {
                 <div className="mx-auto w-12 h-12 bg-gradient-to-br from-indigo-500/20 to-indigo-600/20 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
                   <Sparkles className="h-6 w-6 text-indigo-600" />
                 </div>
-                <CardTitle className="text-lg mb-2 gradient-text">Excellence garantie</CardTitle>
+                <CardTitle className="text-lg mb-2 gradient-text">{homepageAssets.feature6Title}</CardTitle>
                 <CardDescription className="text-sm leading-snug text-muted-foreground">
-                  Méthodes pédagogiques éprouvées basées sur les dernières recherches en sciences cognitives
+                  {homepageAssets.feature6Description}
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -383,8 +383,8 @@ const Index = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-purple-500/5 to-blue-500/5"></div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Nos résultats parlent d'eux-mêmes</h2>
-            <p className="text-xl text-muted-foreground">Des chiffres qui témoignent de notre excellence</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">{homepageAssets.statsTitle}</h2>
+            <p className="text-xl text-muted-foreground">{homepageAssets.statsDescription}</p>
           </div>
           <div className="grid md:grid-cols-3 gap-12 text-center">
             <div className="group">

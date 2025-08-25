@@ -32,6 +32,22 @@ interface HomepageConfig {
   heroCta_secondary: string;
   featuresTitle: string;
   featuresDescription: string;
+  // Features content
+  feature1Title: string;
+  feature1Description: string;
+  feature2Title: string;
+  feature2Description: string;
+  feature3Title: string;
+  feature3Description: string;
+  feature4Title: string;
+  feature4Description: string;
+  feature5Title: string;
+  feature5Description: string;
+  feature6Title: string;
+  feature6Description: string;
+  // Stats section
+  statsTitle: string;
+  statsDescription: string;
   stat1Number: string;
   stat1Label: string;
   stat2Number: string;
@@ -59,13 +75,29 @@ export const useHomepageConfig = () => {
     heroCta_secondary: 'Découvrir nos programmes',
     featuresTitle: 'Pourquoi choisir Balzac Certification ?',
     featuresDescription: 'Une approche moderne et rigoureuse pour certifier vos compétences linguistiques',
+    // Features content
+    feature1Title: 'Tests adaptatifs intelligents',
+    feature1Description: 'Évaluations personnalisées adaptées à votre niveau avec l\'IA',
+    feature2Title: 'Certifications reconnues',
+    feature2Description: 'Certifications officielles valorisables professionnellement',
+    feature3Title: 'Progression en temps réel',
+    feature3Description: 'Tableaux de bord détaillés et statistiques personnalisées',
+    feature4Title: 'Apprentissage flexible',
+    feature4Description: 'Apprenez à votre rythme avec un accès 24h/24',
+    feature5Title: 'Communauté active',
+    feature5Description: 'Communauté d\'apprenants et accompagnement personnalisé',
+    feature6Title: 'Excellence garantie',
+    feature6Description: 'Méthodes pédagogiques éprouvées basées sur les dernières recherches en sciences cognitives',
+    // Stats section
+    statsTitle: 'Nos résultats parlent d\'eux-mêmes',
+    statsDescription: 'Des chiffres qui témoignent de notre excellence',
     stat1Number: '10K+',
     stat1Label: 'Apprenants certifiés',
     stat2Number: '95%',
     stat2Label: 'Taux de satisfaction',
     stat3Number: '15+',
     stat3Label: 'Niveaux disponibles',
-    ctaTitle: 'Prêt à certifier vos compétences ?',
+    ctaTitle: 'Travaillez votre employabilité',
     ctaDescription: 'Rejoignez des milliers d\'apprenants qui ont déjà validé leur maîtrise du français',
     ctaButton: 'Commencer maintenant',
     ctaBadge: 'Commencez dès maintenant',
@@ -80,6 +112,10 @@ export const useHomepageConfig = () => {
           'homepage_logo_url', 'homepage_banner_url', 'homepage_banner_alt',
           'site_title', 'site_subtitle', 'hero_title', 'hero_description',
           'hero_cta_primary', 'hero_cta_secondary', 'features_title', 'features_description',
+          'feature1_title', 'feature1_description', 'feature2_title', 'feature2_description',
+          'feature3_title', 'feature3_description', 'feature4_title', 'feature4_description',
+          'feature5_title', 'feature5_description', 'feature6_title', 'feature6_description',
+          'stats_title', 'stats_description',
           'stat1_number', 'stat1_label', 'stat2_number', 'stat2_label', 'stat3_number', 'stat3_label',
           'cta_title', 'cta_description', 'cta_button', 'cta_badge', 'cta_sub_description'
         ];
@@ -141,6 +177,48 @@ export const useHomepageConfig = () => {
               break;
             case 'features_description':
               configMap.featuresDescription = value;
+              break;
+            case 'feature1_title':
+              configMap.feature1Title = value;
+              break;
+            case 'feature1_description':
+              configMap.feature1Description = value;
+              break;
+            case 'feature2_title':
+              configMap.feature2Title = value;
+              break;
+            case 'feature2_description':
+              configMap.feature2Description = value;
+              break;
+            case 'feature3_title':
+              configMap.feature3Title = value;
+              break;
+            case 'feature3_description':
+              configMap.feature3Description = value;
+              break;
+            case 'feature4_title':
+              configMap.feature4Title = value;
+              break;
+            case 'feature4_description':
+              configMap.feature4Description = value;
+              break;
+            case 'feature5_title':
+              configMap.feature5Title = value;
+              break;
+            case 'feature5_description':
+              configMap.feature5Description = value;
+              break;
+            case 'feature6_title':
+              configMap.feature6Title = value;
+              break;
+            case 'feature6_description':
+              configMap.feature6Description = value;
+              break;
+            case 'stats_title':
+              configMap.statsTitle = value;
+              break;
+            case 'stats_description':
+              configMap.statsDescription = value;
               break;
             case 'stat1_number':
               configMap.stat1Number = value;
@@ -231,6 +309,48 @@ export const useHomepageConfig = () => {
             break;
           case 'featuresDescription':
             configKey = 'features_description';
+            break;
+          case 'feature1Title':
+            configKey = 'feature1_title';
+            break;
+          case 'feature1Description':
+            configKey = 'feature1_description';
+            break;
+          case 'feature2Title':
+            configKey = 'feature2_title';
+            break;
+          case 'feature2Description':
+            configKey = 'feature2_description';
+            break;
+          case 'feature3Title':
+            configKey = 'feature3_title';
+            break;
+          case 'feature3Description':
+            configKey = 'feature3_description';
+            break;
+          case 'feature4Title':
+            configKey = 'feature4_title';
+            break;
+          case 'feature4Description':
+            configKey = 'feature4_description';
+            break;
+          case 'feature5Title':
+            configKey = 'feature5_title';
+            break;
+          case 'feature5Description':
+            configKey = 'feature5_description';
+            break;
+          case 'feature6Title':
+            configKey = 'feature6_title';
+            break;
+          case 'feature6Description':
+            configKey = 'feature6_description';
+            break;
+          case 'statsTitle':
+            configKey = 'stats_title';
+            break;
+          case 'statsDescription':
+            configKey = 'stats_description';
             break;
           case 'stat1Number':
             configKey = 'stat1_number';
