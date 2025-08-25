@@ -28,7 +28,7 @@ export default {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
         },
-        // ✅ AJOUT pour corriger l'erreur via-primary-glow
+        // Couleur ajoutée pour permettre l'utilisation de `via-primary-glow`
         "primary-glow": "#93c5fd",
 
         secondary: {
@@ -89,4 +89,3 @@ export default {
   },
   plugins: [require("tailwindcss-animate")],
 } satisfies Config;
-
