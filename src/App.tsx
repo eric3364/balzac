@@ -13,7 +13,6 @@ import SessionTest from "./pages/SessionTest";
 import SessionProgress from "./pages/SessionProgress";
 import Admin from "./pages/Admin";
 import AdminAuth from "./pages/AdminAuth";
-import MentionsLegales from "./pages/MentionsLegales";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,7 +35,6 @@ const App = () => (
           <Route path="/session-progress" element={<SessionProgress />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin-auth" element={<AdminAuth />} />
-          <Route path="/mentions-legales" element={<MentionsLegales />} />
           {/* catch-all */}
           <Route path="*" element={<NotFound />} />
         </Routes>
