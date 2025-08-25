@@ -109,6 +109,7 @@ const Admin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { config: homepageAssets, updateConfig: updateHomepageAssets } = useHomepageConfig();
+  const [activeTab, setActiveTab] = useState("stats");
   const [isAdmin, setIsAdmin] = useState(false);
   const [administrators, setAdministrators] = useState<AdminUser[]>([]);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
@@ -529,7 +530,7 @@ const Admin = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="stats" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="stats">Statistiques</TabsTrigger>
             <TabsTrigger value="students">Apprenants</TabsTrigger>
@@ -829,9 +830,13 @@ const Admin = () => {
                         // Force une sauvegarde des valeurs actuelles
                         await updateHomepageAssets(homepageAssets);
                         toast({
-                          title: "Configuration sauvegardée",
+                          title: "Modifications sauvegardées",
                           description: "Les modifications de la page d'accueil ont été enregistrées avec succès."
                         });
+                        // Retourner à l'onglet statistiques générales
+                        setTimeout(() => {
+                          setActiveTab("stats");
+                        }, 1000);
                       } catch (error) {
                         console.error('Erreur lors de la sauvegarde:', error);
                         toast({
