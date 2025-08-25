@@ -69,7 +69,7 @@ export const QuestionsManager: React.FC<QuestionsManagerProps> = ({ difficultyLe
       if (error) throw error;
       setQuestions((data || []).map(q => ({
         ...q,
-        choices: q.answer ? JSON.parse(q.answer || '[]') : null
+        choices: null // Pas de champ choices dans la base de données
       })));
     } catch (error) {
       console.error('Erreur lors du chargement des questions:', error);
