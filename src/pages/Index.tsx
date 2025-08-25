@@ -302,75 +302,75 @@ const Index = () => {
             </p>
           </div>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             <Card className="group card-elegant hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 hover:scale-105">
-              <CardHeader className="text-center p-8">
-                <div className="mx-auto w-20 h-20 bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
-                  <Brain className="h-10 w-10 text-blue-600" />
+              <CardHeader className="text-center p-4">
+                <div className="mx-auto w-12 h-12 bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
+                  <Brain className="h-6 w-6 text-blue-600" />
                 </div>
-                <CardTitle className="text-2xl mb-4 gradient-text">Tests adaptatifs intelligents</CardTitle>
-                <CardDescription className="text-lg leading-relaxed text-muted-foreground">
-                  Des évaluations personnalisées qui s'adaptent à votre niveau avec l'IA pour un apprentissage optimal et progressif
+                <CardTitle className="text-lg mb-2 gradient-text">Tests adaptatifs intelligents</CardTitle>
+                <CardDescription className="text-sm leading-snug text-muted-foreground">
+                  Évaluations personnalisées adaptées à votre niveau avec l'IA
                 </CardDescription>
               </CardHeader>
             </Card>
 
             <Card className="group card-elegant hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 hover:scale-105">
-              <CardHeader className="text-center p-8">
-                <div className="mx-auto w-20 h-20 bg-gradient-to-br from-yellow-500/20 to-yellow-600/20 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
-                  <Award className="h-10 w-10 text-yellow-600" />
+              <CardHeader className="text-center p-4">
+                <div className="mx-auto w-12 h-12 bg-gradient-to-br from-yellow-500/20 to-yellow-600/20 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
+                  <Award className="h-6 w-6 text-yellow-600" />
                 </div>
-                <CardTitle className="text-2xl mb-4 gradient-text">Certifications reconnues</CardTitle>
-                <CardDescription className="text-lg leading-relaxed text-muted-foreground">
-                  Obtenez des certifications officielles valorisables dans votre parcours professionnel et académique
+                <CardTitle className="text-lg mb-2 gradient-text">Certifications reconnues</CardTitle>
+                <CardDescription className="text-sm leading-snug text-muted-foreground">
+                  Certifications officielles valorisables professionnellement
                 </CardDescription>
               </CardHeader>
             </Card>
 
             <Card className="group card-elegant hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 hover:scale-105">
-              <CardHeader className="text-center p-8">
-                <div className="mx-auto w-20 h-20 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
-                  <TrendingUp className="h-10 w-10 text-green-600" />
+              <CardHeader className="text-center p-4">
+                <div className="mx-auto w-12 h-12 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
+                  <TrendingUp className="h-6 w-6 text-green-600" />
                 </div>
-                <CardTitle className="text-2xl mb-4 gradient-text">Progression en temps réel</CardTitle>
-                <CardDescription className="text-lg leading-relaxed text-muted-foreground">
-                  Suivez vos progrès avec des tableaux de bord détaillés et des statistiques personnalisées
+                <CardTitle className="text-lg mb-2 gradient-text">Progression en temps réel</CardTitle>
+                <CardDescription className="text-sm leading-snug text-muted-foreground">
+                  Tableaux de bord détaillés et statistiques personnalisées
                 </CardDescription>
               </CardHeader>
             </Card>
 
             <Card className="group card-elegant hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 hover:scale-105">
-              <CardHeader className="text-center p-8">
-                <div className="mx-auto w-20 h-20 bg-gradient-to-br from-purple-500/20 to-purple-600/20 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
-                  <Clock className="h-10 w-10 text-purple-600" />
+              <CardHeader className="text-center p-4">
+                <div className="mx-auto w-12 h-12 bg-gradient-to-br from-purple-500/20 to-purple-600/20 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
+                  <Clock className="h-6 w-6 text-purple-600" />
                 </div>
-                <CardTitle className="text-2xl mb-4 gradient-text">Apprentissage flexible</CardTitle>
-                <CardDescription className="text-lg leading-relaxed text-muted-foreground">
-                  Apprenez à votre rythme, où que vous soyez, avec un accès 24h/24 à tous nos contenus
+                <CardTitle className="text-lg mb-2 gradient-text">Apprentissage flexible</CardTitle>
+                <CardDescription className="text-sm leading-snug text-muted-foreground">
+                  Apprenez à votre rythme avec un accès 24h/24
                 </CardDescription>
               </CardHeader>
             </Card>
 
             <Card className="group card-elegant hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 hover:scale-105">
-              <CardHeader className="text-center p-8">
-                <div className="mx-auto w-20 h-20 bg-gradient-to-br from-red-500/20 to-red-600/20 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
-                  <Users className="h-10 w-10 text-red-600" />
+              <CardHeader className="text-center p-4">
+                <div className="mx-auto w-12 h-12 bg-gradient-to-br from-red-500/20 to-red-600/20 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
+                  <Users className="h-6 w-6 text-red-600" />
                 </div>
-                <CardTitle className="text-2xl mb-4 gradient-text">Communauté active</CardTitle>
-                <CardDescription className="text-lg leading-relaxed text-muted-foreground">
-                  Rejoignez une communauté d'apprenants motivés et bénéficiez d'un accompagnement personnalisé
+                <CardTitle className="text-lg mb-2 gradient-text">Communauté active</CardTitle>
+                <CardDescription className="text-sm leading-snug text-muted-foreground">
+                  Communauté d'apprenants et accompagnement personnalisé
                 </CardDescription>
               </CardHeader>
             </Card>
 
             <Card className="group card-elegant hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 hover:scale-105">
-              <CardHeader className="text-center p-8">
-                <div className="mx-auto w-20 h-20 bg-gradient-to-br from-indigo-500/20 to-indigo-600/20 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
-                  <Sparkles className="h-10 w-10 text-indigo-600" />
+              <CardHeader className="text-center p-4">
+                <div className="mx-auto w-12 h-12 bg-gradient-to-br from-indigo-500/20 to-indigo-600/20 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
+                  <Sparkles className="h-6 w-6 text-indigo-600" />
                 </div>
-                <CardTitle className="text-2xl mb-4 gradient-text">Excellence garantie</CardTitle>
-                <CardDescription className="text-lg leading-relaxed text-muted-foreground">
-                  Méthodes pédagogiques éprouvées basées sur les dernières recherches en sciences cognitives
+                <CardTitle className="text-lg mb-2 gradient-text">Excellence garantie</CardTitle>
+                <CardDescription className="text-sm leading-snug text-muted-foreground">
+                  Méthodes pédagogiques basées sur les sciences cognitives
                 </CardDescription>
               </CardHeader>
             </Card>
