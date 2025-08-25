@@ -713,11 +713,133 @@ const Admin = () => {
                       />
                     </div>
                   </div>
+                  
+                  {/* Détail des fonctionnalités */}
+                  <div className="space-y-4 mt-6">
+                    <h4 className="text-md font-medium">Contenu des fonctionnalités</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Feature 1 */}
+                      <div className="space-y-2">
+                        <Label>Fonctionnalité 1</Label>
+                        <Input
+                          value={homepageAssets.feature1Title || ''}
+                          onChange={(e) => updateHomepageAssets({ feature1Title: e.target.value })}
+                          placeholder="Tests adaptatifs intelligents"
+                        />
+                        <Textarea
+                          value={homepageAssets.feature1Description || ''}
+                          onChange={(e) => updateHomepageAssets({ feature1Description: e.target.value })}
+                          placeholder="Évaluations personnalisées adaptées à votre niveau avec l'IA"
+                          rows={2}
+                        />
+                      </div>
+                      
+                      {/* Feature 2 */}
+                      <div className="space-y-2">
+                        <Label>Fonctionnalité 2</Label>
+                        <Input
+                          value={homepageAssets.feature2Title || ''}
+                          onChange={(e) => updateHomepageAssets({ feature2Title: e.target.value })}
+                          placeholder="Certifications reconnues"
+                        />
+                        <Textarea
+                          value={homepageAssets.feature2Description || ''}
+                          onChange={(e) => updateHomepageAssets({ feature2Description: e.target.value })}
+                          placeholder="Certifications officielles valorisables professionnellement"
+                          rows={2}
+                        />
+                      </div>
+                      
+                      {/* Feature 3 */}
+                      <div className="space-y-2">
+                        <Label>Fonctionnalité 3</Label>
+                        <Input
+                          value={homepageAssets.feature3Title || ''}
+                          onChange={(e) => updateHomepageAssets({ feature3Title: e.target.value })}
+                          placeholder="Progression en temps réel"
+                        />
+                        <Textarea
+                          value={homepageAssets.feature3Description || ''}
+                          onChange={(e) => updateHomepageAssets({ feature3Description: e.target.value })}
+                          placeholder="Tableaux de bord détaillés et statistiques personnalisées"
+                          rows={2}
+                        />
+                      </div>
+                      
+                      {/* Feature 4 */}
+                      <div className="space-y-2">
+                        <Label>Fonctionnalité 4</Label>
+                        <Input
+                          value={homepageAssets.feature4Title || ''}
+                          onChange={(e) => updateHomepageAssets({ feature4Title: e.target.value })}
+                          placeholder="Apprentissage flexible"
+                        />
+                        <Textarea
+                          value={homepageAssets.feature4Description || ''}
+                          onChange={(e) => updateHomepageAssets({ feature4Description: e.target.value })}
+                          placeholder="Apprenez à votre rythme avec un accès 24h/24"
+                          rows={2}
+                        />
+                      </div>
+                      
+                      {/* Feature 5 */}
+                      <div className="space-y-2">
+                        <Label>Fonctionnalité 5</Label>
+                        <Input
+                          value={homepageAssets.feature5Title || ''}
+                          onChange={(e) => updateHomepageAssets({ feature5Title: e.target.value })}
+                          placeholder="Communauté active"
+                        />
+                        <Textarea
+                          value={homepageAssets.feature5Description || ''}
+                          onChange={(e) => updateHomepageAssets({ feature5Description: e.target.value })}
+                          placeholder="Communauté d'apprenants et accompagnement personnalisé"
+                          rows={2}
+                        />
+                      </div>
+                      
+                      {/* Feature 6 */}
+                      <div className="space-y-2">
+                        <Label>Fonctionnalité 6</Label>
+                        <Input
+                          value={homepageAssets.feature6Title || ''}
+                          onChange={(e) => updateHomepageAssets({ feature6Title: e.target.value })}
+                          placeholder="Excellence garantie"
+                        />
+                        <Textarea
+                          value={homepageAssets.feature6Description || ''}
+                          onChange={(e) => updateHomepageAssets({ feature6Description: e.target.value })}
+                          placeholder="Méthodes pédagogiques éprouvées basées sur les dernières recherches en sciences cognitives"
+                          rows={2}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Section Statistiques */}
                 <div className="space-y-4 border-t pt-6">
                   <h3 className="text-lg font-medium">Section Statistiques</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="statsTitle">Titre de la section</Label>
+                      <Input
+                        id="statsTitle"
+                        value={homepageAssets.statsTitle || ''}
+                        onChange={(e) => updateHomepageAssets({ statsTitle: e.target.value })}
+                        placeholder="Nos résultats parlent d'eux-mêmes"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="statsDescription">Description</Label>
+                      <Input
+                        id="statsDescription"
+                        value={homepageAssets.statsDescription || ''}
+                        onChange={(e) => updateHomepageAssets({ statsDescription: e.target.value })}
+                        placeholder="Des chiffres qui témoignent de notre excellence"
+                      />
+                    </div>
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label>Statistique 1</Label>
