@@ -27,12 +27,14 @@ interface Question {
 
 interface TestSession {
   id: string;
-  started_at: string;
-  total_questions: number;
-  current_level: number;
-  current_batch: number;
-  questions_mastered: number;
-  certification_target: boolean;
+  started_at: string | null;
+  total_questions: number | null;
+  current_level: number | null;
+  current_batch: number | null;
+  questions_mastered: number | null;
+  certification_target: boolean | null;
+  created_at: string | null;
+  deleted_at: string | null;
 }
 
 interface UserCertification {
@@ -52,8 +54,9 @@ interface TestBatch {
   id: string;
   batch_number: number;
   level: number;
-  questions_count: number;
-  completed_at?: string;
+  questions_count: number | null;
+  completed_at: string | null;
+  created_at: string | null;
 }
 
 export default function Test() {
@@ -110,6 +113,7 @@ export default function Test() {
       }, 1000);
       return () => clearInterval(interval);
     }
+    return;
   }, [testSession, isCompleted]);
 
   // Cleanup on page unload
@@ -162,7 +166,13 @@ export default function Test() {
         .select('*')
         .eq('user_id', user!.id);
       
-      setCertifications(certificationsData || []);
+      setCertifications((certificationsData || []).map(cert => ({
+        ...cert,
+        certified_at: cert.certified_at || '',
+        issuing_organization: cert.issuing_organization || 'Organisation',
+        expiration_date: cert.expiration_date || null,
+        created_at: cert.created_at || ''
+      })));
       
       // Load questions for the target level
       await loadQuestionsForLevel(targetLevel);
@@ -217,7 +227,17 @@ export default function Test() {
       
       // Shuffle questions
       const shuffledQuestions = questionsData.sort(() => Math.random() - 0.5);
-      setQuestions(shuffledQuestions);
+      setQuestions(shuffledQuestions.map(q => ({
+        ...q,
+        content: q.content || '',
+        type: q.type || 'multiple_choice',
+        level: q.level || 1,
+        rule: q.rule || '',
+        answer: q.answer || '',
+        explanation: q.explanation || '',
+        created_at: q.created_at || '',
+        choices: q.answer ? JSON.parse(q.answer || '[]') : []
+      })));
       
       // First, complete any existing in-progress sessions and clean up deleted ones
       await supabase
@@ -297,7 +317,7 @@ export default function Test() {
       
       toast({
         title: "Erreur",
-        description: `Impossible de charger le test: ${error?.message || 'Erreur inconnue'}`,
+        description: `Impossible de charger le test: ${(error as any)?.message || 'Erreur inconnue'}`,
         variant: "destructive"
       });
     }
@@ -387,7 +407,7 @@ export default function Test() {
         await supabase
           .from('question_attempts')
           .update({
-            attempts_count: existingAttempt.attempts_count + 1,
+            attempts_count: (existingAttempt.attempts_count || 0) + 1,
             is_correct: isCorrect,
             last_attempt_at: new Date().toISOString()
           })
@@ -481,7 +501,13 @@ export default function Test() {
       
       if (error) throw error;
       
-      setCertifications(prev => [...prev, certification]);
+      setCertifications(prev => [...prev, {
+        ...certification,
+        certified_at: certification.certified_at || '',
+        issuing_organization: certification.issuing_organization || 'Organisation',
+        expiration_date: certification.expiration_date || null,
+        created_at: certification.created_at || ''
+      }]);
       
       toast({
         title: "🎉 Certification obtenue !",

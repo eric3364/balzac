@@ -1196,7 +1196,7 @@ const Admin = () => {
                                         <div className="grid grid-cols-2 gap-4">
                                           <div className="space-y-2">
                                             <Label>Couleur</Label>
-                                            <Input type="color" defaultValue={level.color} />
+                                            <Input type="color" defaultValue={level.color || '#6366f1'} />
                                           </div>
                                           <div className="flex items-center space-x-2">
                                             <Switch defaultChecked={level.is_active} />
@@ -1227,7 +1227,7 @@ const Admin = () => {
                                             <div className="space-y-2">
                                               <Label>Prix (€)</Label>
                                               <Input 
-                                                defaultValue={associatedCert.price_euros} 
+                                                defaultValue={associatedCert.price_euros || 0} 
                                                 type="number" 
                                                 step="0.01"
                                                 min="0"
@@ -1260,7 +1260,7 @@ const Admin = () => {
                                             <div className="space-y-2">
                                               <Label>Sessions gratuites</Label>
                                               <Input 
-                                                defaultValue={associatedCert.free_sessions} 
+                                                defaultValue={associatedCert.free_sessions || 0} 
                                                 type="number"
                                                 min="0"
                                                 onChange={(e) => {
@@ -1520,7 +1520,7 @@ const Admin = () => {
                                 <div className="flex items-center justify-between mb-2">
                                   <h5 className="font-medium text-sm">Certification associée</h5>
                                   <Badge variant="outline">
-                                    {associatedCert.price_euros > 0 ? `${associatedCert.price_euros}€` : 'Gratuit'}
+                                    {(associatedCert.price_euros || 0) > 0 ? `${associatedCert.price_euros}€` : 'Gratuit'}
                                   </Badge>
                                 </div>
                                 <p className="text-sm text-muted-foreground mb-2">{associatedCert.name}</p>
@@ -1748,7 +1748,10 @@ const Admin = () => {
               </CardContent>
             </Card>
 
-            <QuestionsManager difficultyLevels={difficultyLevels} />
+            <QuestionsManager difficultyLevels={difficultyLevels.map(level => ({
+              ...level,
+              color: level.color || '#6366f1'
+            }))} />
           </TabsContent>
 
           <TabsContent value="finance" className="space-y-6">

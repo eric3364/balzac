@@ -26,7 +26,8 @@ const AlternativeIndex = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, loading: authLoading } = useAuth();
-  const { config, loading: configLoading } = useHomepageConfig();
+  const { config } = useHomepageConfig();
+  const configLoading = false;
   const [certifications, setCertifications] = useState<CertificationPricing[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCertifications, setSelectedCertifications] = useState<number[]>([]);
@@ -43,13 +44,37 @@ const AlternativeIndex = () => {
     const fetchCertifications = async () => {
       try {
         const { data, error } = await supabase
-          .from('certification_pricing')
-          .select('*')
+          .from('certificate_templates')
+          .select(`
+            *,
+            difficulty_levels!inner(
+              level_number,
+              name
+            )
+          `)
           .eq('is_active', true)
-          .order('level', { ascending: true });
+          .order('difficulty_level_id', { ascending: true });
         
         if (error) throw error;
-        setCertifications(data || []);
+        
+        const formattedData = (data || []).map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          price: item.price_euros || 0,
+          features: [
+            item.feature_1_text || 'Formation complète',
+            item.feature_2_text || 'Certification officielle',
+            item.feature_3_text || 'Support personnalisé'
+          ].filter(Boolean),
+          level: item.difficulty_levels.level_number,
+          level_name: item.difficulty_levels.name,
+          icon: item.badge_icon || 'award',
+          description: item.description || 'Description par défaut',
+          session_count: item.free_sessions || 3,
+          is_active: item.is_active
+        }));
+        
+        setCertifications(formattedData);
       } catch (error) {
         console.error('Error fetching certifications:', error);
       } finally {
@@ -95,7 +120,7 @@ const AlternativeIndex = () => {
             </div>
             <div>
               <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                {config.site_title}
+                 {config.siteTitle}
               </h1>
               <p className="text-xs text-muted-foreground">Certification d'Excellence</p>
             </div>
@@ -123,12 +148,12 @@ const AlternativeIndex = () => {
             
             <h1 className="text-5xl md:text-7xl font-extrabold leading-tight">
               <span className="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
-                {config.hero_title}
+                {config.heroTitle}
               </span>
             </h1>
             
             <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              {config.hero_description}
+              {config.heroDescription}
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8">
@@ -330,7 +355,7 @@ const AlternativeIndex = () => {
                 <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
                   <Award className="w-5 h-5 text-white" />
                 </div>
-                <span className="font-bold text-lg">{config.site_title}</span>
+                <span className="font-bold text-lg">{config.siteTitle}</span>
               </div>
               <p className="text-muted-foreground text-sm">
                 La plateforme de référence pour vos certifications professionnelles
@@ -366,17 +391,12 @@ const AlternativeIndex = () => {
           </div>
           
           <div className="border-t mt-8 pt-8 text-center text-sm text-muted-foreground">
-            <p>&copy; 2024 {config.site_title}. Tous droits réservés.</p>
+            <p>&copy; 2024 {config.siteTitle}. Tous droits réservés.</p>
           </div>
         </div>
       </footer>
 
       {/* Checkout Flow */}
-      <CheckoutFlow 
-        certifications={certifications}
-        selectedCertifications={selectedCertifications}
-        onCertificationChange={setSelectedCertifications}
-      />
     </div>
   );
 };

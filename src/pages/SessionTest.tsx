@@ -202,7 +202,17 @@ const SessionTest = () => {
         return;
       }
 
-      setQuestions(sessionQuestions);
+      setQuestions(sessionQuestions.map(q => ({
+        ...q,
+        content: q.content || '',
+        type: q.type || 'multiple_choice',
+        level: q.level || 1,
+        rule: q.rule || '',
+        answer: q.answer || '',
+        explanation: q.explanation || '',
+        created_at: q.created_at || '',
+        choices: q.answer ? JSON.parse(q.answer || '[]') : []
+      })));
       
       // Enregistrer le temps de début de la session
       if (!sessionStartTime.current) {
@@ -213,7 +223,7 @@ const SessionTest = () => {
       console.error('Erreur lors du chargement des questions:', error);
       toast({
         title: "Erreur",
-        description: `Impossible de charger les questions de la session: ${error?.message || 'Erreur inconnue'}`,
+        description: `Impossible de charger les questions de la session: ${(error as any)?.message || 'Erreur inconnue'}`,
         variant: "destructive"
       });
       navigate('/dashboard');
@@ -439,7 +449,7 @@ const SessionTest = () => {
       }
 
       // Mettre à jour la progression selon le type de session
-      let progressResult = { levelCompleted: false, certification: null };
+      let progressResult: { levelCompleted: boolean; certification: any } = { levelCompleted: false, certification: null };
       
       if (sessionType === 'remedial') {
         // Pour les sessions de rattrapage, utiliser 99 comme numéro de session
@@ -480,7 +490,7 @@ const SessionTest = () => {
         setTimeout(() => {
           toast({
             title: "🏆 Certification obtenue !",
-            description: `Félicitations ! Vous avez obtenu votre certification de niveau ${sessionLevel} avec ${progressResult.certification.score}% !`,
+            description: `Félicitations ! Vous avez obtenu votre certification de niveau ${sessionLevel} avec ${progressResult.certification?.score || 0}% !`,
             variant: "default"
           });
         }, 1000);

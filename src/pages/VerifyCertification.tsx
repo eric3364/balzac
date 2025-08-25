@@ -84,7 +84,7 @@ const VerifyCertification = () => {
           level: data.level,
           level_name: levelResult.data?.name || `Niveau ${data.level}`,
           score: data.score,
-          certified_at: data.certified_at,
+          certified_at: data.certified_at || '',
           credential_id: data.credential_id,
           expiration_date: data.expiration_date,
           issuing_organization: data.issuing_organization || 'Organisation',
