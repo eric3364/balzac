@@ -8,6 +8,8 @@
     "jsx": "react-jsx",
 
     "strict": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
     "skipLibCheck": true,
 
     "esModuleInterop": true,
@@ -18,8 +20,8 @@
       "@/*": ["src/*"]
     },
 
-    "types": ["vite/client", "react", "react-dom"]
+    "types": ["react", "react-dom"]
   },
-  "include": ["src", "vite-env.d.ts"],
+  "include": ["src/**/*", "vite-env.d.ts"],
   "exclude": ["node_modules", "dist"]
 }
