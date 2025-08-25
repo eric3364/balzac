@@ -140,7 +140,7 @@ const AlternativeIndex = () => {
       <section className="relative py-10 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-secondary/10"></div>
         <div className="container mx-auto px-4 relative">
-          <div className="max-w-4xl mx-auto text-center space-y-8">
+          <div className="max-w-4xl mx-auto text-center space-y-4">
             <div className="inline-flex items-center space-x-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm">
               <Sparkles className="w-4 h-4" />
               <span>Nouvelle expérience de certification</span>
@@ -156,7 +156,7 @@ const AlternativeIndex = () => {
               {config.heroDescription}
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
               <Button size="lg" className="px-8 py-6 text-lg" onClick={() => navigate('/auth')}>
                 Commencer maintenant
                 <ArrowRight className="w-5 h-5 ml-2" />
