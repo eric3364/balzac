@@ -318,7 +318,6 @@ export type Database = {
       questions: {
         Row: {
           answer: string | null
-          choices: string[] | null
           content: string | null
           created_at: string | null
           explanation: string | null
@@ -329,7 +328,6 @@ export type Database = {
         }
         Insert: {
           answer?: string | null
-          choices?: string[] | null
           content?: string | null
           created_at?: string | null
           explanation?: string | null
@@ -340,7 +338,6 @@ export type Database = {
         }
         Update: {
           answer?: string | null
-          choices?: string[] | null
           content?: string | null
           created_at?: string | null
           explanation?: string | null
@@ -712,6 +709,10 @@ export type Database = {
       user_has_purchased_level: {
         Args: { level_num: number; user_uuid: string }
         Returns: boolean
+      }
+      validate_promo_code: {
+        Args: { certification_level: number; code_text: string }
+        Returns: Json
       }
     }
     Enums: {
