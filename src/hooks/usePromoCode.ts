@@ -8,7 +8,7 @@ export const usePromoCode = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
-  // Vérifier la validité d'un code promo sans connexion
+  // Vérifier la validité d'un code promo sans connexion (sécurisé)
   const checkPromoCode = async (code: string, level: number): Promise<{ valid: boolean; discount: number }> => {
     if (!code.trim()) {
       toast({
@@ -21,41 +21,25 @@ export const usePromoCode = () => {
 
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('promo_codes')
-        .select('discount_percentage, is_used, expires_at')
-        .eq('code', code.trim().toUpperCase())
-        .eq('level', level)
-        .single();
+      const { data, error } = await supabase.rpc('validate_promo_code', {
+        code_text: code.trim().toUpperCase(),
+        certification_level: level
+      });
 
-      if (error || !data) {
+      if (error) throw error;
+
+      const result = data as { valid: boolean; discount: number; error?: string };
+
+      if (!result.valid) {
         toast({
           title: "Code promo invalide",
-          description: "Ce code promo n'existe pas ou n'est pas valide pour ce niveau.",
+          description: result.error || "Ce code promo n'est pas valide pour ce niveau.",
           variant: "destructive",
         });
         return { valid: false, discount: 0 };
       }
 
-      if (data.is_used) {
-        toast({
-          title: "Code promo déjà utilisé",
-          description: "Ce code promo a déjà été utilisé.",
-          variant: "destructive",
-        });
-        return { valid: false, discount: 0 };
-      }
-
-      if (data.expires_at && new Date(data.expires_at) < new Date()) {
-        toast({
-          title: "Code promo expiré",
-          description: "Ce code promo a expiré.",
-          variant: "destructive",
-        });
-        return { valid: false, discount: 0 };
-      }
-
-      return { valid: true, discount: data.discount_percentage };
+      return { valid: true, discount: result.discount };
     } catch (error) {
       console.error('Erreur lors de la vérification du code promo:', error);
       toast({
