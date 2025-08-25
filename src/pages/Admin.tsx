@@ -825,11 +825,21 @@ const Admin = () => {
                 <div className="pt-6 border-t">
                   <Button 
                     onClick={async () => {
-                      await updateHomepageAssets({});
-                      toast({
-                        title: "Configuration sauvegardée",
-                        description: "Les modifications de la page d'accueil ont été enregistrées."
-                      });
+                      try {
+                        // Force une sauvegarde des valeurs actuelles
+                        await updateHomepageAssets(homepageAssets);
+                        toast({
+                          title: "Configuration sauvegardée",
+                          description: "Les modifications de la page d'accueil ont été enregistrées avec succès."
+                        });
+                      } catch (error) {
+                        console.error('Erreur lors de la sauvegarde:', error);
+                        toast({
+                          title: "Erreur",
+                          description: "Impossible de sauvegarder les modifications.",
+                          variant: "destructive",
+                        });
+                      }
                     }}
                     className="w-full md:w-auto"
                   >
