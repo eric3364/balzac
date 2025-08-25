@@ -68,28 +68,28 @@ interface CertificateTemplate {
   id: string;
   difficulty_level_id: string;
   name: string;
-  description: string;
+  description: string | null;
   certificate_title: string;
-  certificate_subtitle: string;
+  certificate_subtitle: string | null;
   certificate_text: string;
-  certificate_background_color: string;
-  certificate_border_color: string;
-  certificate_text_color: string;
+  certificate_background_color: string | null;
+  certificate_border_color: string | null;
+  certificate_text_color: string | null;
   min_score_required: number;
-  badge_icon: string;
-  badge_color: string;
-  badge_background_color: string;
-  badge_size: string;
-  custom_badge_url: string;
-  price_euros: number;
-  free_sessions: number;
+  badge_icon: string | null;
+  badge_color: string | null;
+  badge_background_color: string | null;
+  badge_size: string | null;
+  custom_badge_url: string | null;
+  price_euros: number | null;
+  free_sessions: number | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
-  created_by: string;
-  feature_1_text?: string;
-  feature_2_text?: string;
-  feature_3_text?: string;
+  created_by: string | null;
+  feature_1_text?: string | null;
+  feature_2_text?: string | null;
+  feature_3_text?: string | null;
 }
 
 interface Question {
@@ -349,7 +349,25 @@ const Admin = () => {
         .select('*');
 
       if (error) throw error;
-      setCertificates(data || []);
+      setCertificates((data || []).map(cert => ({
+        ...cert,
+        description: cert.description || '',
+        certificate_subtitle: cert.certificate_subtitle || '',
+        certificate_background_color: cert.certificate_background_color || '#ffffff',
+        certificate_border_color: cert.certificate_border_color || '#6366f1',
+        certificate_text_color: cert.certificate_text_color || '#000000',
+        badge_icon: cert.badge_icon || 'award',
+        badge_color: cert.badge_color || '#6366f1',
+        badge_background_color: cert.badge_background_color || '#ffffff',
+        badge_size: cert.badge_size || 'medium',
+        custom_badge_url: cert.custom_badge_url || '',
+        price_euros: cert.price_euros || 10,
+        free_sessions: cert.free_sessions || 3,
+        created_by: cert.created_by || '',
+        feature_1_text: cert.feature_1_text || '',
+        feature_2_text: cert.feature_2_text || '',
+        feature_3_text: cert.feature_3_text || ''
+      })));
     } catch (error) {
       console.error('Erreur lors du chargement des certificats:', error);
     }
@@ -363,12 +381,23 @@ const Admin = () => {
         .order('level', { ascending: true });
 
       if (error) throw error;
-      setQuestions(data || []);
+      setQuestions((data || []).map(q => ({
+        ...q,
+        content: q.content || '',
+        type: q.type || 'multiple_choice',
+        level: q.level || 1,
+        rule: q.rule || '',
+        answer: q.answer || '',
+        explanation: q.explanation || '',
+        created_at: q.created_at || '',
+        choices: q.answer ? JSON.parse(q.answer || '[]') : []
+      })));
 
       // Calculate stats per level
       const stats: Record<number, number> = {};
       data?.forEach(q => {
-        stats[q.level] = (stats[q.level] || 0) + 1;
+        const level = q.level || 1;
+        stats[level] = (stats[level] || 0) + 1;
       });
       setQuestionsStats(stats);
     } catch (error) {
@@ -1120,7 +1149,7 @@ const Admin = () => {
                               <div className="flex items-center gap-3">
                                 <Badge 
                                   variant="outline" 
-                                  style={{ backgroundColor: level.color + '20', borderColor: level.color, color: level.color }}
+                                  style={{ backgroundColor: (level.color || '#6366f1') + '20', borderColor: level.color || '#6366f1', color: level.color || '#6366f1' }}
                                 >
                                   Niveau {level.level_number}
                                 </Badge>
