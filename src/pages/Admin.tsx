@@ -531,10 +531,11 @@ const Admin = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="stats">Statistiques</TabsTrigger>
             <TabsTrigger value="students">Apprenants</TabsTrigger>
             <TabsTrigger value="homepage">Page d'accueil</TabsTrigger>
+            <TabsTrigger value="footer">Footer & Légal</TabsTrigger>
             <TabsTrigger value="levels">Niveaux & Certifications</TabsTrigger>
             <TabsTrigger value="questions">Questions</TabsTrigger>
             <TabsTrigger value="finance">Finance</TabsTrigger>
@@ -854,6 +855,18 @@ const Admin = () => {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Footer & Mentions légales Tab */}
+          <TabsContent value="footer" className="space-y-6">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <div>
+                <FooterManager />
+              </div>
+              <div>
+                <LegalPageManager />
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="levels" className="space-y-6">
