@@ -515,7 +515,7 @@ const Admin = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/?preview=true')}
             className="flex items-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
