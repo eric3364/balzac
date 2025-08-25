@@ -515,11 +515,11 @@ const Admin = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/')}
             className="flex items-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
-            Retour au tableau de bord
+            Retour à la page d'accueil
           </Button>
           
           <div>
