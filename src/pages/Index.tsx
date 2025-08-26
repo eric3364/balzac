@@ -265,7 +265,7 @@ const Index = () => {
               <Button 
                 size="default" 
                 className="px-6 py-3 hero-glow hover:scale-105 transition-all duration-300"
-                onClick={() => navigate('/auth')}
+                onClick={() => navigate('/auth?tab=signup')}
               >
                 <Star className="mr-2 h-5 w-5" />
                 Commencer maintenant
