@@ -113,8 +113,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const errorMessage = error.message.toLowerCase();
         let displayMessage = error.message;
         
+        // Détection des erreurs de rate limit
+        if (errorMessage.includes('rate limit') || errorMessage.includes('429')) {
+          displayMessage = "Trop de tentatives, veuillez patienter quelques minutes";
+        }
         // Détection des erreurs d'email invalide
-        if (errorMessage.includes('invalid') && errorMessage.includes('email') ||
+        else if (errorMessage.includes('invalid') && errorMessage.includes('email') ||
             errorMessage.includes('invalid email') ||
             errorMessage.includes('email format') ||
             errorMessage.includes('valid email') ||
