@@ -43,6 +43,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signUp = async (email: string, password: string, firstName: string, lastName: string, school: string, className: string) => {
     try {
+      // Validation des domaines email courants mal tapés
+      const commonDomainTypos: Record<string, string> = {
+        'gmil.com': 'gmail.com',
+        'gmai.com': 'gmail.com', 
+        'gmail.co': 'gmail.com',
+        'yahoo.co': 'yahoo.com',
+        'yahoo.fr': 'yahoo.fr',
+        'hotmil.com': 'hotmail.com',
+        'hotmai.com': 'hotmail.com',
+        'outloo.com': 'outlook.com',
+        'outlok.com': 'outlook.com'
+      };
+      
+      const emailDomain = email.split('@')[1]?.toLowerCase();
+      if (emailDomain && commonDomainTypos[emailDomain]) {
+        toast({
+          title: "Erreur d'inscription",
+          description: "Mail incorrect, merci de ressaisir vos coordonnées",
+          variant: "destructive"
+        });
+        return { error: { message: "Invalid email domain" } };
+      }
+      
       const redirectUrl = `${window.location.origin}/auth/callback`;
       
       const { error } = await supabase.auth.signUp({
