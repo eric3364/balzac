@@ -48,12 +48,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         'gmil.com': 'gmail.com',
         'gmai.com': 'gmail.com', 
         'gmail.co': 'gmail.com',
+        'gmai.fr': 'gmail.fr',
+        'gmil.fr': 'gmail.fr',
+        'gmail.f': 'gmail.fr',
         'yahoo.co': 'yahoo.com',
-        'yahoo.fr': 'yahoo.fr',
+        'yahoo.f': 'yahoo.fr',
         'hotmil.com': 'hotmail.com',
         'hotmai.com': 'hotmail.com',
+        'hotmil.fr': 'hotmail.fr',
+        'hotmai.fr': 'hotmail.fr',
         'outloo.com': 'outlook.com',
-        'outlok.com': 'outlook.com'
+        'outlok.com': 'outlook.com',
+        'outloo.fr': 'outlook.fr',
+        'outlok.fr': 'outlook.fr'
       };
       
       const emailDomain = email.split('@')[1]?.toLowerCase();
