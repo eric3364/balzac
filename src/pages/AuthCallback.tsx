@@ -38,9 +38,13 @@ export default function AuthCallback() {
           return;
         }
 
+        // Déterminer le type d'authentification pour personnaliser le message
+        const url = new URL(window.location.href);
+        const type = url.searchParams.get("type") || url.hash.match(/type=([^&]+)/)?.[1];
+        
         // Succès → rediriger vers le tableau de bord (ou autre)
         toast({
-          title: "Connexion confirmée",
+          title: type === "recovery" ? "Mot de passe réinitialisé" : "Connexion confirmée",
           description: "Bienvenue !",
         });
         navigate("/dashboard", { replace: true });
