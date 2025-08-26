@@ -57,7 +57,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Validation des domaines email courants mal tapés
       const commonDomainTypos: Record<string, string> = {
         'gmil.com': 'gmail.com',
-        'gmai.com': 'gmail.com', 
+        'gmai.com': 'gmail.com',
+        'gma.com': 'gmail.com',
         'gmail.co': 'gmail.com',
         'gmai.fr': 'gmail.fr',
         'gmil.fr': 'gmail.fr',
