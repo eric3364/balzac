@@ -60,13 +60,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (error) {
-        const errorMessage = error.message.toLowerCase().includes('invalid') && error.message.toLowerCase().includes('email') 
-          ? "Mail incorrect, merci de ressaisir vos coordonnées"
-          : error.message;
+        const errorMessage = error.message.toLowerCase();
+        let displayMessage = error.message;
+        
+        // Détection des erreurs d'email invalide
+        if (errorMessage.includes('invalid') && errorMessage.includes('email') ||
+            errorMessage.includes('invalid email') ||
+            errorMessage.includes('email format') ||
+            errorMessage.includes('valid email') ||
+            errorMessage.includes('malformed email')) {
+          displayMessage = "Mail incorrect, merci de ressaisir vos coordonnées";
+        }
         
         toast({
           title: "Erreur d'inscription",
-          description: errorMessage,
+          description: displayMessage,
           variant: "destructive"
         });
         return { error };
