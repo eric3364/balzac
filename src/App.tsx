@@ -5,6 +5,7 @@ import { AuthProvider } from "./hooks/useAuth";
 import Index from "./pages/Index";
 import AlternativeIndex from "./pages/AlternativeIndex";
 import Auth from "./pages/Auth";
+import AuthCallback from "./pages/AuthCallback";
 import Dashboard from "./pages/Dashboard";
 import Pricing from "./pages/Pricing";
 import Payment from "./pages/Payment";
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/alternative" element={<AlternativeIndex />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/payment" element={<Payment />} />
