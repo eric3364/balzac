@@ -70,7 +70,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       toast({
         title: "Inscription réussie",
-        description: "Veuillez vérifier votre email pour confirmer votre compte.",
+        description: "Un email de validation vous a été envoyé, merci de le valider",
       });
 
       return { error: null };
