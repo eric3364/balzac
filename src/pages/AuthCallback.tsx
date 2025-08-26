@@ -19,6 +19,10 @@ export default function AuthCallback() {
   useEffect(() => {
     const run = async () => {
       try {
+        // Vérifier s'il y a déjà une session active
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) return navigate("/dashboard", { replace: true });
+
         // Depuis supabase-js v2, on utilise exchangeCodeForSession()
         const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
 
