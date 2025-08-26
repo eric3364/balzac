@@ -60,9 +60,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (error) {
+        const errorMessage = error.message.toLowerCase().includes('invalid') && error.message.toLowerCase().includes('email') 
+          ? "Mail incorrect, merci de ressaisir vos coordonnées"
+          : error.message;
+        
         toast({
           title: "Erreur d'inscription",
-          description: error.message,
+          description: errorMessage,
           variant: "destructive"
         });
         return { error };
