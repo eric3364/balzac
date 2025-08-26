@@ -72,7 +72,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         'outloo.com': 'outlook.com',
         'outlok.com': 'outlook.com',
         'outloo.fr': 'outlook.fr',
-        'outlok.fr': 'outlook.fr'
+        'outlok.fr': 'outlook.fr',
+        'nextu.fr': 'next-u.fr',
+        'next-u.f': 'next-u.fr',
+        'next-u.com': 'next-u.fr',
+        'nex-u.fr': 'next-u.fr',
+        'next-fr.fr': 'next-u.fr',
+        'nextfr.fr': 'next-u.fr'
       };
       
       const emailDomain = email.split('@')[1]?.toLowerCase();
