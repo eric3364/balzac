@@ -43,6 +43,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signUp = async (email: string, password: string, firstName: string, lastName: string, school: string, className: string) => {
     try {
+      // Validation basique de format email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        toast({
+          title: "Erreur d'inscription",
+          description: "Mail incorrect, merci de ressaisir vos coordonnées",
+          variant: "destructive"
+        });
+        return { error: { message: "Invalid email format" } };
+      }
+
       // Validation des domaines email courants mal tapés
       const commonDomainTypos: Record<string, string> = {
         'gmil.com': 'gmail.com',
@@ -64,7 +75,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       };
       
       const emailDomain = email.split('@')[1]?.toLowerCase();
+      console.log('Email domain:', emailDomain); // Debug
       if (emailDomain && commonDomainTypos[emailDomain]) {
+        console.log('Found typo in domain:', emailDomain); // Debug
         toast({
           title: "Erreur d'inscription",
           description: "Mail incorrect, merci de ressaisir vos coordonnées",
