@@ -7,7 +7,7 @@ import { SessionProgressComponent } from '@/components/SessionProgress';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 
 const SessionProgress = () => {
   const { user, loading } = useAuth();
