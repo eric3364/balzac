@@ -38,6 +38,21 @@ export type Database = {
         }
         Relationships: []
       }
+      admins: {
+        Row: {
+          created_at: string
+          uid: string
+        }
+        Insert: {
+          created_at?: string
+          uid: string
+        }
+        Update: {
+          created_at?: string
+          uid?: string
+        }
+        Relationships: []
+      }
       certificate_templates: {
         Row: {
           badge_background_color: string | null
@@ -169,6 +184,27 @@ export type Database = {
           level_number?: number
           name?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      email_resend_log: {
+        Row: {
+          created_at: string
+          email: string
+          id: number
+          ip: unknown
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: number
+          ip: unknown
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: number
+          ip?: unknown
         }
         Relationships: []
       }
@@ -483,6 +519,45 @@ export type Database = {
           level?: number | null
           rule?: string | null
           type?: string | null
+        }
+        Relationships: []
+      }
+      resend_email_log: {
+        Row: {
+          created_at: string
+          email: string
+          id: number
+          uid: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: number
+          uid?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: number
+          uid?: string | null
+        }
+        Relationships: []
+      }
+      resend_log: {
+        Row: {
+          email: string
+          id: string
+          sent_at: string | null
+        }
+        Insert: {
+          email: string
+          id?: string
+          sent_at?: string | null
+        }
+        Update: {
+          email?: string
+          id?: string
+          sent_at?: string | null
         }
         Relationships: []
       }
@@ -806,6 +881,12 @@ export type Database = {
         Args: { level_num: number; questions_percentage?: number }
         Returns: number
       }
+      can_resend: {
+        Args:
+          | { _email: string; _ip: unknown; _window_seconds?: number }
+          | { p_email: string }
+        Returns: boolean
+      }
       generate_credential_id: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -851,6 +932,10 @@ export type Database = {
       validate_promo_code: {
         Args: { certification_level: number; code_text: string }
         Returns: Json
+      }
+      write_resend_log: {
+        Args: { _email: string; _ip: unknown } | { p_email: string }
+        Returns: undefined
       }
     }
     Enums: {
