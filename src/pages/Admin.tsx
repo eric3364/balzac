@@ -375,12 +375,20 @@ const Admin = () => {
 
   const loadQuestions = async () => {
     try {
+      console.log('Admin: Tentative de chargement des questions...');
+      console.log('Admin: Utilisateur actuel:', user?.id);
+      
       const { data, error } = await supabase
         .from('questions')
         .select('*')
         .order('level', { ascending: true });
 
+      console.log('Admin: Résultat de la requête questions:', { data, error });
+
       if (error) throw error;
+      
+      console.log('Admin: Nombre de questions chargées:', data?.length || 0);
+      
       setQuestions((data || []).map(q => ({
         ...q,
         content: q.content || '',
