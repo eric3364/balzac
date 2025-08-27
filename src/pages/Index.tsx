@@ -459,7 +459,7 @@ const Index = () => {
 
                       <CardContent className="pt-2 px-2 pb-3">
                        {/* Level Icon or Custom Badge */}
-                        <div className="w-12 h-12 mx-auto mb-4 rounded-full flex items-center justify-center overflow-hidden">
+                        <div className="w-36 h-36 mx-auto mb-4 rounded-full flex items-center justify-center overflow-hidden">
                           {cert.custom_badge_url ? (
                             <img 
                               src={cert.custom_badge_url} 
@@ -475,7 +475,7 @@ const Index = () => {
                                 const IconComponent = getIconComponent(cert.badge_icon);
                                 return (
                                   <IconComponent 
-                                    className="h-6 w-6" 
+                                    className="h-18 w-18" 
                                     style={{ color: cert.badge_color || '#6366f1' }}
                                   />
                                 );
