@@ -63,7 +63,10 @@ const Dashboard = () => {
                 <Settings className="h-4 w-4" />
               </Button>
             )}
-            <Button variant="outline" onClick={signOut}>
+            <Button variant="outline" onClick={async () => {
+              await signOut();
+              navigate('/');
+            }}>
               Déconnexion
             </Button>
           </div>
