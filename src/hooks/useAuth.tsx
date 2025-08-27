@@ -191,12 +191,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     try {
-      await supabase.auth.signOut();
+      console.log('Tentative de déconnexion...');
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Erreur lors de la déconnexion:', error);
+        toast({
+          title: "Erreur de déconnexion",
+          description: error.message,
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      console.log('Déconnexion réussie');
       toast({
         title: "Déconnexion",
         description: "À bientôt sur Balzac Certification !"
       });
     } catch (error: any) {
+      console.error('Erreur catch lors de la déconnexion:', error);
       toast({
         title: "Erreur",
         description: error.message,
