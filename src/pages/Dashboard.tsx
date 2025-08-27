@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { AuthGuard } from '@/components/AuthGuard';
 import { useUserStats } from '@/hooks/useUserStats';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useLevelAccess } from '@/hooks/useLevelAccess';
@@ -46,9 +47,10 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card">
+    <AuthGuard>
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-primary">Balzac Certification</h1>
@@ -281,6 +283,7 @@ const Dashboard = () => {
 
       </div>
     </div>
+    </AuthGuard>
   );
 };
 
