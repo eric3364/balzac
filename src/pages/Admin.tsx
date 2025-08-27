@@ -129,7 +129,7 @@ const Admin = () => {
     if (!user) return;
     try {
       // 1) premier choix : RPC sécurisée côté DB
-      const { data: isAdminFlag, error: rpcErr } = await supabase.rpc('is_super_admin', { uid: user.id });
+      const { data: isAdminFlag, error: rpcErr } = await supabase.rpc('is_super_admin');
       if (!rpcErr && isAdminFlag === true) {
         setIsAdmin(true);
         return;
@@ -169,11 +169,14 @@ const Admin = () => {
     }
   };
 
-  // --- Stats : utilise RPC get_users_count au lieu de REST/Edge
+  // --- Stats : utilise une requête directe pour obtenir le nombre d'utilisateurs
   const loadUserStats = async () => {
     try {
-      const { data: usersCount, error: usersCountError } = await supabase.rpc('get_users_count');
-      if (usersCountError) console.error('get_users_count error:', usersCountError);
+      // Utilisation directe de la table profiles pour compter les utilisateurs
+      const { count: authUsersCount, error: usersCountError } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+      if (usersCountError) console.error('profiles count error:', usersCountError);
 
       const { data: users, error: profilesErr } = await supabase
         .from('profiles')
@@ -198,7 +201,7 @@ const Admin = () => {
 
       setUserStats({
         total_users: users?.length ?? 0,
-        total_auth_users: Number(usersCount ?? 0),
+        total_auth_users: Number(authUsersCount ?? 0),
         total_test_sessions: sessions?.length ?? 0,
         total_questions: questions?.length ?? 0,
         total_certifications: certifications?.length ?? 0,
