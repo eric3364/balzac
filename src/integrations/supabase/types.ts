@@ -492,6 +492,7 @@ export type Database = {
       questions: {
         Row: {
           answer: string | null
+          choices: string[] | null
           content: string | null
           created_at: string | null
           explanation: string | null
@@ -502,6 +503,7 @@ export type Database = {
         }
         Insert: {
           answer?: string | null
+          choices?: string[] | null
           content?: string | null
           created_at?: string | null
           explanation?: string | null
@@ -512,6 +514,7 @@ export type Database = {
         }
         Update: {
           answer?: string | null
+          choices?: string[] | null
           content?: string | null
           created_at?: string | null
           explanation?: string | null
