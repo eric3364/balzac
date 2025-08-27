@@ -12,12 +12,12 @@ import { useNavigate } from "react-router-dom";
  *   https://balzac.education/auth/callback?code=...&type=signup
  */
 
-const DEST_AFTER_AUTH = "/app";
-const DEST_RESET_PASS = "/reset-password";
+// ✅ aligne avec tes routes réelles
+const DEST_AFTER_AUTH = "/dashboard";
+const DEST_RESET_PASS = "/auth?type=recovery";
 const DEST_AUTH_PAGE  = "/auth";
 
 function getTypeFromUrl(u: URL): string | null {
-  // Supabase peut mettre "type" soit dans la query, soit dans le hash
   const fromQuery = u.searchParams.get("type");
   if (fromQuery) return fromQuery;
   const hash = new URLSearchParams(u.hash.replace(/^#/, ""));
@@ -25,7 +25,6 @@ function getTypeFromUrl(u: URL): string | null {
 }
 
 function getErrorFromUrl(u: URL): string | null {
-  // Si le lien a expiré / déjà été utilisé, Supabase peut renvoyer error_description
   const fromQuery = u.searchParams.get("error_description");
   if (fromQuery) return fromQuery;
   const hash = new URLSearchParams(u.hash.replace(/^#/, ""));
@@ -42,31 +41,25 @@ export default function AuthCallback() {
 
     const run = async () => {
       try {
-        // 0) Si l'URL transporte déjà une erreur, on l'affiche et on sort
+        // Erreur éventuelle déjà dans l'URL
         const current = new URL(window.location.href);
         const urlError = getErrorFromUrl(current);
         if (urlError) {
-          toast({
-            title: "Connexion impossible",
-            description: urlError,
-            variant: "destructive",
-          });
+          toast({ title: "Connexion impossible", description: urlError, variant: "destructive" });
           navigate(DEST_AUTH_PAGE, { replace: true });
           return;
         }
 
-        // 1) Si une session existe déjà, on file vers l'app
+        // Déjà connecté ?
         const { data: { session: existing } } = await supabase.auth.getSession();
         if (existing) {
           navigate(DEST_AFTER_AUTH, { replace: true });
           return;
         }
 
-        // 2) Échanger l'URL (hash ou query) contre une session (supabase-js v2)
+        // Échanger l'URL contre une session
         const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
-
         if (error) {
-          // Cas fréquents : lien expiré / déjà utilisé / domaine non autorisé
           toast({
             title: "Connexion impossible",
             description: error.message || "Le lien n'est plus valide.",
@@ -76,35 +69,26 @@ export default function AuthCallback() {
           return;
         }
 
-        // 2bis) Double check : s'assurer que la session est bien créée
+        // Double check : session bien créée
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
           toast({
             title: "Connexion incomplète",
-            description: "Impossible de créer la session. Réessaie depuis la page d’authentification.",
+            description: "Impossible de créer la session. Réessaie depuis la page d'authentification.",
             variant: "destructive",
           });
           navigate(DEST_AUTH_PAGE, { replace: true });
           return;
         }
 
-        // 3) Choisir la destination selon le type de flux
+        // Routing selon le flow
         const type = getTypeFromUrl(new URL(window.location.href));
-
         if (type === "recovery") {
-          // Lien de réinitialisation : on envoie sur la page reset
-          toast({
-            title: "Lien confirmé",
-            description: "Veuillez définir votre nouveau mot de passe.",
-          });
-          navigate(DEST_RESET_PASS, { replace: true });
+          toast({ title: "Lien confirmé", description: "Définis ton nouveau mot de passe." });
+          navigate(DEST_RESET_PASS, { replace: true }); // -> /auth?type=recovery
         } else {
-          // Confirmation email / magic link / signin classique
-          toast({
-            title: "Connexion confirmée",
-            description: "Bienvenue !",
-          });
-          navigate(DEST_AFTER_AUTH, { replace: true });
+          toast({ title: "Connexion confirmée", description: "Bienvenue !" });
+          navigate(DEST_AFTER_AUTH, { replace: true }); // -> /dashboard
         }
       } catch (e: any) {
         console.error("Auth callback error:", e);
@@ -120,9 +104,7 @@ export default function AuthCallback() {
     };
 
     run();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -130,11 +112,7 @@ export default function AuthCallback() {
     <div className="min-h-[60vh] flex items-center justify-center">
       <div className="text-center">
         <p className="text-lg font-medium">Validation en cours…</p>
-        {loading && (
-          <p className="text-sm text-muted-foreground mt-2">
-            Merci de patienter.
-          </p>
-        )}
+        {loading && <p className="text-sm text-muted-foreground mt-2">Merci de patienter.</p>}
       </div>
     </div>
   );
