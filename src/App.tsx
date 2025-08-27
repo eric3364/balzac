@@ -39,6 +39,7 @@ function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/admin/auth" element={<AdminAuth />} />
+              <Route path="/admin-auth" element={<AdminAuth />} />
               <Route path="/test" element={<Test />} />
               <Route path="/session-test" element={<SessionTest />} />
               <Route path="/session-progress" element={<SessionProgress />} />
