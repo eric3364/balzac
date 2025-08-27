@@ -116,6 +116,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Détection des erreurs de rate limit
         if (errorMessage.includes('rate limit') || errorMessage.includes('429')) {
           displayMessage = "Trop de tentatives, veuillez patienter quelques minutes";
+          
+          // Afficher le message de confirmation même en cas de rate limit
+          // car l'utilisateur pourrait avoir été créé
+          toast({
+            title: "Email de confirmation",
+            description: "Si votre compte a été créé, un email de validation vous a été envoyé",
+          });
         }
         // Détection des erreurs d'email invalide
         else if (errorMessage.includes('invalid') && errorMessage.includes('email') ||
