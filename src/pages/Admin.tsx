@@ -616,12 +616,14 @@ const Admin = () => {
                       currentUrl={homepageAssets.logoUrl || ''}
                       onUrlChange={(url) => updateHomepageAssets({ logoUrl: url })}
                       bucketPath="logo"
+                      recommendedDimensions="64x64 px (format carré)"
                     />
                     <HomepageAssetUploader
                       label="Image bannière"
                       currentUrl={homepageAssets.bannerUrl || ''}
                       onUrlChange={(url) => updateHomepageAssets({ bannerUrl: url })}
                       bucketPath="banner"
+                      recommendedDimensions="1920x1080 px (format paysage 16:9)"
                     />
                   </div>
                 </div>

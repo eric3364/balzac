@@ -11,9 +11,10 @@ interface HomepageAssetUploaderProps {
   currentUrl: string;
   onUrlChange: (url: string) => void;
   bucketPath: string;
+  recommendedDimensions?: string;
 }
 
-export const HomepageAssetUploader = ({ label, currentUrl, onUrlChange, bucketPath }: HomepageAssetUploaderProps) => {
+export const HomepageAssetUploader = ({ label, currentUrl, onUrlChange, bucketPath, recommendedDimensions }: HomepageAssetUploaderProps) => {
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
 
@@ -88,7 +89,14 @@ export const HomepageAssetUploader = ({ label, currentUrl, onUrlChange, bucketPa
 
   return (
     <div className="space-y-4">
-      <Label>{label}</Label>
+      <div>
+        <Label>{label}</Label>
+        {recommendedDimensions && (
+          <p className="text-sm text-muted-foreground mt-1">
+            Dimensions recommandées : {recommendedDimensions}
+          </p>
+        )}
+      </div>
       
       {currentUrl && (
         <div className="relative border border-border rounded-lg p-4">
