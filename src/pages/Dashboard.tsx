@@ -66,8 +66,8 @@ const Dashboard = () => {
             <Button variant="outline" onClick={async () => {
               console.log('Clique sur le bouton de déconnexion');
               await signOut();
-              console.log('SignOut terminé, navigation vers /');
-              navigate('/');
+              console.log('SignOut terminé, navigation vers /auth');
+              navigate('/auth', { replace: true });
             }}>
               Déconnexion
             </Button>
