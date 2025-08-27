@@ -23,6 +23,7 @@ interface CertificationPricing {
   badge_icon: string;
   badge_color: string;
   badge_background_color: string;
+  custom_badge_url?: string;
   is_active: boolean;
   feature_1_text?: string;
   feature_2_text?: string;
@@ -57,6 +58,7 @@ const Index = () => {
             badge_icon,
             badge_color,
             badge_background_color,
+            custom_badge_url,
             feature_1_text,
             feature_2_text,
             feature_3_text,
@@ -86,6 +88,7 @@ const Index = () => {
           badge_icon: item.badge_icon,
           badge_color: item.badge_color,
           badge_background_color: item.badge_background_color,
+          custom_badge_url: item.custom_badge_url,
           is_active: item.is_active,
           feature_1_text: item.feature_1_text,
           feature_2_text: item.feature_2_text,
@@ -455,20 +458,30 @@ const Index = () => {
                        </div>
 
                       <CardContent className="pt-2 px-2 pb-3">
-                        {/* Level Icon */}
-                        <div 
-                          className="w-12 h-12 mx-auto mb-4 rounded-full flex items-center justify-center"
-                          style={{ backgroundColor: cert.badge_background_color || '#ffffff' }}
-                        >
-                          {(() => {
-                            const IconComponent = getIconComponent(cert.badge_icon);
-                            return (
-                              <IconComponent 
-                                className="h-6 w-6" 
-                                style={{ color: cert.badge_color || '#6366f1' }}
-                              />
-                            );
-                          })()}
+                       {/* Level Icon or Custom Badge */}
+                        <div className="w-12 h-12 mx-auto mb-4 rounded-full flex items-center justify-center overflow-hidden">
+                          {cert.custom_badge_url ? (
+                            <img 
+                              src={cert.custom_badge_url} 
+                              alt={`Badge ${cert.level_name}`}
+                              className="w-full h-full object-cover rounded-full"
+                            />
+                          ) : (
+                            <div 
+                              className="w-full h-full rounded-full flex items-center justify-center"
+                              style={{ backgroundColor: cert.badge_background_color || '#ffffff' }}
+                            >
+                              {(() => {
+                                const IconComponent = getIconComponent(cert.badge_icon);
+                                return (
+                                  <IconComponent 
+                                    className="h-6 w-6" 
+                                    style={{ color: cert.badge_color || '#6366f1' }}
+                                  />
+                                );
+                              })()}
+                            </div>
+                          )}
                         </div>
 
                         {/* Level Name */}
