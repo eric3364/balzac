@@ -30,30 +30,35 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
         <AuthProvider>
-          <Router>
-          <div className="min-h-screen bg-background font-sans antialiased">
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/auth/callback" element={<AuthCallback />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/admin/auth" element={<AdminAuth />} />
-              <Route path="/admin-auth" element={<AdminAuth />} />
-              <Route path="/test" element={<Test />} />
-              <Route path="/session-test" element={<SessionTest />} />
-              <Route path="/session-progress" element={<SessionProgress />} />
-              <Route path="/payment" element={<Payment />} />
-              <Route path="/pricing" element={<Pricing />} />
-              <Route path="/legal/:page" element={<LegalPage />} />
-              <Route path="/verify-certification" element={<VerifyCertification />} />
-              <Route path="/alternative" element={<AlternativeIndex />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </div>
-          <Toaster />
-          <Sonner />
-        </Router>
+          <BrowserRouter>
+            <div className="min-h-screen bg-background font-sans antialiased">
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+
+                <Route path="/admin" element={<Admin />} />
+                {/* si tu gardes une page d'auth admin dédiée */}
+                <Route path="/admin/auth" element={<AdminAuth />} />
+
+                {/* compat : toute tentative vers /admin-auth redirige vers /auth */}
+                <Route path="/admin-auth" element={<Navigate to="/auth" replace />} />
+
+                <Route path="/test" element={<Test />} />
+                <Route path="/session-test" element={<SessionTest />} />
+                <Route path="/session-progress" element={<SessionProgress />} />
+                <Route path="/payment" element={<Payment />} />
+                <Route path="/pricing" element={<Pricing />} />
+                <Route path="/legal/:page" element={<LegalPage />} />
+                <Route path="/verify-certification" element={<VerifyCertification />} />
+                <Route path="/alternative" element={<AlternativeIndex />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </div>
+            <Toaster />
+            <Sonner />
+          </BrowserRouter>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
