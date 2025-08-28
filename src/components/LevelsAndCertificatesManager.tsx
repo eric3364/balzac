@@ -130,8 +130,8 @@ export const LevelsAndCertificatesManager = () => {
       if (error) throw error;
 
       const transformedLevels: LevelWithCertificate[] = (data || []).map(level => {
-        const certTemplates = Array.isArray(level.certificate_templates) ? level.certificate_templates : [];
-        const cert = certTemplates.length > 0 ? certTemplates[0] : null;
+        // certificate_templates est un objet unique, pas un tableau
+        const cert = level.certificate_templates;
         
         console.log('Processing level:', level.level_number, 'cert data:', cert);
         
