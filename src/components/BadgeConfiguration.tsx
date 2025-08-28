@@ -63,8 +63,15 @@ export const BadgeConfiguration: React.FC<BadgeConfigurationProps> = ({
 }) => {
   const [config, setConfig] = useState(initialConfig);
   const [uploading, setUploading] = useState(false);
+  const [badgeUpdateKey, setBadgeUpdateKey] = useState(0); // Clé pour forcer le re-render
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  // Synchroniser avec les changements de configuration initiale
+  React.useEffect(() => {
+    setConfig(initialConfig);
+    setBadgeUpdateKey(prev => prev + 1); // Force le re-render des badges
+  }, [initialConfig]);
 
   const handleConfigChange = (newConfig: Partial<typeof config>) => {
     console.log('BadgeConfiguration: Configuration en cours de changement', newConfig);
@@ -72,6 +79,11 @@ export const BadgeConfiguration: React.FC<BadgeConfigurationProps> = ({
     setConfig(updatedConfig);
     console.log('BadgeConfiguration: Appel de onConfigChange avec', updatedConfig);
     onConfigChange(updatedConfig);
+    
+    // Force le re-render des badges si l'URL du badge personnalisé change
+    if (newConfig.custom_badge_url !== undefined) {
+      setBadgeUpdateKey(prev => prev + 1);
+    }
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -166,7 +178,7 @@ export const BadgeConfiguration: React.FC<BadgeConfigurationProps> = ({
             {/* Badge non obtenu */}
             <div className="text-center space-y-2">
               <CertificationBadge
-                key={`not-obtained-${config.custom_badge_url || config.badge_icon}-${Date.now()}`}
+                key={`not-obtained-${badgeUpdateKey}`}
                 icon={config.badge_icon}
                 color={config.badge_color}
                 backgroundColor={config.badge_background_color}
@@ -181,7 +193,7 @@ export const BadgeConfiguration: React.FC<BadgeConfigurationProps> = ({
             {/* Badge obtenu */}
             <div className="text-center space-y-2">
               <CertificationBadge
-                key={`obtained-${config.custom_badge_url || config.badge_icon}-${Date.now()}`}
+                key={`obtained-${badgeUpdateKey}`}
                 icon={config.badge_icon}
                 color={config.badge_color}
                 backgroundColor={config.badge_background_color}

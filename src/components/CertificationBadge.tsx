@@ -87,7 +87,7 @@ export const CertificationBadge: React.FC<CertificationBadgeProps> = ({
           <img
             src={customUrl}
             alt="Badge personnalisé"
-            key={customUrl} // Force le re-render quand l'URL change
+            key={`badge-img-${customUrl}`} // Force le re-render quand l'URL change
             className={cn(
               "transition-all duration-300 object-contain rounded-full",
               sizeConfig.container,
