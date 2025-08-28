@@ -458,7 +458,7 @@ export const LevelsAndCertificatesManager = () => {
                     <div className="text-center">
                       <p className="text-sm font-medium mb-2">Aperçu du badge:</p>
                       <CertificationBadge
-                        key={`badge-preview-${level.level_id}-${level.custom_badge_url || level.badge_icon}-${Date.now()}`}
+                        key={`badge-preview-${level.level_id}-${level.custom_badge_url}-${level.badge_icon}-${level.badge_color}-${level.badge_background_color}-${level.badge_size}`}
                         icon={level.badge_icon}
                         color={level.badge_color}
                         backgroundColor={level.badge_background_color}
