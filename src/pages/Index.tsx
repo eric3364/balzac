@@ -219,7 +219,7 @@ const Index = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-8 lg:py-12 min-h-[80vh]">
+      <section className="relative overflow-hidden py-8 lg:py-12">
         {homepageAssets.bannerUrl && (
           <div className="absolute inset-0 z-0">
             <img 
