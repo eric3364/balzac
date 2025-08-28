@@ -1,0 +1,253 @@
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { Save, TestTube } from 'lucide-react';
+
+interface Level {
+  id: string;
+  level_number: number;
+  name: string;
+  description: string | null;
+  is_active: boolean;
+}
+
+interface TestLevelConfig {
+  level_id: string;
+  level_number: number;
+  level_name: string;
+  questions_percentage: number;
+  total_questions: number;
+  estimated_tests: number;
+}
+
+export const TestSettingsManager = () => {
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [levels, setLevels] = useState<Level[]>([]);
+  const [testConfigs, setTestConfigs] = useState<TestLevelConfig[]>([]);
+
+  const loadLevels = async () => {
+    try {
+      const { data: levelsData, error: levelsError } = await supabase
+        .from('difficulty_levels')
+        .select('id, level_number, name, description, is_active')
+        .eq('is_active', true)
+        .order('level_number', { ascending: true });
+
+      if (levelsError) throw levelsError;
+      setLevels(levelsData || []);
+
+      // Charger les questions pour chaque niveau
+      const { data: questionsData, error: questionsError } = await supabase
+        .from('questions')
+        .select('level');
+
+      if (questionsError) throw questionsError;
+
+      // Compter les questions par niveau
+      const questionCounts: Record<number, number> = {};
+      (questionsData || []).forEach((q: any) => {
+        const level = q.level || 1;
+        questionCounts[level] = (questionCounts[level] || 0) + 1;
+      });
+
+      // Charger la configuration existante
+      const configKeys = (levelsData || []).map(level => `test_questions_percentage_level_${level.level_number}`);
+      const { data: configData, error: configError } = await supabase
+        .from('site_configuration')
+        .select('config_key, config_value')
+        .in('config_key', configKeys);
+
+      if (configError) throw configError;
+
+      // Créer la configuration pour chaque niveau
+      const configs: TestLevelConfig[] = (levelsData || []).map(level => {
+        const configKey = `test_questions_percentage_level_${level.level_number}`;
+        const existingConfig = (configData || []).find(c => c.config_key === configKey);
+        const percentage = existingConfig ? Number(existingConfig.config_value) : 20;
+        const totalQuestions = questionCounts[level.level_number] || 0;
+        const questionsPerTest = Math.ceil((totalQuestions * percentage) / 100);
+        const estimatedTests = questionsPerTest > 0 ? Math.ceil(totalQuestions / questionsPerTest) : 0;
+
+        return {
+          level_id: level.id,
+          level_number: level.level_number,
+          level_name: level.name,
+          questions_percentage: percentage,
+          total_questions: totalQuestions,
+          estimated_tests: estimatedTests
+        };
+      });
+
+      setTestConfigs(configs);
+    } catch (error) {
+      console.error('Erreur lors du chargement des niveaux:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les niveaux.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updatePercentage = (levelNumber: number, percentage: number) => {
+    setTestConfigs(prev => prev.map(config => {
+      if (config.level_number === levelNumber) {
+        const questionsPerTest = Math.ceil((config.total_questions * percentage) / 100);
+        const estimatedTests = questionsPerTest > 0 ? Math.ceil(config.total_questions / questionsPerTest) : 0;
+        
+        return {
+          ...config,
+          questions_percentage: percentage,
+          estimated_tests: estimatedTests
+        };
+      }
+      return config;
+    }));
+  };
+
+  const saveConfiguration = async () => {
+    setSaving(true);
+    try {
+      const user = await supabase.auth.getUser();
+      const configEntries = testConfigs.map(config => ({
+        config_key: `test_questions_percentage_level_${config.level_number}`,
+        config_value: config.questions_percentage,
+        updated_by: user.data.user?.id || null
+      }));
+
+      const { error } = await supabase
+        .from('site_configuration')
+        .upsert(configEntries, {
+          onConflict: 'config_key'
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Configuration sauvegardée",
+        description: "Les paramètres des tests ont été mis à jour avec succès.",
+      });
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de sauvegarder la configuration.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  useEffect(() => {
+    loadLevels();
+  }, []);
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-6">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TestTube className="h-5 w-5" />
+            Paramètres des tests par niveau
+          </CardTitle>
+          <CardDescription>
+            Configurez le pourcentage de questions utilisées pour chaque test par niveau. 
+            Ce pourcentage détermine combien de questions seront sélectionnées de la base de données pour créer chaque test.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid gap-6">
+            {testConfigs.map((config) => (
+              <div key={config.level_id} className="p-4 border rounded-lg space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-medium">Niveau {config.level_number}: {config.level_name}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {config.total_questions} questions disponibles
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium">{config.estimated_tests} tests estimés</p>
+                    <p className="text-sm text-muted-foreground">
+                      {Math.ceil((config.total_questions * config.questions_percentage) / 100)} questions par test
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                  <div className="space-y-2">
+                    <Label htmlFor={`percentage-${config.level_number}`}>
+                      Pourcentage de questions par test (%)
+                    </Label>
+                    <Input
+                      id={`percentage-${config.level_number}`}
+                      type="number"
+                      min="1"
+                      max="100"
+                      value={config.questions_percentage}
+                      onChange={(e) => updatePercentage(config.level_number, Number(e.target.value))}
+                      className="w-full"
+                    />
+                  </div>
+                  
+                  <div className="text-sm text-muted-foreground">
+                    <p>• Questions par test: {Math.ceil((config.total_questions * config.questions_percentage) / 100)}</p>
+                    <p>• Nombre de tests possibles: {config.estimated_tests}</p>
+                    <p>• Total questions utilisées: {Math.min(config.total_questions, Math.ceil((config.total_questions * config.questions_percentage) / 100) * config.estimated_tests)}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex justify-end">
+            <Button onClick={saveConfiguration} disabled={saving}>
+              <Save className="h-4 w-4 mr-2" />
+              {saving ? 'Sauvegarde...' : 'Sauvegarder la configuration'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Comment ça fonctionne ?</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 text-sm">
+          <p>
+            <strong>Pourcentage de questions :</strong> Détermine combien de questions sont sélectionnées 
+            de la base de données pour créer chaque test. Par exemple, avec 100 questions et 20%, 
+            chaque test contiendra 20 questions.
+          </p>
+          <p>
+            <strong>Nombre de tests estimés :</strong> Indique combien de tests différents peuvent être 
+            générés avec ce pourcentage. Plus le pourcentage est élevé, moins il y aura de tests différents possibles.
+          </p>
+          <p>
+            <strong>Recommandation :</strong> Un pourcentage entre 15% et 25% offre un bon équilibre 
+            entre la diversité des tests et la couverture du contenu.
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};

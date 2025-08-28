@@ -24,6 +24,7 @@ import { FinanceManager } from '@/components/FinanceManager';
 import { FooterManager } from '@/components/FooterManager';
 import { LegalPageManager } from '@/components/LegalPageManager';
 import { LevelsAndCertificatesManager } from '@/components/LevelsAndCertificatesManager';
+import { TestSettingsManager } from '@/components/TestSettingsManager';
 
 interface AdminUser {
   id: number;
@@ -460,13 +461,14 @@ const Admin = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-8">
+          <TabsList className="grid w-full grid-cols-9">
             <TabsTrigger value="stats">Statistiques</TabsTrigger>
             <TabsTrigger value="students">Apprenants</TabsTrigger>
             <TabsTrigger value="homepage">Page d'accueil</TabsTrigger>
             <TabsTrigger value="footer">Footer & Légal</TabsTrigger>
             <TabsTrigger value="levels">Niveaux & Certifications</TabsTrigger>
             <TabsTrigger value="questions">Questions</TabsTrigger>
+            <TabsTrigger value="test-settings">Paramètres des tests</TabsTrigger>
             <TabsTrigger value="finance">Finance</TabsTrigger>
             <TabsTrigger value="settings">Paramètres</TabsTrigger>
           </TabsList>
@@ -731,6 +733,11 @@ const Admin = () => {
             </Card>
 
             <QuestionsManager />
+          </TabsContent>
+
+          {/* Paramètres des tests */}
+          <TabsContent value="test-settings" className="space-y-6">
+            <TestSettingsManager />
           </TabsContent>
 
           {/* Finance */}
