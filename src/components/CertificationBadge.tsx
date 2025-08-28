@@ -11,6 +11,7 @@ interface CertificationBadgeProps {
   level?: number;
   className?: string;
   animated?: boolean;
+  customUrl?: string;
 }
 
 // Mapping des icônes disponibles
@@ -52,7 +53,8 @@ export const CertificationBadge: React.FC<CertificationBadgeProps> = ({
   isObtained = false,
   level,
   className,
-  animated = false
+  animated = false,
+  customUrl
 }) => {
   const IconComponent = iconMap[icon] || Star;
   const sizeConfig = sizeMap[size];
@@ -80,19 +82,37 @@ export const CertificationBadge: React.FC<CertificationBadgeProps> = ({
           boxShadow: isObtained ? `0 4px 20px ${color}33` : undefined
         }}
       >
-        {/* Icône principale */}
-        <IconComponent
-          size={sizeConfig.icon}
-          style={{
-            color: isObtained ? color : '#9ca3af',
-          }}
-          className={cn(
-            "transition-all duration-300",
-            {
-              "drop-shadow-sm": isObtained
-            }
-          )}
-        />
+        {/* Image personnalisée ou icône */}
+        {customUrl ? (
+          <img
+            src={customUrl}
+            alt="Badge personnalisé"
+            className={cn(
+              "transition-all duration-300 object-contain rounded-full",
+              sizeConfig.container,
+              {
+                "grayscale opacity-50": !isObtained,
+                "drop-shadow-sm": isObtained
+              }
+            )}
+            style={{
+              filter: isObtained ? 'none' : 'grayscale(100%) opacity(0.5)'
+            }}
+          />
+        ) : (
+          <IconComponent
+            size={sizeConfig.icon}
+            style={{
+              color: isObtained ? color : '#9ca3af',
+            }}
+            className={cn(
+              "transition-all duration-300",
+              {
+                "drop-shadow-sm": isObtained
+              }
+            )}
+          />
+        )}
 
         {/* Effet de brillance pour les badges obtenus */}
         {isObtained && (

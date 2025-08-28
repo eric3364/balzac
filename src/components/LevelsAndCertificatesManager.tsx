@@ -13,6 +13,7 @@ import { Plus, Edit2, Trash2, Settings, Award, Save, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { CertificationBadge } from '@/components/CertificationBadge';
+import { CustomBadgeUploader } from '@/components/CustomBadgeUploader';
 
 interface LevelWithCertificate {
   // Niveau de difficulté
@@ -417,6 +418,7 @@ export const LevelsAndCertificatesManager = () => {
                         color={level.badge_color}
                         backgroundColor={level.badge_background_color}
                         size={level.badge_size as 'small' | 'medium' | 'large'}
+                        customUrl={level.custom_badge_url || undefined}
                       />
                     </div>
                   </div>
@@ -603,6 +605,21 @@ export const LevelsAndCertificatesManager = () => {
                         </SelectContent>
                       </Select>
                     </div>
+                  </div>
+
+                  {/* Section Badge personnalisé */}
+                  <Separator />
+                  <div className="space-y-4">
+                    <h4 className="text-md font-semibold">Badge personnalisé</h4>
+                    <CustomBadgeUploader
+                      currentBadgeUrl={editingLevel.custom_badge_url}
+                      onBadgeChange={(url) => setEditingLevel(prev => prev ? {
+                        ...prev,
+                        custom_badge_url: url || ''
+                      } : null)}
+                      levelNumber={editingLevel.level_number}
+                      disabled={saving}
+                    />
                   </div>
                 </div>
               </div>
