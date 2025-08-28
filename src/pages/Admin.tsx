@@ -23,6 +23,7 @@ import { FooterManager } from '@/components/FooterManager';
 import { LegalPageManager } from '@/components/LegalPageManager';
 import { LevelsAndCertificatesManager } from '@/components/LevelsAndCertificatesManager';
 import { TestSettingsManager } from '@/components/TestSettingsManager';
+import { HomepageManager } from '@/components/HomepageManager';
 
 interface AdminUser {
   id: number;
@@ -356,19 +357,7 @@ const Admin = () => {
           </TabsContent>
 
           <TabsContent value="homepage" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Gestion de la page d'accueil</CardTitle>
-                <CardDescription>
-                  Configuration de la page d'accueil
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Configuration de la page d'accueil disponible via d'autres outils.
-                </p>
-              </CardContent>
-            </Card>
+            <HomepageManager />
           </TabsContent>
 
           <TabsContent value="footer" className="space-y-6">
