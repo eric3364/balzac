@@ -166,6 +166,7 @@ export const BadgeConfiguration: React.FC<BadgeConfigurationProps> = ({
             {/* Badge non obtenu */}
             <div className="text-center space-y-2">
               <CertificationBadge
+                key={`not-obtained-${config.custom_badge_url || config.badge_icon}-${Date.now()}`}
                 icon={config.badge_icon}
                 color={config.badge_color}
                 backgroundColor={config.badge_background_color}
@@ -180,6 +181,7 @@ export const BadgeConfiguration: React.FC<BadgeConfigurationProps> = ({
             {/* Badge obtenu */}
             <div className="text-center space-y-2">
               <CertificationBadge
+                key={`obtained-${config.custom_badge_url || config.badge_icon}-${Date.now()}`}
                 icon={config.badge_icon}
                 color={config.badge_color}
                 backgroundColor={config.badge_background_color}
