@@ -127,11 +127,13 @@ export const useSessionProgress = (level: number) => {
         for (let i = 1; i <= totalSessions; i++) {
           const sessionNumber = i;
           const isFirstSession = i === 1;
+          const completedSessions = progressData.completed_sessions || 0;
           
           // Une session est disponible si :
           // - C'est la première session du niveau OU
-          // - La session précédente a été complétée avec succès
-          const isAvailable = isFirstSession || i <= currentSession;
+          // - Elle fait partie des sessions complétées OU
+          // - C'est la session suivante après les sessions complétées
+          const isAvailable = isFirstSession || i <= completedSessions + 1;
           
           sessions.push({
             sessionNumber,
