@@ -702,7 +702,53 @@ const Admin = () => {
                   </div>
                 </div>
 
-                {/* … toutes les autres sections UI inchangées … */}
+                {/* Section Couleurs des titres de section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Couleurs des titres de section</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="features-title-color">Couleur du titre "Fonctionnalités"</Label>
+                      <Input
+                        id="features-title-color"
+                        type="color"
+                        value={homepageAssets.featuresTitleColor || '#6366f1'}
+                        onChange={(e) => updateHomepageAssets({ featuresTitleColor: e.target.value })}
+                        className="h-10 w-full"
+                      />
+                      <p className="text-sm text-muted-foreground">
+                        Couleur du titre de la section fonctionnalités
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="stats-title-color">Couleur du titre "Statistiques"</Label>
+                      <Input
+                        id="stats-title-color"
+                        type="color"
+                        value={homepageAssets.statsTitleColor || '#6366f1'}
+                        onChange={(e) => updateHomepageAssets({ statsTitleColor: e.target.value })}
+                        className="h-10 w-full"
+                      />
+                      <p className="text-sm text-muted-foreground">
+                        Couleur du titre de la section statistiques
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="cta-title-color">Couleur du titre "Call-to-Action"</Label>
+                      <Input
+                        id="cta-title-color"
+                        type="color"
+                        value={homepageAssets.ctaTitleColor || '#6366f1'}
+                        onChange={(e) => updateHomepageAssets({ ctaTitleColor: e.target.value })}
+                        className="h-10 w-full"
+                      />
+                      <p className="text-sm text-muted-foreground">
+                        Couleur du titre de la section appel à l'action
+                      </p>
+                    </div>
+                  </div>
+                </div>
 
                 <div className="pt-6 border-t">
                   <Button 

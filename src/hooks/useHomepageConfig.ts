@@ -35,6 +35,7 @@ interface HomepageConfig {
   heroCta_primary: string;
   heroCta_secondary: string;
   featuresTitle: string;
+  featuresTitleColor: string;
   featuresDescription: string;
   // Features content
   feature1Title: string;
@@ -51,6 +52,7 @@ interface HomepageConfig {
   feature6Description: string;
   // Stats section
   statsTitle: string;
+  statsTitleColor: string;
   statsDescription: string;
   stat1Number: string;
   stat1Label: string;
@@ -59,6 +61,7 @@ interface HomepageConfig {
   stat3Number: string;
   stat3Label: string;
   ctaTitle: string;
+  ctaTitleColor: string;
   ctaDescription: string;
   ctaButton: string;
   ctaBadge: string;
@@ -82,6 +85,7 @@ export const useHomepageConfig = () => {
     heroCta_primary: 'Commencer gratuitement',
     heroCta_secondary: 'Découvrir nos programmes',
     featuresTitle: 'Pourquoi choisir Balzac Certification ?',
+    featuresTitleColor: '#6366f1',
     featuresDescription: 'Une approche moderne et rigoureuse pour certifier vos compétences linguistiques',
     // Features content
     feature1Title: 'Tests adaptatifs intelligents',
@@ -98,6 +102,7 @@ export const useHomepageConfig = () => {
     feature6Description: 'Méthodes pédagogiques éprouvées basées sur les dernières recherches en sciences cognitives',
     // Stats section
     statsTitle: 'Nos résultats parlent d\'eux-mêmes',
+    statsTitleColor: '#6366f1',
     statsDescription: 'Des chiffres qui témoignent de notre excellence',
     stat1Number: '10K+',
     stat1Label: 'Apprenants certifiés',
@@ -106,6 +111,7 @@ export const useHomepageConfig = () => {
     stat3Number: '15+',
     stat3Label: 'Niveaux disponibles',
     ctaTitle: 'Travaillez votre employabilité',
+    ctaTitleColor: '#6366f1',
     ctaDescription: 'Rejoignez des milliers d\'apprenants qui ont déjà validé leur maîtrise du français',
     ctaButton: 'Commencer maintenant',
     ctaBadge: 'Commencez dès maintenant',
@@ -120,13 +126,13 @@ export const useHomepageConfig = () => {
           'homepage_logo_url', 'homepage_banner_url', 'homepage_banner_alt', 'homepage_banner_opacity',
           'site_title', 'site_subtitle', 'hero_title', 'hero_description',
           'hero_badge_color', 'hero_title_color', 'hero_description_color',
-          'hero_cta_primary', 'hero_cta_secondary', 'features_title', 'features_description',
+          'hero_cta_primary', 'hero_cta_secondary', 'features_title', 'features_title_color', 'features_description',
           'feature1_title', 'feature1_description', 'feature2_title', 'feature2_description',
           'feature3_title', 'feature3_description', 'feature4_title', 'feature4_description',
           'feature5_title', 'feature5_description', 'feature6_title', 'feature6_description',
-          'stats_title', 'stats_description',
+          'stats_title', 'stats_title_color', 'stats_description',
           'stat1_number', 'stat1_label', 'stat2_number', 'stat2_label', 'stat3_number', 'stat3_label',
-          'cta_title', 'cta_description', 'cta_button', 'cta_badge', 'cta_sub_description'
+          'cta_title', 'cta_title_color', 'cta_description', 'cta_button', 'cta_badge', 'cta_sub_description'
         ];
         
         const { data } = await supabase
@@ -196,6 +202,9 @@ export const useHomepageConfig = () => {
             case 'features_title':
               configMap.featuresTitle = value;
               break;
+            case 'features_title_color':
+              configMap.featuresTitleColor = value || '#6366f1';
+              break;
             case 'features_description':
               configMap.featuresDescription = value;
               break;
@@ -238,6 +247,9 @@ export const useHomepageConfig = () => {
             case 'stats_title':
               configMap.statsTitle = value;
               break;
+            case 'stats_title_color':
+              configMap.statsTitleColor = value || '#6366f1';
+              break;
             case 'stats_description':
               configMap.statsDescription = value;
               break;
@@ -261,6 +273,9 @@ export const useHomepageConfig = () => {
               break;
             case 'cta_title':
               configMap.ctaTitle = value;
+              break;
+            case 'cta_title_color':
+              configMap.ctaTitleColor = value || '#6366f1';
               break;
             case 'cta_description':
               configMap.ctaDescription = value;
@@ -340,6 +355,9 @@ export const useHomepageConfig = () => {
           case 'featuresTitle':
             configKey = 'features_title';
             break;
+          case 'featuresTitleColor':
+            configKey = 'features_title_color';
+            break;
           case 'featuresDescription':
             configKey = 'features_description';
             break;
@@ -382,6 +400,9 @@ export const useHomepageConfig = () => {
           case 'statsTitle':
             configKey = 'stats_title';
             break;
+          case 'statsTitleColor':
+            configKey = 'stats_title_color';
+            break;
           case 'statsDescription':
             configKey = 'stats_description';
             break;
@@ -405,6 +426,9 @@ export const useHomepageConfig = () => {
             break;
           case 'ctaTitle':
             configKey = 'cta_title';
+            break;
+          case 'ctaTitleColor':
+            configKey = 'cta_title_color';
             break;
           case 'ctaDescription':
             configKey = 'cta_description';

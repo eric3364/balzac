@@ -306,7 +306,8 @@ const Index = () => {
         
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-8">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6"
+                style={{ color: homepageAssets.featuresTitleColor }}>
               {homepageAssets.featuresTitle}
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
@@ -395,7 +396,10 @@ const Index = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-purple-500/5 to-blue-500/5"></div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">{homepageAssets.statsTitle}</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4"
+                style={{ color: homepageAssets.statsTitleColor }}>
+              {homepageAssets.statsTitle}
+            </h2>
             <p className="text-xl text-muted-foreground">{homepageAssets.statsDescription}</p>
           </div>
           <div className="grid md:grid-cols-3 gap-12 text-center">
@@ -571,7 +575,8 @@ const Index = () => {
               {homepageAssets.ctaBadge}
             </div>
             
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6"
+                style={{ color: homepageAssets.ctaTitleColor }}>
               {homepageAssets.ctaTitle}
             </h2>
             <p className="text-xl text-white/90 mb-10 max-w-3xl mx-auto leading-relaxed">
