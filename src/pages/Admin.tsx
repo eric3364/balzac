@@ -19,8 +19,6 @@ import { useToast } from '@/hooks/use-toast';
 import { UserManagement } from '@/components/UserManagement';
 import { QuestionsManager } from '@/components/QuestionsManager';
 import { FinanceManager } from '@/components/FinanceManager';
-import { FooterManager } from '@/components/FooterManager';
-import { LegalPageManager } from '@/components/LegalPageManager';
 import { LevelsAndCertificatesManager } from '@/components/LevelsAndCertificatesManager';
 import { TestSettingsManager } from '@/components/TestSettingsManager';
 import { HomepageManager } from '@/components/HomepageManager';
@@ -265,11 +263,10 @@ const Admin = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-8">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="stats">Statistiques</TabsTrigger>
             <TabsTrigger value="students">Apprenants</TabsTrigger>
             <TabsTrigger value="homepage">Page d'accueil</TabsTrigger>
-            <TabsTrigger value="footer">Footer & Légal</TabsTrigger>
             <TabsTrigger value="levels">Niveaux & Certifications</TabsTrigger>
             <TabsTrigger value="questions">Questions</TabsTrigger>
             <TabsTrigger value="test-settings">Paramètres des tests</TabsTrigger>
@@ -358,11 +355,6 @@ const Admin = () => {
 
           <TabsContent value="homepage" className="space-y-6">
             <HomepageManager />
-          </TabsContent>
-
-          <TabsContent value="footer" className="space-y-6">
-            <FooterManager />
-            <LegalPageManager />
           </TabsContent>
 
           <TabsContent value="levels" className="space-y-6">

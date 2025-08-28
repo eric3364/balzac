@@ -4,8 +4,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useHomepageConfig } from '@/hooks/useHomepageConfig';
 import { HomepageAssetUploader } from './HomepageAssetUploader';
+import { FooterManager } from './FooterManager';
+import { LegalPageManager } from './LegalPageManager';
 import { Separator } from '@/components/ui/separator';
-import { Home, Type, Image, BarChart, MessageCircle } from 'lucide-react';
+import { Home, Type, Image, BarChart, MessageCircle, Settings, FileText } from 'lucide-react';
 
 export const HomepageManager = () => {
   const { config, updateConfig } = useHomepageConfig();
@@ -291,6 +293,21 @@ export const HomepageManager = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Séparateur pour les paramètres du footer */}
+      <div className="pt-8">
+        <Separator className="mb-6" />
+        <div className="flex items-center gap-2 mb-6">
+          <Settings className="h-5 w-5 text-primary" />
+          <h2 className="text-2xl font-bold">Paramètres du footer et pages légales</h2>
+        </div>
+      </div>
+
+      {/* Footer Manager */}
+      <FooterManager />
+
+      {/* Legal Page Manager */}
+      <LegalPageManager />
     </div>
   );
 };
