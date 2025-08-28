@@ -375,23 +375,32 @@ export const UserManagement = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from('users')
-        .insert(usersToImport.map(user => ({
-          email: user.email,
-          first_name: user.first_name || null,
-          last_name: user.last_name || null,
-          school: user.school || null,
-          class_name: user.class_name || null,
-          is_active: true
-        })));
+      // Utiliser la fonction edge pour inviter les utilisateurs
+      const { data, error } = await supabase.functions.invoke('invite-users', {
+        body: { users: usersToImport }
+      });
 
       if (error) throw error;
 
-      toast({
-        title: "Import réussi",
-        description: `${usersToImport.length} utilisateur(s) importé(s) avec succès`
-      });
+      const { summary, results } = data;
+      
+      if (summary.errors > 0) {
+        const errorEmails = results
+          .filter((r: any) => !r.success)
+          .map((r: any) => `${r.email}: ${r.error}`)
+          .join('\n');
+        
+        toast({
+          title: `Import partiel (${summary.success}/${summary.total})`,
+          description: `Erreurs:\n${errorEmails}`,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Import réussi",
+          description: `${summary.success} invitation(s) envoyée(s). Les utilisateurs recevront un email pour créer leur mot de passe.`
+        });
+      }
 
       refetch();
       // Reset file input
@@ -400,7 +409,7 @@ export const UserManagement = () => {
       console.error('Erreur lors de l\'import:', error);
       toast({
         title: "Erreur d'import",
-        description: "Certains utilisateurs n'ont pas pu être importés",
+        description: "Erreur lors de l'envoi des invitations",
         variant: "destructive"
       });
     }
