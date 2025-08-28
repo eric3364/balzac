@@ -13,6 +13,7 @@ import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { BadgeConfiguration } from '@/components/BadgeConfiguration';
+import { CertificationBadge } from '@/components/CertificationBadge';
 import { Users, Settings, BarChart3, Shield, ArrowLeft, Save, Plus, Edit2, Trash2, Award, FileText, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { HomepageAssetUploader } from '@/components/HomepageAssetUploader';
@@ -789,7 +790,101 @@ const Admin = () => {
 
           {/* Niveaux & Certifications */}
           <TabsContent value="levels" className="space-y-6">
-            {/* … UI de gestion des niveaux/certifs inchangée … */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              {/* Gestion des niveaux de difficulté */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Settings className="h-5 w-5" />
+                    Niveaux de difficulté
+                  </CardTitle>
+                  <CardDescription>
+                    Configuration des niveaux disponibles pour les tests
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {difficultyLevels.length > 0 ? (
+                    <div className="space-y-3">
+                      {difficultyLevels.map((level) => (
+                        <div key={level.id} className="flex items-center justify-between p-3 border rounded-lg">
+                           <div className="flex items-center gap-3">
+                             <div 
+                               className="w-4 h-4 rounded-full" 
+                               style={{ backgroundColor: level.color || '#6366f1' }}
+                             />
+                             <div>
+                              <p className="font-medium">Niveau {level.level_number}: {level.name}</p>
+                              <p className="text-sm text-muted-foreground">{level.description}</p>
+                            </div>
+                          </div>
+                          <Badge variant={level.is_active ? "default" : "secondary"}>
+                            {level.is_active ? "Actif" : "Inactif"}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground">Aucun niveau de difficulté configuré</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Gestion des certificats */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Award className="h-5 w-5" />
+                    Modèles de certificats
+                  </CardTitle>
+                  <CardDescription>
+                    Configuration des certificats délivrés après validation
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {certificates.length > 0 ? (
+                    <div className="space-y-3">
+                      {certificates.map((cert) => (
+                        <div key={cert.id} className="p-3 border rounded-lg">
+                          <div className="flex items-start justify-between">
+                            <div className="space-y-1">
+                              <p className="font-medium">{cert.name}</p>
+                              <p className="text-sm text-muted-foreground">{cert.description}</p>
+                              <div className="flex items-center gap-4 text-sm">
+                                <span>Score requis: {cert.min_score_required}%</span>
+                                <span>Prix: {cert.price_euros}€</span>
+                                <span>Sessions gratuites: {cert.free_sessions}</span>
+                              </div>
+                            </div>
+                            <Badge variant={cert.is_active ? "default" : "secondary"}>
+                              {cert.is_active ? "Actif" : "Inactif"}
+                            </Badge>
+                          </div>
+                          
+                          {/* Aperçu du badge */}
+                          <div className="mt-3 pt-3 border-t">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium">Aperçu du badge:</span>
+                              <CertificationBadge
+                                icon={cert.badge_icon || 'award'}
+                                color={cert.badge_color || '#6366f1'}
+                                backgroundColor={cert.badge_background_color || '#ffffff'}
+                                size={(cert.badge_size as 'small' | 'medium' | 'large') || 'medium'}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground">Aucun modèle de certificat configuré</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           {/* Questions */}
