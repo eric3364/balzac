@@ -654,6 +654,54 @@ const Admin = () => {
                   </div>
                 </div>
 
+                {/* Section Couleurs du texte */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Couleurs du texte du bandeau</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="badge-color">Couleur du badge</Label>
+                      <Input
+                        id="badge-color"
+                        type="color"
+                        value={homepageAssets.heroBadgeColor || '#6366f1'}
+                        onChange={(e) => updateHomepageAssets({ heroBadgeColor: e.target.value })}
+                        className="h-10 w-full"
+                      />
+                      <p className="text-sm text-muted-foreground">
+                        Couleur du badge "Plateforme de certification nouvelle génération"
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="title-color">Couleur du titre principal</Label>
+                      <Input
+                        id="title-color"
+                        type="color"
+                        value={homepageAssets.heroTitleColor || '#000000'}
+                        onChange={(e) => updateHomepageAssets({ heroTitleColor: e.target.value })}
+                        className="h-10 w-full"
+                      />
+                      <p className="text-sm text-muted-foreground">
+                        Couleur du titre principal du bandeau
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="description-color">Couleur de la description</Label>
+                      <Input
+                        id="description-color"
+                        type="color"
+                        value={homepageAssets.heroDescriptionColor || '#6b7280'}
+                        onChange={(e) => updateHomepageAssets({ heroDescriptionColor: e.target.value })}
+                        className="h-10 w-full"
+                      />
+                      <p className="text-sm text-muted-foreground">
+                        Couleur du texte de description
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 {/* … toutes les autres sections UI inchangées … */}
 
                 <div className="pt-6 border-t">

@@ -253,17 +253,23 @@ const Index = () => {
         <div className="relative z-10 container mx-auto px-4 text-center">
           <div className="max-w-6xl mx-auto">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full mb-4 animate-fade-in">
-              <Sparkles className="h-5 w-5 text-primary" />
-              <span className="text-sm font-semibold text-primary">Plateforme de certification nouvelle génération</span>
+              <Sparkles className="h-5 w-5" style={{ color: homepageAssets.heroBadgeColor }} />
+              <span className="text-sm font-semibold" style={{ color: homepageAssets.heroBadgeColor }}>Plateforme de certification nouvelle génération</span>
             </div>
             
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 leading-none animate-fade-in"
-                style={{ animationDelay: '0.2s' }}>
-              <span className="gradient-text">{homepageAssets.heroTitle}</span>
+                style={{ 
+                  animationDelay: '0.2s',
+                  color: homepageAssets.heroTitleColor 
+                }}>
+              <span>{homepageAssets.heroTitle}</span>
             </h1>
             
-            <p className="text-lg md:text-xl lg:text-2xl text-muted-foreground mb-6 leading-relaxed font-medium max-w-4xl mx-auto animate-fade-in"
-               style={{ animationDelay: '0.4s' }}>
+            <p className="text-lg md:text-xl lg:text-2xl mb-6 leading-relaxed font-medium max-w-4xl mx-auto animate-fade-in"
+               style={{ 
+                 animationDelay: '0.4s',
+                 color: homepageAssets.heroDescriptionColor 
+               }}>
               {homepageAssets.heroDescription}
             </p>
             

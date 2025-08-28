@@ -29,6 +29,9 @@ interface HomepageConfig {
   siteSubtitle: string;
   heroTitle: string;
   heroDescription: string;
+  heroBadgeColor: string;
+  heroTitleColor: string;
+  heroDescriptionColor: string;
   heroCta_primary: string;
   heroCta_secondary: string;
   featuresTitle: string;
@@ -73,6 +76,9 @@ export const useHomepageConfig = () => {
     siteSubtitle: 'Excellence en français',
     heroTitle: 'Maîtrisez le français avec excellence',
     heroDescription: 'Une plateforme de certification complète pour valider et perfectionner vos compétences en langue française',
+    heroBadgeColor: '#6366f1',
+    heroTitleColor: '#000000',
+    heroDescriptionColor: '#6b7280',
     heroCta_primary: 'Commencer gratuitement',
     heroCta_secondary: 'Découvrir nos programmes',
     featuresTitle: 'Pourquoi choisir Balzac Certification ?',
@@ -113,6 +119,7 @@ export const useHomepageConfig = () => {
         const configKeys = [
           'homepage_logo_url', 'homepage_banner_url', 'homepage_banner_alt', 'homepage_banner_opacity',
           'site_title', 'site_subtitle', 'hero_title', 'hero_description',
+          'hero_badge_color', 'hero_title_color', 'hero_description_color',
           'hero_cta_primary', 'hero_cta_secondary', 'features_title', 'features_description',
           'feature1_title', 'feature1_description', 'feature2_title', 'feature2_description',
           'feature3_title', 'feature3_description', 'feature4_title', 'feature4_description',
@@ -170,6 +177,15 @@ export const useHomepageConfig = () => {
               break;
             case 'hero_description':
               configMap.heroDescription = value;
+              break;
+            case 'hero_badge_color':
+              configMap.heroBadgeColor = value || '#6366f1';
+              break;
+            case 'hero_title_color':
+              configMap.heroTitleColor = value || '#000000';
+              break;
+            case 'hero_description_color':
+              configMap.heroDescriptionColor = value || '#6b7280';
               break;
             case 'hero_cta_primary':
               configMap.heroCta_primary = value;
@@ -305,6 +321,15 @@ export const useHomepageConfig = () => {
             break;
           case 'heroDescription':
             configKey = 'hero_description';
+            break;
+          case 'heroBadgeColor':
+            configKey = 'hero_badge_color';
+            break;
+          case 'heroTitleColor':
+            configKey = 'hero_title_color';
+            break;
+          case 'heroDescriptionColor':
+            configKey = 'hero_description_color';
             break;
           case 'heroCta_primary':
             configKey = 'hero_cta_primary';
