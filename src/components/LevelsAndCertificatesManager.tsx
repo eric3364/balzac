@@ -263,7 +263,7 @@ export const LevelsAndCertificatesManager = () => {
       };
 
       if (editingLevel.cert_id) {
-        // Mise à jour du certificat
+        // Mise à jour du certificat existant
         const { error: certError } = await supabase
           .from('certificate_templates')
           .update(certData)
@@ -271,12 +271,29 @@ export const LevelsAndCertificatesManager = () => {
         
         if (certError) throw certError;
       } else {
-        // Création du certificat
-        const { error: certError } = await supabase
+        // Vérifier s'il existe déjà un certificat pour ce niveau
+        const { data: existingCert } = await supabase
           .from('certificate_templates')
-          .insert(certData);
-        
-        if (certError) throw certError;
+          .select('id')
+          .eq('difficulty_level_id', levelId)
+          .single();
+
+        if (existingCert) {
+          // Mettre à jour le certificat existant
+          const { error: certError } = await supabase
+            .from('certificate_templates')
+            .update(certData)
+            .eq('id', existingCert.id);
+          
+          if (certError) throw certError;
+        } else {
+          // Créer un nouveau certificat
+          const { error: certError } = await supabase
+            .from('certificate_templates')
+            .insert(certData);
+          
+          if (certError) throw certError;
+        }
       }
 
       toast({
