@@ -24,6 +24,7 @@ interface CertificateTemplate {
   badge_color: string | null;
   badge_background_color: string | null;
   badge_size?: string | null;
+  custom_badge_url?: string | null;
   difficulty_level_id: string;
   difficulty_levels: {
     level_number: number;
@@ -234,6 +235,7 @@ const CertificationBadges = () => {
                     isObtained={isObtained}
                     level={level}
                     animated={true}
+                    customUrl={template?.custom_badge_url || undefined}
                   />
                 </div>
 

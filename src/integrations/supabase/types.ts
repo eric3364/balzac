@@ -624,6 +624,24 @@ export type Database = {
         }
         Relationships: []
       }
+      super_admins: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       test_answers: {
         Row: {
           answered_at: string | null
@@ -924,8 +942,12 @@ export type Database = {
         Args: { user_uuid?: string }
         Returns: number
       }
-      is_super_admin: {
+      get_users_count: {
         Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      is_super_admin: {
+        Args: Record<PropertyKey, never> | { uid: string }
         Returns: boolean
       }
       user_has_purchased_level: {

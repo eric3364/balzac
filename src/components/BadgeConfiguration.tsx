@@ -157,6 +157,7 @@ export const BadgeConfiguration: React.FC<BadgeConfigurationProps> = ({
                 size={config.badge_size as 'small' | 'medium' | 'large'}
                 isObtained={false}
                 level={levelNumber}
+                customUrl={config.custom_badge_url || undefined}
               />
               <p className="text-xs text-muted-foreground">Non obtenu</p>
             </div>
@@ -171,6 +172,7 @@ export const BadgeConfiguration: React.FC<BadgeConfigurationProps> = ({
                 isObtained={true}
                 level={levelNumber}
                 animated={true}
+                customUrl={config.custom_badge_url || undefined}
               />
               <p className="text-xs text-muted-foreground">Obtenu</p>
             </div>
