@@ -99,6 +99,14 @@ export const CertificationBadge: React.FC<CertificationBadgeProps> = ({
             style={{
               filter: isObtained ? 'none' : 'grayscale(100%) opacity(0.5)'
             }}
+            onError={(e) => {
+              console.log('Erreur de chargement du badge:', customUrl);
+              // Optionnel: remplacer par l'icône par défaut en cas d'erreur
+              e.currentTarget.style.display = 'none';
+            }}
+            onLoad={() => {
+              console.log('Badge chargé avec succès:', customUrl);
+            }}
           />
         ) : (
           <IconComponent
