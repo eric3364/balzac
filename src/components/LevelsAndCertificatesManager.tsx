@@ -302,7 +302,10 @@ export const LevelsAndCertificatesManager = () => {
       });
 
       closeDialog();
-      loadLevelsAndCertificates();
+      // Attendre un peu avant de recharger pour s'assurer que les données sont bien écrites
+      setTimeout(() => {
+        loadLevelsAndCertificates();
+      }, 100);
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
       toast({
