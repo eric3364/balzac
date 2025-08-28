@@ -132,6 +132,9 @@ export const LevelsAndCertificatesManager = () => {
       const transformedLevels: LevelWithCertificate[] = (data || []).map(level => {
         const certTemplates = Array.isArray(level.certificate_templates) ? level.certificate_templates : [];
         const cert = certTemplates.length > 0 ? certTemplates[0] : null;
+        
+        console.log('Processing level:', level.level_number, 'cert data:', cert);
+        
         return {
           level_id: level.id,
           level_number: level.level_number,
@@ -192,6 +195,12 @@ export const LevelsAndCertificatesManager = () => {
   };
 
   const openEditDialog = (level: LevelWithCertificate) => {
+    console.log('Opening edit dialog with level:', level);
+    console.log('Feature texts:', {
+      feature_1_text: level.feature_1_text,
+      feature_2_text: level.feature_2_text,
+      feature_3_text: level.feature_3_text
+    });
     setEditingLevel({ ...level });
     setIsDialogOpen(true);
   };
