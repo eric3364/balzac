@@ -24,6 +24,7 @@ interface HomepageConfig {
   logoUrl: string;
   bannerUrl: string;
   bannerAlt: string;
+  bannerOpacity: number;
   siteTitle: string;
   siteSubtitle: string;
   heroTitle: string;
@@ -67,6 +68,7 @@ export const useHomepageConfig = () => {
     logoUrl: '',
     bannerUrl: '',
     bannerAlt: 'Bandeau visuel',
+    bannerOpacity: 100,
     siteTitle: 'Balzac Certification',
     siteSubtitle: 'Excellence en français',
     heroTitle: 'Maîtrisez le français avec excellence',
@@ -109,7 +111,7 @@ export const useHomepageConfig = () => {
     const fetchConfig = async () => {
       try {
         const configKeys = [
-          'homepage_logo_url', 'homepage_banner_url', 'homepage_banner_alt',
+          'homepage_logo_url', 'homepage_banner_url', 'homepage_banner_alt', 'homepage_banner_opacity',
           'site_title', 'site_subtitle', 'hero_title', 'hero_description',
           'hero_cta_primary', 'hero_cta_secondary', 'features_title', 'features_description',
           'feature1_title', 'feature1_description', 'feature2_title', 'feature2_description',
@@ -153,6 +155,9 @@ export const useHomepageConfig = () => {
               break;
             case 'homepage_banner_alt':
               configMap.bannerAlt = value;
+              break;
+            case 'homepage_banner_opacity':
+              configMap.bannerOpacity = value ? Number(value) : 100;
               break;
             case 'site_title':
               configMap.siteTitle = value;
@@ -285,6 +290,9 @@ export const useHomepageConfig = () => {
             break;
           case 'bannerAlt':
             configKey = 'homepage_banner_alt';
+            break;
+          case 'bannerOpacity':
+            configKey = 'homepage_banner_opacity';
             break;
           case 'siteTitle':
             configKey = 'site_title';

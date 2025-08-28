@@ -628,12 +628,29 @@ const Admin = () => {
                       onUrlChange={(url) => updateHomepageAssets({ logoUrl: url })}
                       bucketPath="logo"
                     />
-                    <HomepageAssetUploader
-                      label="Image bannière"
-                      currentUrl={homepageAssets.bannerUrl || ''}
-                      onUrlChange={(url) => updateHomepageAssets({ bannerUrl: url })}
-                      bucketPath="banner"
-                    />
+                    <div className="space-y-3">
+                      <HomepageAssetUploader
+                        label="Image bannière"
+                        currentUrl={homepageAssets.bannerUrl || ''}
+                        onUrlChange={(url) => updateHomepageAssets({ bannerUrl: url })}
+                        bucketPath="banner"
+                      />
+                      <div className="space-y-2">
+                        <Label htmlFor="banner-opacity">Opacité de l'image (%)</Label>
+                        <Input
+                          id="banner-opacity"
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={homepageAssets.bannerOpacity || 100}
+                          onChange={(e) => updateHomepageAssets({ bannerOpacity: Number(e.target.value) })}
+                          className="w-24"
+                        />
+                        <p className="text-sm text-muted-foreground">
+                          Contrôle la transparence de l'image de fond (0 = transparent, 100 = opaque)
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
 

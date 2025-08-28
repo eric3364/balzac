@@ -226,6 +226,7 @@ const Index = () => {
               src={homepageAssets.bannerUrl} 
               alt={homepageAssets.bannerAlt}
               className="w-full h-full object-cover"
+              style={{ opacity: (homepageAssets.bannerOpacity || 100) / 100 }}
             />
             <div className="absolute inset-0 bg-gradient-to-br from-background/20 via-background/40 to-background/60"></div>
           </div>
