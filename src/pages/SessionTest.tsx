@@ -211,7 +211,7 @@ const SessionTest = () => {
         answer: q.answer || '',
         explanation: q.explanation || '',
         created_at: q.created_at || '',
-        choices: q.answer ? JSON.parse(q.answer || '[]') : []
+        choices: Array.isArray(q.choices) ? q.choices : (q.choices ? [q.choices] : [])
       })));
       
       // Enregistrer le temps de début de la session
