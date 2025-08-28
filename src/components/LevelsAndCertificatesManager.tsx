@@ -426,6 +426,33 @@ export const LevelsAndCertificatesManager = () => {
                       <p><span className="font-medium">Prix:</span> {level.price_euros}€</p>
                       <p><span className="font-medium">Sessions gratuites:</span> {level.free_sessions}</p>
                     </div>
+                    
+                    {/* Affichage des lignes commerciales */}
+                    {(level.feature_1_text || level.feature_2_text || level.feature_3_text) && (
+                      <div className="mt-3">
+                        <p className="font-medium text-sm mb-1">Arguments commerciaux:</p>
+                        <ul className="text-xs space-y-1">
+                          {level.feature_1_text && (
+                            <li className="flex items-start gap-1">
+                              <span className="text-green-600">✓</span>
+                              <span>{level.feature_1_text}</span>
+                            </li>
+                          )}
+                          {level.feature_2_text && (
+                            <li className="flex items-start gap-1">
+                              <span className="text-green-600">✓</span>
+                              <span>{level.feature_2_text}</span>
+                            </li>
+                          )}
+                          {level.feature_3_text && (
+                            <li className="flex items-start gap-1">
+                              <span className="text-green-600">✓</span>
+                              <span>{level.feature_3_text}</span>
+                            </li>
+                          )}
+                        </ul>
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center justify-center">
                     <div className="text-center">
@@ -622,7 +649,54 @@ export const LevelsAndCertificatesManager = () => {
                         </SelectContent>
                       </Select>
                     </div>
-                  </div>
+                   </div>
+
+                   {/* Section Lignes commerciales */}
+                   <Separator />
+                   <div className="space-y-4">
+                     <h4 className="text-md font-semibold">Lignes commerciales</h4>
+                     <p className="text-sm text-muted-foreground">
+                       Ajoutez jusqu'à 3 arguments commerciaux pour promouvoir ce niveau
+                     </p>
+                     <div className="space-y-3">
+                       <div className="space-y-2">
+                         <Label htmlFor="feature1">Ligne commerciale 1</Label>
+                         <Input
+                           id="feature1"
+                           placeholder="Ex: Accès illimité aux ressources premium"
+                           value={editingLevel.feature_1_text}
+                           onChange={(e) => setEditingLevel(prev => prev ? {
+                             ...prev,
+                             feature_1_text: e.target.value
+                           } : null)}
+                         />
+                       </div>
+                       <div className="space-y-2">
+                         <Label htmlFor="feature2">Ligne commerciale 2</Label>
+                         <Input
+                           id="feature2"
+                           placeholder="Ex: Support personnalisé par email"
+                           value={editingLevel.feature_2_text}
+                           onChange={(e) => setEditingLevel(prev => prev ? {
+                             ...prev,
+                             feature_2_text: e.target.value
+                           } : null)}
+                         />
+                       </div>
+                       <div className="space-y-2">
+                         <Label htmlFor="feature3">Ligne commerciale 3</Label>
+                         <Input
+                           id="feature3"
+                           placeholder="Ex: Certificat reconnu par l'industrie"
+                           value={editingLevel.feature_3_text}
+                           onChange={(e) => setEditingLevel(prev => prev ? {
+                             ...prev,
+                             feature_3_text: e.target.value
+                           } : null)}
+                         />
+                       </div>
+                     </div>
+                   </div>
 
                   {/* Section Badge personnalisé */}
                   <Separator />
