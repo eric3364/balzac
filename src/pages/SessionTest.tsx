@@ -727,14 +727,6 @@ const SessionTest = () => {
 
             {!showExplanation && (
               <div className="space-y-4">
-                {/* Debug information */}
-                <div className="p-2 bg-gray-100 text-xs">
-                  <p>Question type: {currentQuestion.type}</p>
-                  <p>Has choices: {currentQuestion.choices ? 'Yes' : 'No'}</p>
-                  <p>Choices length: {currentQuestion.choices?.length || 0}</p>
-                  <p>Show explanation: {showExplanation ? 'Yes' : 'No'}</p>
-                </div>
-                
                 {currentQuestion.type === 'QCM' && currentQuestion.choices ? (
                   <RadioGroup value={currentAnswer} onValueChange={handleAnswerChange}>
                     {currentQuestion.choices.map((choice, index) => (
