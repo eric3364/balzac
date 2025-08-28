@@ -234,7 +234,7 @@ const CertificationBadges = () => {
                     size={template?.badge_size === 'small' ? 'small' : template?.badge_size === 'large' ? 'large' : 'medium'}
                     isObtained={isObtained}
                     level={level}
-                    animated={true}
+                    animated={false}
                     customUrl={template?.custom_badge_url || undefined}
                   />
                 </div>
