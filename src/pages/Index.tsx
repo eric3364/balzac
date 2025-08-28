@@ -219,33 +219,35 @@ const Index = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-8 lg:py-12">
-        {/* Dynamic Background */}
-        <div className="absolute inset-0">
-          <div 
-            className="w-full h-full opacity-60"
-            style={{ background: 'var(--gradient-hero)' }}
-          ></div>
-        </div>
-        
-        {/* Animated background elements */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/20 rounded-full blur-3xl animate-float"></div>
-          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
-          <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-blue-500/15 rounded-full blur-2xl animate-pulse-slow"></div>
-          <div className="absolute bottom-1/4 left-1/4 w-72 h-72 bg-pink-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '4s' }}></div>
-        </div>
-        
+      <section className="relative overflow-hidden py-8 lg:py-12 min-h-[80vh]">
         {homepageAssets.bannerUrl && (
           <div className="absolute inset-0 z-0">
             <img 
               src={homepageAssets.bannerUrl} 
               alt={homepageAssets.bannerAlt}
-              className="w-full h-full object-cover opacity-20"
+              className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-br from-background/30 to-background/70"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-background/20 via-background/40 to-background/60"></div>
           </div>
         )}
+        
+        {/* Dynamic Background - only if no banner */}
+        {!homepageAssets.bannerUrl && (
+          <div className="absolute inset-0">
+            <div 
+              className="w-full h-full opacity-60"
+              style={{ background: 'var(--gradient-hero)' }}
+            ></div>
+          </div>
+        )}
+        
+        {/* Animated background elements */}
+        <div className="absolute inset-0 overflow-hidden z-10">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/10 rounded-full blur-3xl animate-float"></div>
+          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
+          <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-blue-500/8 rounded-full blur-2xl animate-pulse-slow"></div>
+          <div className="absolute bottom-1/4 left-1/4 w-72 h-72 bg-pink-500/8 rounded-full blur-3xl animate-float" style={{ animationDelay: '4s' }}></div>
+        </div>
         
         <div className="relative z-10 container mx-auto px-4 text-center">
           <div className="max-w-6xl mx-auto">
