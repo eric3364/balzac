@@ -33,10 +33,12 @@ interface DifficultyLevel {
 }
 
 interface QuestionsManagerProps {
-  difficultyLevels: DifficultyLevel[];
+  difficultyLevels?: DifficultyLevel[];
 }
 
-export const QuestionsManager: React.FC<QuestionsManagerProps> = ({ difficultyLevels }) => {
+export const QuestionsManager: React.FC<QuestionsManagerProps> = ({ difficultyLevels: propDifficultyLevels }) => {
+  const [internalDifficultyLevels, setInternalDifficultyLevels] = useState<DifficultyLevel[]>([]);
+  const difficultyLevels = propDifficultyLevels || internalDifficultyLevels;
   const [questions, setQuestions] = useState<Question[]>([]);
   const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,7 +54,27 @@ export const QuestionsManager: React.FC<QuestionsManagerProps> = ({ difficultyLe
 
   useEffect(() => {
     loadQuestions();
-  }, []);
+    if (!propDifficultyLevels) {
+      loadDifficultyLevels();
+    }
+  }, [propDifficultyLevels]);
+
+  const loadDifficultyLevels = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('difficulty_levels')
+        .select('id, level_number, name, color')
+        .order('level_number', { ascending: true });
+
+      if (error) throw error;
+      setInternalDifficultyLevels((data || []).map(level => ({
+        ...level,
+        color: level.color || '#6366f1'
+      })));
+    } catch (error) {
+      console.error('Erreur lors du chargement des niveaux:', error);
+    }
+  };
 
   useEffect(() => {
     filterQuestions();

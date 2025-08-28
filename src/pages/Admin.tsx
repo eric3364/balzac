@@ -23,6 +23,7 @@ import { QuestionsManager } from '@/components/QuestionsManager';
 import { FinanceManager } from '@/components/FinanceManager';
 import { FooterManager } from '@/components/FooterManager';
 import { LegalPageManager } from '@/components/LegalPageManager';
+import { LevelsAndCertificatesManager } from '@/components/LevelsAndCertificatesManager';
 
 interface AdminUser {
   id: number;
@@ -50,46 +51,6 @@ interface TestConfig {
   shuffle_questions: boolean;
   show_immediate_feedback: boolean;
   questions_percentage_per_level: number;
-}
-
-interface DifficultyLevel {
-  id: string;
-  level_number: number;
-  name: string;
-  description: string | null;
-  color: string | null;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-  created_by: string | null;
-}
-
-interface CertificateTemplate {
-  id: string;
-  difficulty_level_id: string;
-  name: string;
-  description: string | null;
-  certificate_title: string;
-  certificate_subtitle: string | null;
-  certificate_text: string;
-  certificate_background_color: string | null;
-  certificate_border_color: string | null;
-  certificate_text_color: string | null;
-  min_score_required: number;
-  badge_icon: string | null;
-  badge_color: string | null;
-  badge_background_color: string | null;
-  badge_size: string | null;
-  custom_badge_url: string | null;
-  price_euros: number | null;
-  free_sessions: number | null;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-  created_by: string | null;
-  feature_1_text?: string | null;
-  feature_2_text?: string | null;
-  feature_3_text?: string | null;
 }
 
 interface Question {
@@ -230,8 +191,6 @@ const Admin = () => {
   };
 
   const [savingConfig, setSavingConfig] = useState(false);
-  const [difficultyLevels, setDifficultyLevels] = useState<DifficultyLevel[]>([]);
-  const [certificates, setCertificates] = useState<CertificateTemplate[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [questionsStats, setQuestionsStats] = useState<Record<number, number>>({});
   
@@ -260,8 +219,6 @@ const Admin = () => {
       loadAdministrators();
       loadUserStats();
       loadTestConfig();
-      loadDifficultyLevels();
-      loadCertificates();
       loadQuestions();
       loadCertConfig();
     }
@@ -341,55 +298,6 @@ const Admin = () => {
     }
   };
 
-  const loadDifficultyLevels = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('difficulty_levels')
-        .select('*')
-        .order('level_number', { ascending: true });
-
-      if (error) throw error;
-      setDifficultyLevels((data || []).map(level => ({
-        ...level,
-        description: level.description || '',
-        color: level.color || '#6366f1',
-        created_by: level.created_by || ''
-      })));
-    } catch (error) {
-      console.error('Erreur lors du chargement des niveaux:', error);
-    }
-  };
-
-  const loadCertificates = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('certificate_templates')
-        .select('*');
-
-    if (error) throw error;
-      setCertificates((data || []).map(cert => ({
-        ...cert,
-        description: cert.description || '',
-        certificate_subtitle: cert.certificate_subtitle || '',
-        certificate_background_color: cert.certificate_background_color || '#ffffff',
-        certificate_border_color: cert.certificate_border_color || '#6366f1',
-        certificate_text_color: cert.certificate_text_color || '#000000',
-        badge_icon: cert.badge_icon || 'award',
-        badge_color: cert.badge_color || '#6366f1',
-        badge_background_color: cert.badge_background_color || '#ffffff',
-        badge_size: cert.badge_size || 'medium',
-        custom_badge_url: cert.custom_badge_url || '',
-        price_euros: cert.price_euros || 10,
-        free_sessions: cert.free_sessions || 3,
-        created_by: cert.created_by || '',
-        feature_1_text: cert.feature_1_text || '',
-        feature_2_text: cert.feature_2_text || '',
-        feature_3_text: cert.feature_3_text || ''
-      })));
-    } catch (error) {
-      console.error('Erreur lors du chargement des certificats:', error);
-    }
-  };
 
   const loadQuestions = async () => {
     try {
@@ -788,103 +696,8 @@ const Admin = () => {
             </div>
           </TabsContent>
 
-          {/* Niveaux & Certifications */}
           <TabsContent value="levels" className="space-y-6">
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-              {/* Gestion des niveaux de difficulté */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Settings className="h-5 w-5" />
-                    Niveaux de difficulté
-                  </CardTitle>
-                  <CardDescription>
-                    Configuration des niveaux disponibles pour les tests
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {difficultyLevels.length > 0 ? (
-                    <div className="space-y-3">
-                      {difficultyLevels.map((level) => (
-                        <div key={level.id} className="flex items-center justify-between p-3 border rounded-lg">
-                           <div className="flex items-center gap-3">
-                             <div 
-                               className="w-4 h-4 rounded-full" 
-                               style={{ backgroundColor: level.color || '#6366f1' }}
-                             />
-                             <div>
-                              <p className="font-medium">Niveau {level.level_number}: {level.name}</p>
-                              <p className="text-sm text-muted-foreground">{level.description}</p>
-                            </div>
-                          </div>
-                          <Badge variant={level.is_active ? "default" : "secondary"}>
-                            {level.is_active ? "Actif" : "Inactif"}
-                          </Badge>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <p className="text-muted-foreground">Aucun niveau de difficulté configuré</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Gestion des certificats */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Award className="h-5 w-5" />
-                    Modèles de certificats
-                  </CardTitle>
-                  <CardDescription>
-                    Configuration des certificats délivrés après validation
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {certificates.length > 0 ? (
-                    <div className="space-y-3">
-                      {certificates.map((cert) => (
-                        <div key={cert.id} className="p-3 border rounded-lg">
-                          <div className="flex items-start justify-between">
-                            <div className="space-y-1">
-                              <p className="font-medium">{cert.name}</p>
-                              <p className="text-sm text-muted-foreground">{cert.description}</p>
-                              <div className="flex items-center gap-4 text-sm">
-                                <span>Score requis: {cert.min_score_required}%</span>
-                                <span>Prix: {cert.price_euros}€</span>
-                                <span>Sessions gratuites: {cert.free_sessions}</span>
-                              </div>
-                            </div>
-                            <Badge variant={cert.is_active ? "default" : "secondary"}>
-                              {cert.is_active ? "Actif" : "Inactif"}
-                            </Badge>
-                          </div>
-                          
-                          {/* Aperçu du badge */}
-                          <div className="mt-3 pt-3 border-t">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium">Aperçu du badge:</span>
-                              <CertificationBadge
-                                icon={cert.badge_icon || 'award'}
-                                color={cert.badge_color || '#6366f1'}
-                                backgroundColor={cert.badge_background_color || '#ffffff'}
-                                size={(cert.badge_size as 'small' | 'medium' | 'large') || 'medium'}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <p className="text-muted-foreground">Aucun modèle de certificat configuré</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
+            <LevelsAndCertificatesManager />
           </TabsContent>
 
           {/* Questions */}
@@ -917,12 +730,7 @@ const Admin = () => {
               </CardContent>
             </Card>
 
-            <QuestionsManager
-              difficultyLevels={difficultyLevels.map(level => ({
-                ...level,
-                color: level.color || '#6366f1'
-              }))}
-            />
+            <QuestionsManager />
           </TabsContent>
 
           {/* Finance */}
