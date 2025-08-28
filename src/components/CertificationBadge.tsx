@@ -78,7 +78,7 @@ export const CertificationBadge: React.FC<CertificationBadgeProps> = ({
         )}
         style={{
           backgroundColor: isObtained ? backgroundColor : '#f3f4f6',
-          borderColor: isObtained ? color : '#d1d5db',
+          borderColor: isObtained && !customUrl ? color : (isObtained ? 'transparent' : '#d1d5db'),
           boxShadow: isObtained ? `0 4px 20px ${color}33` : undefined
         }}
       >
