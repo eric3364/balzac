@@ -202,17 +202,30 @@ const SessionTest = () => {
         return;
       }
 
-      setQuestions(sessionQuestions.map(q => ({
-        ...q,
-        content: q.content || '',
-        type: q.type || 'multiple_choice',
-        level: q.level || 1,
-        rule: q.rule || '',
-        answer: q.answer || '',
-        explanation: q.explanation || '',
-        created_at: q.created_at || '',
-        choices: Array.isArray(q.choices) ? q.choices : (q.choices ? [q.choices] : [])
-      })));
+      setQuestions(sessionQuestions.map(q => {
+        console.log('Processing question:', {
+          id: q.id,
+          type: q.type,
+          choices_raw: q.choices,
+          choices_type: typeof q.choices,
+          choices_isArray: Array.isArray(q.choices)
+        });
+        
+        const processedChoices = Array.isArray(q.choices) ? q.choices : (q.choices ? [q.choices] : []);
+        console.log('Processed choices:', processedChoices);
+        
+        return {
+          ...q,
+          content: q.content || '',
+          type: q.type || 'multiple_choice',
+          level: q.level || 1,
+          rule: q.rule || '',
+          answer: q.answer || '',
+          explanation: q.explanation || '',
+          created_at: q.created_at || '',
+          choices: processedChoices
+        };
+      }));
       
       // Enregistrer le temps de début de la session
       if (!sessionStartTime.current) {
@@ -727,7 +740,7 @@ const SessionTest = () => {
 
             {!showExplanation && (
               <div className="space-y-4">
-                {currentQuestion.type === 'QCM' && currentQuestion.choices ? (
+                {currentQuestion.type === 'QCM' && currentQuestion.choices && currentQuestion.choices.length > 0 ? (
                   <RadioGroup value={currentAnswer} onValueChange={handleAnswerChange}>
                     {currentQuestion.choices.map((choice, index) => (
                       <div key={index} className="flex items-center space-x-2">
