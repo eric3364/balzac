@@ -99,6 +99,30 @@ Deno.serve(async (req) => {
           continue
         }
 
+        // Créer explicitement l'entrée dans la table users
+        if (authUser.user) {
+          const { error: userError } = await supabaseAdmin
+            .from('users')
+            .insert({
+              user_id: authUser.user.id,
+              email: userData.email,
+              first_name: userData.first_name || '',
+              last_name: userData.last_name || '',
+              school: userData.school || '',
+              class_name: userData.class_name || ''
+            })
+
+          if (userError) {
+            console.error('Erreur création utilisateur pour', userData.email, ':', userError)
+            results.push({
+              email: userData.email,
+              success: false,
+              error: `Utilisateur auth créé mais erreur base de données: ${userError.message}`
+            })
+            continue
+          }
+        }
+
         results.push({
           email: userData.email,
           success: true,
