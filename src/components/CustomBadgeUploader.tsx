@@ -77,12 +77,12 @@ export const CustomBadgeUploader: React.FC<CustomBadgeUploaderProps> = ({
 
       if (uploadError) throw uploadError;
 
-      // Obtenir l'URL publique
+      // Obtenir l'URL publique avec cache-busting
       const { data } = supabase.storage
         .from('custom-badges')
         .getPublicUrl(filePath);
 
-      const newBadgeUrl = data.publicUrl;
+      const newBadgeUrl = `${data.publicUrl}?t=${Date.now()}`;
       onBadgeChange(newBadgeUrl);
 
       toast({
@@ -180,6 +180,7 @@ export const CustomBadgeUploader: React.FC<CustomBadgeUploaderProps> = ({
                   src={currentBadgeUrl}
                   alt="Badge personnalisé"
                   className="h-16 w-16 object-contain rounded"
+                  key={currentBadgeUrl} // Force le re-render quand l'URL change
                 />
                 <p className="text-sm text-muted-foreground">
                   Badge personnalisé actuel

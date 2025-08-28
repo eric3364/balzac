@@ -100,21 +100,36 @@ export const BadgeConfiguration: React.FC<BadgeConfigurationProps> = ({
 
     setUploading(true);
     try {
+      // Supprimer l'ancien badge s'il existe
+      if (config.custom_badge_url) {
+        const oldFileName = config.custom_badge_url.split('/').pop();
+        if (oldFileName) {
+          await supabase.storage
+            .from('custom-badges')
+            .remove([oldFileName]);
+        }
+      }
+
+      // Générer un nom unique avec timestamp pour forcer le rafraîchissement
       const fileExt = file.name.split('.').pop();
-      const fileName = `badge-${levelNumber}-${Date.now()}.${fileExt}`;
-      const filePath = `badges/${fileName}`;
+      const fileName = `level-${levelNumber}-badge-${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('public')
-        .upload(filePath, file);
+        .from('custom-badges')
+        .upload(fileName, file, {
+          cacheControl: '0', // Empêche la mise en cache pour forcer le rafraîchissement
+          upsert: true
+        });
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('public')
-        .getPublicUrl(filePath);
+      const { data } = supabase.storage
+        .from('custom-badges')
+        .getPublicUrl(fileName);
 
-      handleConfigChange({ custom_badge_url: publicUrl });
+      // Ajouter un paramètre de cache-busting pour forcer le rafraîchissement
+      const newBadgeUrl = `${data.publicUrl}?t=${Date.now()}`;
+      handleConfigChange({ custom_badge_url: newBadgeUrl });
 
       toast({
         title: "Succès",
@@ -211,6 +226,7 @@ export const BadgeConfiguration: React.FC<BadgeConfigurationProps> = ({
                   src={config.custom_badge_url} 
                   alt="Badge personnalisé" 
                   className="w-12 h-12 object-cover rounded"
+                  key={config.custom_badge_url} // Force le re-render quand l'URL change
                 />
                 <div className="flex-1">
                   <p className="text-sm font-medium">Badge personnalisé utilisé</p>
