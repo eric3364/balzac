@@ -458,11 +458,14 @@ export const LevelsAndCertificatesManager = () => {
                     <div className="text-center">
                       <p className="text-sm font-medium mb-2">Aperçu du badge:</p>
                       <CertificationBadge
+                        key={`badge-preview-${level.level_id}-${level.custom_badge_url || level.badge_icon}-${Date.now()}`}
                         icon={level.badge_icon}
                         color={level.badge_color}
                         backgroundColor={level.badge_background_color}
                         size={level.badge_size as 'small' | 'medium' | 'large'}
                         customUrl={level.custom_badge_url || undefined}
+                        isObtained={true}
+                        level={level.level_number}
                       />
                     </div>
                   </div>
