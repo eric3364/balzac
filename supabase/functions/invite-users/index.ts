@@ -91,10 +91,17 @@ Deno.serve(async (req) => {
 
         if (authError) {
           console.error('Erreur auth pour', userData.email, ':', authError)
+          let errorMessage = authError.message
+          
+          // Gestion spéciale pour la limite de taux d'emails
+          if (authError.message.includes('email rate limit exceeded')) {
+            errorMessage = 'Limite d\'envoi d\'emails atteinte. Veuillez attendre quelques minutes avant de réessayer.'
+          }
+          
           results.push({
             email: userData.email,
             success: false,
-            error: authError.message
+            error: errorMessage
           })
           continue
         }
