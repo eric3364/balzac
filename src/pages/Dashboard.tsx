@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Settings, Lock, BookOpen, Target, Clock, TrendingUp, Award, BarChart3 } from 'lucide-react';
 import CertificationBadges from '@/components/CertificationBadges';
+import InitialAssessmentCard from '@/components/InitialAssessmentCard';
 import StatsCard from '@/components/dashboard/StatsCard';
 import ProgressChart from '@/components/dashboard/ProgressChart';
 import ScoreGauge from '@/components/dashboard/ScoreGauge';
@@ -79,8 +80,13 @@ const Dashboard = () => {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8 space-y-8">
-        {/* Section des badges de certification */}
+        {/* Test d'évaluation initiale */}
         <div className="animate-fade-in">
+          <InitialAssessmentCard />
+        </div>
+
+        {/* Section des badges de certification */}
+        <div className="animate-fade-in" style={{ animationDelay: '0.05s' }}>
           <CertificationBadges />
         </div>
 
@@ -159,7 +165,7 @@ const Dashboard = () => {
         </div>
         
         {/* Cartes de statistiques principales */}
-        <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
+        <div className="animate-fade-in" style={{ animationDelay: '0.15s' }}>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <StatsCard
             title="Tests passés"
@@ -197,7 +203,7 @@ const Dashboard = () => {
         </div>
 
         {/* Statistiques détaillées en grille */}
-        <div className="animate-fade-in" style={{ animationDelay: '0.3s' }}>
+        <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -255,7 +261,7 @@ const Dashboard = () => {
         </div>
 
         {/* Graphiques et visualisations */}
-        <div className="animate-fade-in" style={{ animationDelay: '0.4s' }}>
+        <div className="animate-fade-in" style={{ animationDelay: '0.25s' }}>
           <div className="grid gap-6 lg:grid-cols-2">
           {/* Graphique en camembert */}
           <ProgressChart
@@ -273,7 +279,7 @@ const Dashboard = () => {
         </div>
 
         {/* Graphiques détaillés */}
-        <div className="animate-fade-in" style={{ animationDelay: '0.5s' }}>
+        <div className="animate-fade-in" style={{ animationDelay: '0.3s' }}>
           <div className="grid gap-6 lg:grid-cols-2">
           {/* Graphique temps d'étude */}
           <StudyTimeChart

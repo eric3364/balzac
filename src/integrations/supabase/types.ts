@@ -343,6 +343,33 @@ export type Database = {
         }
         Relationships: []
       }
+      initial_assessments: {
+        Row: {
+          completed_at: string
+          created_at: string
+          id: string
+          recommendations: string[] | null
+          scores: Json
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          created_at?: string
+          id?: string
+          recommendations?: string[] | null
+          scores?: Json
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          created_at?: string
+          id?: string
+          recommendations?: string[] | null
+          scores?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       legal_page: {
         Row: {
           content: string | null
