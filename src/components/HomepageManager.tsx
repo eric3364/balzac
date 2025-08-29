@@ -2,15 +2,31 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 import { useHomepageConfig } from '@/hooks/useHomepageConfig';
 import { HomepageAssetUploader } from './HomepageAssetUploader';
 import { FooterManager } from './FooterManager';
 import { LegalPageManager } from './LegalPageManager';
 import { Separator } from '@/components/ui/separator';
-import { Home, Type, Image, BarChart, MessageCircle, Settings, FileText } from 'lucide-react';
+import { Home, Type, Image, BarChart, MessageCircle, Settings, FileText, Save } from 'lucide-react';
+import { toast } from 'sonner';
+import { useState } from 'react';
 
 export const HomepageManager = () => {
   const { config, updateConfig } = useHomepageConfig();
+  const [saving, setSaving] = useState(false);
+
+  const handleSaveSection = async (sectionName: string) => {
+    setSaving(true);
+    try {
+      // La fonction updateConfig sauvegarde déjà automatiquement
+      toast.success(`${sectionName} sauvegardé avec succès`);
+    } catch (error) {
+      toast.error(`Erreur lors de la sauvegarde de ${sectionName}`);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -53,6 +69,17 @@ export const HomepageManager = () => {
               placeholder="Description de l'image pour l'accessibilité"
             />
           </div>
+          
+          <div className="flex justify-end pt-4">
+            <Button 
+              onClick={() => handleSaveSection("Images")}
+              disabled={saving}
+              className="flex items-center gap-2"
+            >
+              <Save className="h-4 w-4" />
+              {saving ? "Sauvegarde..." : "Sauvegarder les paramètres"}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -86,6 +113,17 @@ export const HomepageManager = () => {
               onChange={(e) => updateConfig({ siteSubtitle: e.target.value })}
               placeholder="Description courte de votre plateforme"
             />
+          </div>
+          
+          <div className="flex justify-end pt-4">
+            <Button 
+              onClick={() => handleSaveSection("Titres et branding")}
+              disabled={saving}
+              className="flex items-center gap-2"
+            >
+              <Save className="h-4 w-4" />
+              {saving ? "Sauvegarde..." : "Sauvegarder les paramètres"}
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -144,6 +182,17 @@ export const HomepageManager = () => {
               />
             </div>
           </div>
+          
+          <div className="flex justify-end pt-4">
+            <Button 
+              onClick={() => handleSaveSection("Section Hero")}
+              disabled={saving}
+              className="flex items-center gap-2"
+            >
+              <Save className="h-4 w-4" />
+              {saving ? "Sauvegarde..." : "Sauvegarder les paramètres"}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -178,6 +227,17 @@ export const HomepageManager = () => {
               placeholder="Description de vos fonctionnalités principales"
               rows={2}
             />
+          </div>
+          
+          <div className="flex justify-end pt-4">
+            <Button 
+              onClick={() => handleSaveSection("Section fonctionnalités")}
+              disabled={saving}
+              className="flex items-center gap-2"
+            >
+              <Save className="h-4 w-4" />
+              {saving ? "Sauvegarde..." : "Sauvegarder les paramètres"}
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -246,6 +306,17 @@ export const HomepageManager = () => {
               />
             </div>
           </div>
+          
+          <div className="flex justify-end pt-4">
+            <Button 
+              onClick={() => handleSaveSection("Statistiques")}
+              disabled={saving}
+              className="flex items-center gap-2"
+            >
+              <Save className="h-4 w-4" />
+              {saving ? "Sauvegarde..." : "Sauvegarder les paramètres"}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -290,6 +361,17 @@ export const HomepageManager = () => {
               onChange={(e) => updateConfig({ ctaButton: e.target.value })}
               placeholder="Commencer maintenant"
             />
+          </div>
+          
+          <div className="flex justify-end pt-4">
+            <Button 
+              onClick={() => handleSaveSection("Appel à l'action")}
+              disabled={saving}
+              className="flex items-center gap-2"
+            >
+              <Save className="h-4 w-4" />
+              {saving ? "Sauvegarde..." : "Sauvegarder les paramètres"}
+            </Button>
           </div>
         </CardContent>
       </Card>
