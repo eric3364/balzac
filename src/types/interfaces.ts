@@ -59,3 +59,21 @@ export interface UpdateProgressResult {
   levelCompleted: boolean;
   certification: UserCertification | null;
 }
+
+export interface InitialAssessment {
+  id: string;
+  user_id: string;
+  completed_at: string;
+  scores: {
+    conjugaison: number;
+    grammaire: number;
+    vocabulaire: number;
+    overall: number;
+  };
+  recommendations: string[];
+  created_at: string;
+}
+
+export interface AssessmentQuestion extends Question {
+  category: 'conjugaison' | 'grammaire' | 'vocabulaire';
+}
