@@ -76,7 +76,7 @@ export const SiteFooter = () => {
                      <div key={link.id}>
                        {link.url.startsWith('/') ? (
                          <Link 
-                           to={link.is_legal && !link.url.startsWith('/legal/') ? `/legal${link.url}` : link.url}
+                           to={link.url === '/politique-de-confidentialite' ? '/legal/politique-de-confidentialite' : link.url}
                            className="text-sm text-muted-foreground hover:text-primary transition-colors block"
                          >
                            {link.label}
