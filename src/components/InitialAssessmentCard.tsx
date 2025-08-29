@@ -320,6 +320,10 @@ const InitialAssessmentCard = () => {
                       onChange={(e) => setCurrentAnswer(e.target.value)}
                       placeholder="Tapez votre réponse ici..."
                       className="min-h-[100px]"
+                      spellCheck="false"
+                      autoComplete="off"
+                      autoCorrect="off"
+                      autoCapitalize="off"
                     />
                   ) : (
                     <Input
@@ -327,6 +331,10 @@ const InitialAssessmentCard = () => {
                       value={currentAnswer}
                       onChange={(e) => setCurrentAnswer(e.target.value)}
                       placeholder="Tapez votre réponse ici..."
+                      spellCheck="false"
+                      autoComplete="off"
+                      autoCorrect="off"
+                      autoCapitalize="off"
                       onKeyPress={(e) => {
                         if (e.key === 'Enter' && currentAnswer.trim()) {
                           handleAnswer(currentAnswer.trim());
