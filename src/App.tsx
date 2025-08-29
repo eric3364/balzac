@@ -10,6 +10,7 @@ import { Toaster as Sonner } from '@/components/ui/sonner';
 import Index from '@/pages/Index';
 import Auth from '@/pages/Auth';
 import AuthCallback from '@/pages/AuthCallback';
+import SetPassword from '@/pages/SetPassword';
 import Dashboard from '@/pages/Dashboard';
 import Admin from '@/pages/Admin';
 import AdminAuth from '@/pages/AdminAuth';
@@ -36,6 +37,7 @@ function App() {
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
+                <Route path="/set-password" element={<SetPassword />} />
                 <Route path="/dashboard" element={<Dashboard />} />
 
                 <Route path="/admin" element={<Admin />} />

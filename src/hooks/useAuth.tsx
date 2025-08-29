@@ -45,6 +45,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         setSession(session);
         setUser(session?.user ?? null);
+        
+        // Vérifier si c'est la première connexion d'un apprenant
+        if (session?.user && event === 'SIGNED_IN') {
+          setTimeout(async () => {
+            try {
+              const { data: userData, error } = await supabase
+                .from('users')
+                .select('is_active, user_id')
+                .eq('user_id', session.user.id)
+                .single();
+              
+              if (!error && userData && !userData.is_active) {
+                // Rediriger vers la page de définition de mot de passe
+                window.location.href = '/set-password';
+                return;
+              }
+            } catch (error) {
+              console.error('Erreur lors de la vérification du statut utilisateur:', error);
+            }
+          }, 100);
+        }
+        
         setLoading(false);
       }
     );
