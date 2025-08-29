@@ -64,7 +64,7 @@ export const useInitialAssessment = () => {
           ...q,
           content: q.content!,
           answer: q.answer!,
-          choices: q.choices || [], // Peut être vide pour les questions texte libre
+          choices: [], // Colonne choices non utilisée
           explanation: q.explanation || '',
           rule: q.rule || '',
           type: q.type || 'multiple_choice',
