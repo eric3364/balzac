@@ -78,12 +78,14 @@ const Dashboard = () => {
       </header>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 space-y-8">
         {/* Section des badges de certification */}
-        <CertificationBadges />
+        <div className="animate-fade-in">
+          <CertificationBadges />
+        </div>
 
         {/* Sessions de test */}
-        <div className="mb-8">
+        <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
           <Card>
             <CardHeader>
               <CardTitle>Sessions de test</CardTitle>
@@ -157,7 +159,8 @@ const Dashboard = () => {
         </div>
         
         {/* Cartes de statistiques principales */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+        <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <StatsCard
             title="Tests passés"
             value={userStats.loading ? '...' : userStats.totalTests}
@@ -189,11 +192,13 @@ const Dashboard = () => {
             subtitle="Badges obtenus"
             icon={Award}
             color="yellow"
-          />
+            />
+          </div>
         </div>
 
-        {/* Statistiques détaillées en grille - DÉPLACÉES AU-DESSUS */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
+        {/* Statistiques détaillées en grille */}
+        <div className="animate-fade-in" style={{ animationDelay: '0.3s' }}>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Réponses correctes</CardTitle>
@@ -247,9 +252,11 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </div>
+        </div>
 
         {/* Graphiques et visualisations */}
-        <div className="grid gap-6 lg:grid-cols-2 mb-8">
+        <div className="animate-fade-in" style={{ animationDelay: '0.4s' }}>
+          <div className="grid gap-6 lg:grid-cols-2">
           {/* Graphique en camembert */}
           <ProgressChart
             correctAnswers={userStats.correctAnswers}
@@ -261,11 +268,13 @@ const Dashboard = () => {
           <ScoreGauge
             score={userStats.progressPercentage}
             loading={userStats.loading}
-          />
+            />
+          </div>
         </div>
 
         {/* Graphiques détaillés */}
-        <div className="grid gap-6 lg:grid-cols-2 mb-8">
+        <div className="animate-fade-in" style={{ animationDelay: '0.5s' }}>
+          <div className="grid gap-6 lg:grid-cols-2">
           {/* Graphique temps d'étude */}
           <StudyTimeChart
             timeSpent={userStats.timeSpent}
@@ -278,7 +287,8 @@ const Dashboard = () => {
             totalQuestions={userStats.totalQuestions}
             sessionsCount={userStats.totalTests}
             loading={userStats.loading}
-          />
+            />
+          </div>
         </div>
 
       </div>

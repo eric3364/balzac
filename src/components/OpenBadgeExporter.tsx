@@ -71,6 +71,7 @@ export const OpenBadgeExporter: React.FC<OpenBadgeExporterProps> = ({
   userProfile
 }) => {
   const [isExporting, setIsExporting] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [badgeUrl, setBadgeUrl] = useState<string | null>(null);
 
   const generateOpenBadge = async (): Promise<OpenBadgeData> => {
@@ -167,7 +168,10 @@ export const OpenBadgeExporter: React.FC<OpenBadgeExporterProps> = ({
     try {
       const openBadgeData = await generateOpenBadge();
       await navigator.clipboard.writeText(openBadgeData.verification.url);
+      setCopied(true);
       toast.success('URL de vérification copiée !');
+      
+      setTimeout(() => setCopied(false), 2000);
     } catch (error) {
       console.error('Erreur lors de la copie:', error);
       toast.error('Erreur lors de la copie');
@@ -175,58 +179,43 @@ export const OpenBadgeExporter: React.FC<OpenBadgeExporterProps> = ({
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <CheckCircle className="h-5 w-5 text-green-500" />
-          Badge Open Badge
-        </CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Partagez votre certification selon le standard Open Badge 2.0
-        </p>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center gap-2 mb-4">
-          <Badge variant="secondary">Compatible LinkedIn</Badge>
-          <Badge variant="outline">Standard Open Badge 2.0</Badge>
-        </div>
+    <div className="w-full">
+      <div className="grid grid-cols-3 gap-2">
+        <Button
+          onClick={exportBadge}
+          disabled={isExporting}
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-1 text-xs"
+        >
+          <Download className="h-3 w-3" />
+          {isExporting ? '...' : 'JSON'}
+        </Button>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <Button
-            onClick={exportBadge}
-            disabled={isExporting}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <Download className="h-4 w-4" />
-            {isExporting ? 'Export...' : 'Télécharger JSON'}
-          </Button>
-          
-          <Button
-            onClick={shareToLinkedIn}
-            className="flex items-center gap-2 bg-[#0077B5] hover:bg-[#005885] text-white"
-          >
-            <Share2 className="h-4 w-4" />
-            Partager LinkedIn
-          </Button>
-          
-          <Button
-            onClick={copyBadgeUrl}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <ExternalLink className="h-4 w-4" />
-            Copier URL
-          </Button>
-        </div>
+        <Button
+          onClick={shareToLinkedIn}
+          size="sm"
+          className="bg-[#0077B5] hover:bg-[#005885] text-white flex items-center gap-1 text-xs"
+        >
+          <Share2 className="h-3 w-3" />
+          LinkedIn
+        </Button>
         
-        <div className="text-xs text-muted-foreground space-y-1">
-          <p>• Le fichier JSON peut être importé sur des plateformes compatibles Open Badge</p>
-          <p>• L'URL de vérification permet de valider automatiquement votre certification</p>
-          <p>• Compatible avec LinkedIn Learning et autres plateformes professionnelles</p>
-        </div>
-      </CardContent>
-    </Card>
+        <Button
+          onClick={copyBadgeUrl}
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-1 text-xs"
+        >
+          {copied ? <CheckCircle className="h-3 w-3 text-green-500" /> : <ExternalLink className="h-3 w-3" />}
+          URL
+        </Button>
+      </div>
+      
+      <div className="text-[10px] text-muted-foreground mt-1 text-center">
+        Open Badge 2.0
+      </div>
+    </div>
   );
 };
 

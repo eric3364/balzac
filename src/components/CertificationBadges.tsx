@@ -216,15 +216,22 @@ const CertificationBadges = () => {
   return (
     <Card className="mb-8 bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
       <CardContent className="p-6">
-        <div className="flex items-center gap-2 mb-6">
-          <Trophy className="h-6 w-6 text-primary" />
-          <h2 className="text-xl font-bold">Mes Certifications</h2>
-          <Badge variant="secondary" className="ml-2">
-            {certifications.length} / {difficultyLevels.length} obtenue{certifications.length > 1 ? 's' : ''}
-          </Badge>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <Trophy className="h-6 w-6 text-primary" />
+            <h2 className="text-xl font-bold">Mes Certifications</h2>
+            <Badge variant="secondary" className="ml-2">
+              {certifications.length} / {difficultyLevels.length} obtenue{certifications.length > 1 ? 's' : ''}
+            </Badge>
+          </div>
+          {certifications.length > 0 && (
+            <div className="text-sm text-muted-foreground">
+              Cliquez sur une certification pour la partager
+            </div>
+          )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {allLevels.map((levelData) => {
             const { level, difficultyLevel, certification, template, isObtained } = levelData;
             const IconComponent = getIconComponent(template?.badge_icon || 'award');
@@ -232,107 +239,103 @@ const CertificationBadges = () => {
             const backgroundColor = template?.badge_background_color || '#ffffff';
             
             return (
-              <div
+              <Card
                 key={level}
-                className={`flex flex-col items-center p-4 rounded-lg border transition-all duration-200 ${
+                className={`transition-all duration-300 hover:scale-105 ${
                   isObtained 
-                    ? 'bg-card hover:shadow-lg' 
-                    : 'bg-muted/50 opacity-60 hover:opacity-80'
+                    ? 'shadow-md hover:shadow-xl border-primary/20 bg-gradient-to-br from-card to-card/80' 
+                    : 'opacity-60 hover:opacity-80 bg-muted/30'
                 }`}
               >
-                {/* Badge avec nouveau composant */}
-                <div className="mb-3">
-                  <CertificationBadge
-                    icon={template?.badge_icon || 'award'}
-                    color={badgeColor}
-                    backgroundColor={backgroundColor}
-                    size={template?.badge_size === 'small' ? 'small' : template?.badge_size === 'large' ? 'large' : 'medium'}
-                    isObtained={isObtained}
-                    level={level}
-                    animated={false}
-                    customUrl={template?.custom_badge_url || undefined}
-                  />
-                </div>
+                <CardContent className="p-4 flex flex-col items-center min-h-[320px]">
+                  {/* Badge avec nouveau composant */}
+                  <div className="mb-4 flex-shrink-0">
+                    <CertificationBadge
+                      icon={template?.badge_icon || 'award'}
+                      color={badgeColor}
+                      backgroundColor={backgroundColor}
+                      size="large"
+                      isObtained={isObtained}
+                      level={level}
+                      animated={isObtained}
+                      customUrl={template?.custom_badge_url || undefined}
+                    />
+                  </div>
 
-                {/* Level Name */}
-<h3 className={`font-semibold text-sm text-center mb-1 ${
-                  isObtained ? '' : 'text-muted-foreground'
-                }`}>
-                  {difficultyLevel.name}
-                </h3>
+                  {/* Level Name */}
+                  <h3 className={`font-semibold text-base text-center mb-2 ${
+                    isObtained ? 'text-foreground' : 'text-muted-foreground'
+                  }`}>
+                    {difficultyLevel.name}
+                  </h3>
 
-                {isObtained && certification ? (
-                  <>
-                    {/* Score */}
-                    <div className={`text-lg font-bold mb-2 ${getScoreColor(certification.score)}`}>
-                      {certification.score}%
-                    </div>
-
-                    {/* Study Time */}
-                    <div className="flex items-center gap-1 mb-2 text-xs text-muted-foreground">
-                      <Clock className="h-3 w-3" />
-                      <span>{formatStudyTime(certification.timeSpent || 0)}</span>
-                    </div>
-
-                    {/* Date */}
-                    <div className="text-xs text-muted-foreground text-center">
-                      {certification.certified_at && format(new Date(certification.certified_at), 'dd MMM yyyy', { locale: fr })}
-                    </div>
-
-                    {/* Perfect Score Indicator */}
-                    {certification.score === 100 && (
-                      <div className="mt-2">
-                        <Badge variant="default" className="text-xs bg-yellow-500 hover:bg-yellow-600">
-                          <Star className="h-3 w-3 mr-1" />
-                          Parfait !
-                        </Badge>
+                  {isObtained && certification ? (
+                    <div className="flex-1 w-full space-y-3">
+                      {/* Score et temps d'étude */}
+                      <div className="text-center space-y-2">
+                        <div className={`text-2xl font-bold ${getScoreColor(certification.score)}`}>
+                          {certification.score}%
+                        </div>
+                        
+                        <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
+                          <Clock className="h-3 w-3" />
+                          <span>{formatStudyTime(certification.timeSpent || 0)}</span>
+                        </div>
+                        
+                        <div className="text-xs text-muted-foreground">
+                          {certification.certified_at && format(new Date(certification.certified_at), 'dd MMM yyyy', { locale: fr })}
+                        </div>
                       </div>
-                    )}
 
-                    {/* Partage LinkedIn */}
-                    {certification.certified_at && (
-                      <div className="mt-3 w-full">
-                        <LinkedInSharer
-                          certification={{
-                            ...certification,
-                            certified_at: certification.certified_at,
-                            issuing_organization: certification.issuing_organization || 'Organisation'
-                          }}
-                          template={template}
-                          difficultyLevel={difficultyLevel}
-                          userProfile={userProfile}
-                        />
-                      </div>
-                    )}
+                      {/* Perfect Score Indicator */}
+                      {certification.score === 100 && (
+                        <div className="flex justify-center">
+                          <Badge variant="default" className="text-xs bg-yellow-500 hover:bg-yellow-600">
+                            <Star className="h-3 w-3 mr-1" />
+                            Parfait !
+                          </Badge>
+                        </div>
+                      )}
 
-                    {/* Open Badge Export */}
-                    {certification.certified_at && (
-                      <div className="mt-3 w-full">
-                        <OpenBadgeExporter
-                          certification={{
-                            ...certification,
-                            certified_at: certification.certified_at,
-                            issuing_organization: certification.issuing_organization || 'Organisation'
-                          }}
-                          template={template}
-                          difficultyLevel={difficultyLevel}
-                          userProfile={userProfile}
-                        />
+                      {/* Boutons d'action */}
+                      {certification.certified_at && (
+                        <div className="space-y-2 w-full">
+                          <LinkedInSharer
+                            certification={{
+                              ...certification,
+                              certified_at: certification.certified_at,
+                              issuing_organization: certification.issuing_organization || 'Organisation'
+                            }}
+                            template={template}
+                            difficultyLevel={difficultyLevel}
+                            userProfile={userProfile}
+                          />
+                          
+                          <OpenBadgeExporter
+                            certification={{
+                              ...certification,
+                              certified_at: certification.certified_at,
+                              issuing_organization: certification.issuing_organization || 'Organisation'
+                            }}
+                            template={template}
+                            difficultyLevel={difficultyLevel}
+                            userProfile={userProfile}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex-1 flex flex-col justify-center items-center text-center space-y-2">
+                      <div className="text-sm font-medium text-muted-foreground">
+                        À débloquer
                       </div>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    {/* Non obtained status */}
-                    <div className="text-sm font-medium mb-2 text-muted-foreground">
-                      À débloquer
+                      <div className="text-xs text-muted-foreground px-2">
+                        {level === 1 ? 'Commencez votre apprentissage' : `Complétez le niveau ${level - 1} d'abord`}
+                      </div>
                     </div>
-                    <div className="text-xs text-muted-foreground text-center">
-                      {level === 1 ? 'Commencez votre apprentissage' : `Complétez le niveau ${level - 1} d'abord`}
-                    </div>
-                  </>
-                )}
-              </div>
+                  )}
+                </CardContent>
+              </Card>
             );
           })}
         </div>

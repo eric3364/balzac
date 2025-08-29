@@ -103,8 +103,8 @@ Cette certification valide mes compétences en français et renforce mon employa
           className="w-full bg-[#0077B5] hover:bg-[#005885] text-white flex items-center gap-2"
           size="sm"
         >
-          <LinkedinIcon className="h-4 w-4" />
-          Partager sur LinkedIn
+          <LinkedinIcon className="h-3 w-3" />
+          <span className="text-xs">Partager sur LinkedIn</span>
         </Button>
       </DialogTrigger>
       
