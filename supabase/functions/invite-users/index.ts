@@ -75,6 +75,22 @@ Deno.serve(async (req) => {
     
     for (const userData of users) {
       try {
+        // Vérifier d'abord si l'utilisateur existe déjà dans la table users
+        const { data: existingUser } = await supabaseAdmin
+          .from('users')
+          .select('email')
+          .eq('email', userData.email)
+          .single();
+
+        if (existingUser) {
+          results.push({
+            email: userData.email,
+            success: false,
+            error: 'Un utilisateur avec cet email existe déjà dans le système'
+          });
+          continue;
+        }
+
         // Créer l'utilisateur avec invitation
         const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
           userData.email,
@@ -92,6 +108,48 @@ Deno.serve(async (req) => {
         if (authError) {
           console.error('Erreur auth pour', userData.email, ':', authError)
           let errorMessage = authError.message
+          
+          // Gestion spéciale si l'utilisateur Auth existe déjà mais pas dans notre table users
+          if (authError.message.includes('A user with this email address has already been registered')) {
+            // Récupérer l'utilisateur existant depuis Auth
+            const { data: { users: existingAuthUsers }, error: getUserError } = await supabaseAdmin.auth.admin.listUsers();
+            
+            if (!getUserError) {
+              const existingAuthUser = existingAuthUsers?.find(u => u.email === userData.email);
+              
+              if (existingAuthUser) {
+                // Créer l'entrée dans la table users pour cet utilisateur Auth existant
+                const { error: insertError } = await supabaseAdmin
+                  .from('users')
+                  .insert({
+                    user_id: existingAuthUser.id,
+                    email: userData.email,
+                    first_name: userData.first_name || '',
+                    last_name: userData.last_name || '',
+                    school: userData.school || '',
+                    class_name: userData.class_name || ''
+                  });
+
+                if (!insertError) {
+                  results.push({
+                    email: userData.email,
+                    success: true,
+                    user_id: existingAuthUser.id,
+                    message: 'Utilisateur Auth existant ajouté au système'
+                  });
+                  continue;
+                } else {
+                  console.error('Erreur insertion users pour', userData.email, ':', insertError);
+                  errorMessage = 'Erreur lors de l\'ajout de l\'utilisateur existant au système';
+                }
+              }
+            }
+            
+            // Si ça n'a pas marché, utiliser le message d'erreur par défaut
+            if (errorMessage === authError.message) {
+              errorMessage = 'Un utilisateur avec cet email existe déjà. Contactez l\'administrateur.';
+            }
+          }
           
           // Gestion spéciale pour la limite de taux d'emails
           if (authError.message.includes('email rate limit exceeded')) {
