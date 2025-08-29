@@ -45,12 +45,11 @@ export const useInitialAssessment = () => {
 
   const getAssessmentQuestions = useCallback(async (): Promise<AssessmentQuestion[]> => {
     try {
-      // Récupérer 10 questions aléatoires par niveau (1-3) avec leurs catégories basées sur les règles
+      // Récupérer des questions aléatoires de tous les niveaux (1-4)
       const { data: questions, error } = await supabase
         .from('questions')
         .select('*')
-        .in('level', [1, 2, 3])
-        .limit(30);
+        .in('level', [1, 2, 3, 4]);
 
       if (error) throw error;
 
@@ -74,24 +73,30 @@ export const useInitialAssessment = () => {
           category: categorizeQuestion(q.rule || '')
         }));
 
-      // Sélectionner 10 questions équilibrées par catégorie
-      const conjugaisonQuestions = categorizedQuestions.filter(q => q.category === 'conjugaison');
-      const grammaireQuestions = categorizedQuestions.filter(q => q.category === 'grammaire');
-      const vocabulaireQuestions = categorizedQuestions.filter(q => q.category === 'vocabulaire');
+      // Grouper par niveau
+      const questionsByLevel = {
+        1: categorizedQuestions.filter(q => q.level === 1),
+        2: categorizedQuestions.filter(q => q.level === 2),
+        3: categorizedQuestions.filter(q => q.level === 3),
+        4: categorizedQuestions.filter(q => q.level === 4)
+      };
 
       const selectedQuestions: AssessmentQuestion[] = [];
-      
-      // Prendre 3-4 questions de chaque catégorie si possible
-      selectedQuestions.push(...conjugaisonQuestions.slice(0, 3));
-      selectedQuestions.push(...grammaireQuestions.slice(0, 4));
-      selectedQuestions.push(...vocabulaireQuestions.slice(0, 3));
 
-      // Compléter avec des questions aléatoires si pas assez
-      const remaining = categorizedQuestions.filter(q => !selectedQuestions.includes(q));
-      selectedQuestions.push(...remaining.slice(0, 10 - selectedQuestions.length));
+      // Sélectionner 10 questions aléatoires par niveau
+      [1, 2, 3, 4].forEach(level => {
+        const levelQuestions = questionsByLevel[level as keyof typeof questionsByLevel];
+        if (levelQuestions.length > 0) {
+          // Mélanger les questions du niveau
+          const shuffled = levelQuestions.sort(() => Math.random() - 0.5);
+          // Prendre 10 questions (ou moins si pas assez disponibles)
+          const selected = shuffled.slice(0, Math.min(10, shuffled.length));
+          selectedQuestions.push(...selected);
+        }
+      });
 
-      // Mélanger les questions
-      return selectedQuestions.sort(() => Math.random() - 0.5).slice(0, 10);
+      // Mélanger toutes les questions sélectionnées pour l'ordre de présentation
+      return selectedQuestions.sort(() => Math.random() - 0.5);
     } catch (error) {
       console.error('Erreur lors du chargement des questions d\'évaluation:', error);
       return [];

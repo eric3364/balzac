@@ -252,27 +252,28 @@ const InitialAssessmentCard = () => {
           <CardTitle className="text-blue-800">Évaluation initiale requise</CardTitle>
         </div>
         <CardDescription className="text-blue-700">
-          Avant de commencer vos tests, réalisez cette évaluation de 10 questions pour identifier vos points forts et axes d'amélioration.
+          Avant de commencer vos tests, réalisez cette évaluation de 40 questions (10 par niveau) pour identifier vos points forts et axes d'amélioration.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center gap-4 text-sm text-blue-700">
           <div className="flex items-center gap-1">
             <Clock className="h-4 w-4" />
-            ~5 minutes
+            ~15 minutes
           </div>
           <div className="flex items-center gap-1">
             <Target className="h-4 w-4" />
-            10 questions
+            40 questions
           </div>
         </div>
         
         <div className="bg-white p-4 rounded-lg border border-blue-200">
           <h4 className="font-semibold text-blue-800 mb-2">Cette évaluation analyse :</h4>
           <ul className="space-y-1 text-sm text-blue-700">
-            <li>• Conjugaison des verbes</li>
-            <li>• Règles de grammaire</li>
-            <li>• Vocabulaire et homophones</li>
+            <li>• Conjugaison des verbes (10 questions)</li>
+            <li>• Règles de grammaire (10 questions)</li>
+            <li>• Vocabulaire et homophones (10 questions)</li>
+            <li>• Niveau avancé (10 questions)</li>
           </ul>
         </div>
 
