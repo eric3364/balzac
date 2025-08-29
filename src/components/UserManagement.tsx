@@ -219,55 +219,35 @@ export const UserManagement = () => {
           description: "L'utilisateur a été mis à jour avec succès"
         });
       } else {
-        // Création - choisir entre add-learner (avec mot de passe) ou invite-users (sans mot de passe)
-        if (userForm.password) {
-          // Utiliser la fonction edge add-learner pour créer avec mot de passe
-          const { data, error } = await supabase.functions.invoke('add-learner', {
-            body: {
-              email: userForm.email,
-              first_name: userForm.first_name,
-              last_name: userForm.last_name,
-              school: userForm.school || '',
-              class_name: userForm.class_name || '',
-              password: userForm.password
-            }
-          });
-
-          if (error) throw error;
-
-          if (data?.success) {
-            toast({
-              title: "Utilisateur créé",
-              description: data.message || "L'utilisateur a été créé avec succès"
-            });
-          } else {
-            throw new Error(data?.error || 'Erreur lors de la création');
+        // Création - toujours utiliser add-learner pour éviter les limites d'emails
+        const { data, error } = await supabase.functions.invoke('add-learner', {
+          body: {
+            email: userForm.email,
+            first_name: userForm.first_name,
+            last_name: userForm.last_name,
+            school: userForm.school || '',
+            class_name: userForm.class_name || '',
+            password: userForm.password // Si pas de mot de passe, un temporaire sera généré
           }
-        } else {
-          // Utiliser la fonction edge invite-users pour envoyer une invitation
-          const { data, error } = await supabase.functions.invoke('invite-users', {
-            body: {
-              users: [{
-                email: userForm.email,
-                first_name: userForm.first_name,
-                last_name: userForm.last_name,
-                school: userForm.school || '',
-                class_name: userForm.class_name || ''
-              }]
-            }
-          });
+        });
 
-          if (error) throw error;
-
-          if (data?.results?.[0]?.success) {
-            toast({
-              title: "Utilisateur créé",
-              description: "L'utilisateur a été créé et invité avec succès"
-            });
-          } else {
-            throw new Error(data?.results?.[0]?.error || 'Erreur lors de la création');
-          }
+        if (error) {
+          console.error('Erreur add-learner:', error);
+          throw new Error(error.message || 'Erreur lors de la création de l\'utilisateur');
         }
+
+        if (data?.error) {
+          throw new Error(data.error);
+        }
+
+        const successMessage = userForm.password 
+          ? 'Apprenant créé avec le mot de passe défini'
+          : 'Apprenant créé avec mot de passe temporaire. Il devra le changer à la première connexion.';
+        
+        toast({
+          title: "Utilisateur créé",
+          description: successMessage
+        });
       }
 
       setIsUserDialogOpen(false);
@@ -826,10 +806,10 @@ export const UserManagement = () => {
                   type="password"
                   value={userForm.password || ''}
                   onChange={(e) => setUserForm(prev => ({ ...prev, password: e.target.value }))}
-                  placeholder="Laisser vide pour envoyer un email d'invitation"
+                  placeholder="Laisser vide pour mot de passe temporaire"
                 />
                 <p className="text-sm text-muted-foreground">
-                  Si aucun mot de passe n'est défini, un email d'invitation sera envoyé
+                  Si aucun mot de passe n'est défini, un mot de passe temporaire sera généré. L'apprenant devra le changer à la première connexion.
                 </p>
               </div>
             )}

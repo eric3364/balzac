@@ -119,9 +119,12 @@ serve(async (req) => {
       },
     };
 
-    // Ajouter le mot de passe s'il est fourni, sinon Supabase enverra un email d'invitation
+    // Toujours ajouter un mot de passe temporaire pour éviter les limites d'emails
     if (password) {
       createUserOptions.password = password;
+    } else {
+      // Générer un mot de passe temporaire si aucun n'est fourni
+      createUserOptions.password = `temp_${Math.random().toString(36).slice(-8)}${Date.now().toString(36)}`;
     }
 
     const { data: created, error: createErr } = await supaAdmin.auth.admin.createUser(createUserOptions);
@@ -150,7 +153,7 @@ serve(async (req) => {
         last_name: last_name || '',
         school: school || '',
         class_name: class_name || '',
-        is_active: true
+        is_active: password ? true : false
       });
 
     if (insertErr) {
@@ -174,7 +177,7 @@ serve(async (req) => {
         success: true, 
         user_id: userId, 
         email: email,
-        message: password ? 'Utilisateur créé avec mot de passe' : 'Utilisateur créé, email d\'invitation envoyé'
+        message: password ? 'Utilisateur créé avec mot de passe' : 'Utilisateur créé avec mot de passe temporaire, devra le changer à la première connexion'
       }), 
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
