@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Award, Star, Trophy, Shield, Crown, Clock } from 'lucide-react';
 import CertificationBadge from './CertificationBadge';
+import OpenBadgeExporter from './OpenBadgeExporter';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -13,6 +14,10 @@ interface Certification {
   level: number;
   score: number;
   certified_at: string | null;
+  credential_id: string;
+  expiration_date?: string | null;
+  issuing_organization: string | null;
+  user_id: string;
   timeSpent?: number; // en minutes
 }
 
@@ -38,6 +43,7 @@ const CertificationBadges = () => {
   const [certifications, setCertifications] = useState<Certification[]>([]);
   const [templates, setTemplates] = useState<CertificateTemplate[]>([]);
   const [difficultyLevels, setDifficultyLevels] = useState<any[]>([]);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -51,6 +57,13 @@ const CertificationBadges = () => {
           .select('*')
           .eq('user_id', user.id)
           .order('level', { ascending: true });
+
+        // Récupérer le profil utilisateur
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .maybeSingle();
 
         // Récupérer les sessions de test pour calculer le temps par niveau
         const { data: sessions } = await supabase
@@ -107,7 +120,7 @@ const CertificationBadges = () => {
           };
         });
 
-        setCertifications(certificationsWithTime.filter(cert => cert.certified_at));
+        setCertifications(certificationsWithTime.filter(cert => cert.certified_at) as Certification[]);
         setTemplates((certificateTemplates || []).map(template => ({
           ...template,
           badge_icon: template.badge_icon || 'award',
@@ -119,6 +132,7 @@ const CertificationBadges = () => {
           }
         })));
         setDifficultyLevels(difficultyLevels || []);
+        setUserProfile(profile);
       } catch (error) {
         console.error('Erreur lors du chargement des certifications:', error);
       } finally {
@@ -271,6 +285,22 @@ const CertificationBadges = () => {
                           <Star className="h-3 w-3 mr-1" />
                           Parfait !
                         </Badge>
+                      </div>
+                    )}
+
+                    {/* Open Badge Export */}
+                    {certification.certified_at && (
+                      <div className="mt-3 w-full">
+                        <OpenBadgeExporter
+                          certification={{
+                            ...certification,
+                            certified_at: certification.certified_at,
+                            issuing_organization: certification.issuing_organization || 'Organisation'
+                          }}
+                          template={template}
+                          difficultyLevel={difficultyLevel}
+                          userProfile={userProfile}
+                        />
                       </div>
                     )}
                   </>

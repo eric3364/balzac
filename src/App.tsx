@@ -21,6 +21,8 @@ import Payment from '@/pages/Payment';
 import Pricing from '@/pages/Pricing';
 import { LegalPage } from '@/pages/LegalPage';
 import VerifyCertification from '@/pages/VerifyCertification';
+import BadgeVerification from '@/pages/BadgeVerification';
+import BadgeCriteria from '@/pages/BadgeCriteria';
 import AlternativeIndex from '@/pages/AlternativeIndex';
 import NotFound from '@/pages/NotFound';
 
@@ -53,6 +55,9 @@ function App() {
                 <Route path="/payment" element={<Payment />} />
                 <Route path="/pricing" element={<Pricing />} />
                 <Route path="/legal/:slug" element={<LegalPage />} />
+                <Route path="/verify/:credentialId" element={<VerifyCertification />} />
+                <Route path="/badge/:credentialId" element={<BadgeVerification />} />
+                <Route path="/criteria/:level" element={<BadgeCriteria />} />
                 <Route path="/verify-certification" element={<VerifyCertification />} />
                 <Route path="/alternative" element={<AlternativeIndex />} />
                 <Route path="*" element={<NotFound />} />
