@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { useInitialAssessment } from '@/hooks/useInitialAssessment';
@@ -14,6 +16,7 @@ const InitialAssessmentCard = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [questions, setQuestions] = useState<AssessmentQuestion[]>([]);
   const [answers, setAnswers] = useState<{ questionId: number; answer: string; isCorrect: boolean; category: string }[]>([]);
+  const [currentAnswer, setCurrentAnswer] = useState('');
   const [showResults, setShowResults] = useState(false);
   const [isActive, setIsActive] = useState(false);
 
@@ -38,7 +41,7 @@ const InitialAssessmentCard = () => {
 
   const handleAnswer = (answer: string) => {
     const question = questions[currentQuestion];
-    const isCorrect = answer === question.answer;
+    const isCorrect = answer.toLowerCase().trim() === (question.answer || '').toLowerCase().trim();
     
     setAnswers(prev => [...prev, {
       questionId: question.id,
@@ -46,6 +49,9 @@ const InitialAssessmentCard = () => {
       isCorrect,
       category: question.category
     }]);
+
+    // Réinitialiser la réponse courante
+    setCurrentAnswer('');
 
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(prev => prev + 1);
@@ -217,7 +223,7 @@ const InitialAssessmentCard = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4">{question.content}</h3>
             
-            {question.type === 'multiple_choice' && question.choices ? (
+            {question.type === 'multiple_choice' && question.choices && question.choices.length > 0 ? (
               <div className="space-y-2">
                 {question.choices.map((choice, index) => (
                   <Button
@@ -231,11 +237,45 @@ const InitialAssessmentCard = () => {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>Type de question non supporté pour l'évaluation</p>
-                <Button onClick={() => handleAnswer('')} className="mt-4">
-                  Passer cette question
-                </Button>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Votre réponse :</label>
+                  {question.type === 'long_text' ? (
+                    <Textarea
+                      value={currentAnswer}
+                      onChange={(e) => setCurrentAnswer(e.target.value)}
+                      placeholder="Tapez votre réponse ici..."
+                      className="min-h-[100px]"
+                    />
+                  ) : (
+                    <Input
+                      type="text"
+                      value={currentAnswer}
+                      onChange={(e) => setCurrentAnswer(e.target.value)}
+                      placeholder="Tapez votre réponse ici..."
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter' && currentAnswer.trim()) {
+                          handleAnswer(currentAnswer.trim());
+                        }
+                      }}
+                    />
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={() => handleAnswer(currentAnswer.trim())}
+                    disabled={!currentAnswer.trim()}
+                    className="flex-1"
+                  >
+                    Valider la réponse
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => handleAnswer('')}
+                  >
+                    Passer
+                  </Button>
+                </div>
               </div>
             )}
           </div>
