@@ -288,7 +288,14 @@ const InitialAssessmentCard = () => {
             </AlertDescription>
           </Alert>
           <div>
-            <h3 className="text-lg font-semibold mb-4">{question.content}</h3>
+            <h3 className="text-lg font-semibold mb-2">{question.content}</h3>
+            {question.rule && (
+              <div className="mb-4 p-3 bg-muted/50 rounded-lg border-l-4 border-primary">
+                <p className="text-sm text-muted-foreground font-medium">
+                  <span className="font-semibold">Règle :</span> {question.rule}
+                </p>
+              </div>
+            )}
             
             {question.type === 'multiple_choice' && question.choices && question.choices.length > 0 ? (
               <div className="space-y-2">
