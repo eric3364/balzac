@@ -73,25 +73,25 @@ export const SiteFooter = () => {
                 {footerLinks
                   .sort((a, b) => a.sort_order - b.sort_order)
                   .map((link) => (
-                    <div key={link.id}>
-                      {link.url.startsWith('/') ? (
-                        <Link 
-                          to={link.url}
-                          className="text-sm text-muted-foreground hover:text-primary transition-colors block"
-                        >
-                          {link.label}
-                        </Link>
-                      ) : (
-                        <a 
-                          href={link.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-muted-foreground hover:text-primary transition-colors block"
-                        >
-                          {link.label}
-                        </a>
-                      )}
-                    </div>
+                     <div key={link.id}>
+                       {link.url.startsWith('/') ? (
+                         <Link 
+                           to={link.is_legal && !link.url.startsWith('/legal/') ? `/legal${link.url}` : link.url}
+                           className="text-sm text-muted-foreground hover:text-primary transition-colors block"
+                         >
+                           {link.label}
+                         </Link>
+                       ) : (
+                         <a 
+                           href={link.url}
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           className="text-sm text-muted-foreground hover:text-primary transition-colors block"
+                         >
+                           {link.label}
+                         </a>
+                       )}
+                     </div>
                   ))
                 }
               </div>

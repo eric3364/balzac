@@ -52,7 +52,7 @@ function App() {
                 <Route path="/session-progress" element={<SessionProgress />} />
                 <Route path="/payment" element={<Payment />} />
                 <Route path="/pricing" element={<Pricing />} />
-                <Route path="/legal/:page" element={<LegalPage />} />
+                <Route path="/legal/:slug" element={<LegalPage />} />
                 <Route path="/verify-certification" element={<VerifyCertification />} />
                 <Route path="/alternative" element={<AlternativeIndex />} />
                 <Route path="*" element={<NotFound />} />
