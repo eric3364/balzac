@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Award, Star, Trophy, Shield, Crown, Clock } from 'lucide-react';
 import CertificationBadge from './CertificationBadge';
 import OpenBadgeExporter from './OpenBadgeExporter';
+import LinkedInSharer from './LinkedInSharer';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -285,6 +286,22 @@ const CertificationBadges = () => {
                           <Star className="h-3 w-3 mr-1" />
                           Parfait !
                         </Badge>
+                      </div>
+                    )}
+
+                    {/* Partage LinkedIn */}
+                    {certification.certified_at && (
+                      <div className="mt-3 w-full">
+                        <LinkedInSharer
+                          certification={{
+                            ...certification,
+                            certified_at: certification.certified_at,
+                            issuing_organization: certification.issuing_organization || 'Organisation'
+                          }}
+                          template={template}
+                          difficultyLevel={difficultyLevel}
+                          userProfile={userProfile}
+                        />
                       </div>
                     )}
 
