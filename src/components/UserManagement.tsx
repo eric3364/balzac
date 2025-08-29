@@ -35,6 +35,7 @@ interface UserFormData {
   school: School | '';
   class_name: ClassLevel | '';
   is_active: boolean;
+  password?: string;
 }
 
 export const UserManagement = () => {
@@ -218,28 +219,54 @@ export const UserManagement = () => {
           description: "L'utilisateur a été mis à jour avec succès"
         });
       } else {
-        // Création - utiliser la fonction edge pour inviter l'utilisateur
-        const { data, error } = await supabase.functions.invoke('invite-users', {
-          body: {
-            users: [{
+        // Création - choisir entre add-learner (avec mot de passe) ou invite-users (sans mot de passe)
+        if (userForm.password) {
+          // Utiliser la fonction edge add-learner pour créer avec mot de passe
+          const { data, error } = await supabase.functions.invoke('add-learner', {
+            body: {
               email: userForm.email,
               first_name: userForm.first_name,
               last_name: userForm.last_name,
               school: userForm.school || '',
-              class_name: userForm.class_name || ''
-            }]
-          }
-        });
-
-        if (error) throw error;
-
-        if (data?.results?.[0]?.success) {
-          toast({
-            title: "Utilisateur créé",
-            description: "L'utilisateur a été créé et invité avec succès"
+              class_name: userForm.class_name || '',
+              password: userForm.password
+            }
           });
+
+          if (error) throw error;
+
+          if (data?.success) {
+            toast({
+              title: "Utilisateur créé",
+              description: data.message || "L'utilisateur a été créé avec succès"
+            });
+          } else {
+            throw new Error(data?.error || 'Erreur lors de la création');
+          }
         } else {
-          throw new Error(data?.results?.[0]?.error || 'Erreur lors de la création');
+          // Utiliser la fonction edge invite-users pour envoyer une invitation
+          const { data, error } = await supabase.functions.invoke('invite-users', {
+            body: {
+              users: [{
+                email: userForm.email,
+                first_name: userForm.first_name,
+                last_name: userForm.last_name,
+                school: userForm.school || '',
+                class_name: userForm.class_name || ''
+              }]
+            }
+          });
+
+          if (error) throw error;
+
+          if (data?.results?.[0]?.success) {
+            toast({
+              title: "Utilisateur créé",
+              description: "L'utilisateur a été créé et invité avec succès"
+            });
+          } else {
+            throw new Error(data?.results?.[0]?.error || 'Erreur lors de la création');
+          }
         }
       }
 
@@ -790,6 +817,22 @@ export const UserManagement = () => {
                 </SelectContent>
               </Select>
             </div>
+            
+            {!editingUser && (
+              <div className="space-y-2">
+                <Label htmlFor="password">Mot de passe (optionnel)</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={userForm.password || ''}
+                  onChange={(e) => setUserForm(prev => ({ ...prev, password: e.target.value }))}
+                  placeholder="Laisser vide pour envoyer un email d'invitation"
+                />
+                <p className="text-sm text-muted-foreground">
+                  Si aucun mot de passe n'est défini, un email d'invitation sera envoyé
+                </p>
+              </div>
+            )}
           </div>
           
           <DialogFooter>
