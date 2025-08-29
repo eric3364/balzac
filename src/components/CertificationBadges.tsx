@@ -241,10 +241,10 @@ const CertificationBadges = () => {
             return (
               <Card
                 key={level}
-                className={`transition-all duration-300 hover:scale-105 ${
+                className={`${
                   isObtained 
-                    ? 'shadow-md hover:shadow-xl border-primary/20 bg-gradient-to-br from-card to-card/80' 
-                    : 'opacity-60 hover:opacity-80 bg-muted/30'
+                    ? 'shadow-md border-primary/20 bg-gradient-to-br from-card to-card/80' 
+                    : 'opacity-60 bg-muted/30'
                 }`}
               >
                 <CardContent className="p-4 flex flex-col items-center min-h-[320px]">
@@ -257,7 +257,7 @@ const CertificationBadges = () => {
                       size="large"
                       isObtained={isObtained}
                       level={level}
-                      animated={isObtained}
+                      animated={false}
                       customUrl={template?.custom_badge_url || undefined}
                     />
                   </div>
