@@ -59,12 +59,12 @@ export const useInitialAssessment = () => {
 
       // Classifier les questions par catégorie basée sur la règle
       const categorizedQuestions: AssessmentQuestion[] = questions
-        .filter(q => q.content && q.answer && q.choices) // Filtrer les questions valides
+        .filter(q => q.content && q.answer) // Filtrer les questions valides (content et answer obligatoires)
         .map(q => ({
           ...q,
           content: q.content!,
           answer: q.answer!,
-          choices: q.choices!,
+          choices: q.choices || [], // Peut être vide pour les questions texte libre
           explanation: q.explanation || '',
           rule: q.rule || '',
           type: q.type || 'multiple_choice',
