@@ -5,9 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useInitialAssessment } from '@/hooks/useInitialAssessment';
+import { useAntiCheat } from '@/hooks/useAntiCheat';
 import { AssessmentQuestion } from '@/types/interfaces';
-import { CheckCircle, Clock, BookOpen, Target } from 'lucide-react';
+import { CheckCircle, Clock, BookOpen, Target, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 
 const InitialAssessmentCard = () => {
@@ -20,7 +22,23 @@ const InitialAssessmentCard = () => {
   const [showResults, setShowResults] = useState(false);
   const [isActive, setIsActive] = useState(false);
 
+  // Système anti-triche
+  const { isTerminated } = useAntiCheat({
+    onTestTerminated: () => {
+      setIsActive(false);
+      setShowResults(false);
+      toast.error('Évaluation interrompue pour des raisons de sécurité');
+    },
+    isActive: isActive && !showResults,
+    strictMode: true
+  });
+
   const startAssessment = async () => {
+    if (isTerminated) {
+      toast.error('Impossible de démarrer l\'évaluation. Veuillez rafraîchir la page.');
+      return;
+    }
+    
     setIsStarting(true);
     try {
       const assessmentQuestions = await getAssessmentQuestions();
@@ -29,9 +47,9 @@ const InitialAssessmentCard = () => {
         return;
       }
       setQuestions(assessmentQuestions);
-      setIsActive(true);
       setCurrentQuestion(0);
       setAnswers([]);
+      setIsActive(true); // Activer en dernier pour déclencher l'anti-triche
     } catch (error) {
       toast.error('Erreur lors du chargement de l\'évaluation');
     } finally {
@@ -40,6 +58,11 @@ const InitialAssessmentCard = () => {
   };
 
   const handleAnswer = (answer: string) => {
+    if (isTerminated) {
+      toast.error('Évaluation interrompue. Impossible de continuer.');
+      return;
+    }
+
     const question = questions[currentQuestion];
     const isCorrect = answer.toLowerCase().trim() === (question.answer || '').toLowerCase().trim();
     
@@ -186,6 +209,38 @@ const InitialAssessmentCard = () => {
     );
   }
 
+  if (isTerminated) {
+    return (
+      <Card className="border-red-200 bg-red-50">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Shield className="h-5 w-5 text-red-600" />
+            <CardTitle className="text-red-800">Évaluation interrompue</CardTitle>
+          </div>
+          <CardDescription className="text-red-700">
+            L'évaluation a été interrompue pour des raisons de sécurité.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Alert className="border-red-200 bg-red-50">
+            <Shield className="h-4 w-4" />
+            <AlertDescription className="text-red-700">
+              Vous avez quitté la page pendant l'évaluation. Pour des raisons de sécurité, 
+              l'évaluation a été terminée. Veuillez rafraîchir la page pour recommencer.
+            </AlertDescription>
+          </Alert>
+          <Button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 w-full"
+            variant="destructive"
+          >
+            Rafraîchir la page
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (isActive) {
     if (showResults) {
       return (
@@ -225,6 +280,13 @@ const InitialAssessmentCard = () => {
           <Progress value={progress} className="w-full" />
         </CardHeader>
         <CardContent className="space-y-6">
+          <Alert className="border-orange-200 bg-orange-50">
+            <Shield className="h-4 w-4" />
+            <AlertDescription className="text-orange-700">
+              🔒 <strong>Session sécurisée :</strong> Ne quittez pas cette page pendant l'évaluation. 
+              Tout changement d'onglet ou fermeture de page entraînera l'interruption définitive du test.
+            </AlertDescription>
+          </Alert>
           <div>
             <h3 className="text-lg font-semibold mb-4">{question.content}</h3>
             
