@@ -198,7 +198,7 @@ export const UserManagement = () => {
   const saveUser = async () => {
     try {
       if (editingUser) {
-        // Modification
+        // Modification - utiliser la table users directement pour les modifications
         const { error } = await supabase
           .from('users')
           .update({
@@ -218,24 +218,29 @@ export const UserManagement = () => {
           description: "L'utilisateur a été mis à jour avec succès"
         });
       } else {
-        // Création
-        const { error } = await supabase
-          .from('users')
-          .insert({
-            email: userForm.email,
-            first_name: userForm.first_name,
-            last_name: userForm.last_name,
-            school: userForm.school || null,
-            class_name: userForm.class_name || null,
-            is_active: userForm.is_active
-          });
+        // Création - utiliser la fonction edge pour inviter l'utilisateur
+        const { data, error } = await supabase.functions.invoke('invite-users', {
+          body: {
+            users: [{
+              email: userForm.email,
+              first_name: userForm.first_name,
+              last_name: userForm.last_name,
+              school: userForm.school || '',
+              class_name: userForm.class_name || ''
+            }]
+          }
+        });
 
         if (error) throw error;
 
-        toast({
-          title: "Utilisateur créé",
-          description: "L'utilisateur a été créé avec succès"
-        });
+        if (data?.results?.[0]?.success) {
+          toast({
+            title: "Utilisateur créé",
+            description: "L'utilisateur a été créé et invité avec succès"
+          });
+        } else {
+          throw new Error(data?.results?.[0]?.error || 'Erreur lors de la création');
+        }
       }
 
       setIsUserDialogOpen(false);
@@ -244,7 +249,7 @@ export const UserManagement = () => {
       console.error('Erreur lors de la sauvegarde:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de sauvegarder l'utilisateur",
+        description: (error as Error)?.message || "Impossible de sauvegarder l'utilisateur",
         variant: "destructive"
       });
     }
