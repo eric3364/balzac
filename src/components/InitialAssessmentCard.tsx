@@ -213,9 +213,14 @@ const InitialAssessmentCard = () => {
         <CardHeader>
           <div className="flex justify-between items-center">
             <CardTitle>Évaluation initiale</CardTitle>
-            <Badge variant="outline">
-              Question {currentQuestion + 1} / {questions.length}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline">
+                Question {currentQuestion + 1} / {questions.length}
+              </Badge>
+              <Badge variant="secondary" className="text-xs">
+                Réf: {question.id}
+              </Badge>
+            </div>
           </div>
           <Progress value={progress} className="w-full" />
         </CardHeader>
