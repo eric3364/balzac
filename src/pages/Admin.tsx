@@ -22,6 +22,7 @@ import { FinanceManager } from '@/components/FinanceManager';
 import { LevelsAndCertificatesManager } from '@/components/LevelsAndCertificatesManager';
 import { TestSettingsManager } from '@/components/TestSettingsManager';
 import { HomepageManager } from '@/components/HomepageManager';
+import { useConnectionStats } from '@/hooks/useConnectionStats';
 
 interface AdminUser {
   id: number;
@@ -89,6 +90,7 @@ const Admin = () => {
   const [administrators, setAdministrators] = useState<AdminUser[]>([]);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [loadingData, setLoadingData] = useState(true);
+  const connectionStats = useConnectionStats();
 
   // --- Vérifie si l'utilisateur est admin (RPC is_super_admin + fallback table administrators)
   const checkAdminStatus = async () => {
@@ -290,59 +292,141 @@ const Admin = () => {
               </CardHeader>
               <CardContent>
                 {userStats ? (
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-                    <Card>
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Utilisateurs totaux</CardTitle>
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold">{userStats.total_auth_users}</div>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Sessions de test</CardTitle>
-                        <FileText className="h-4 w-4 text-muted-foreground" />
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold">{userStats.total_test_sessions}</div>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Questions totales</CardTitle>
-                        <FileText className="h-4 w-4 text-muted-foreground" />
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold">{userStats.total_questions}</div>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Certifications</CardTitle>
-                        <Award className="h-4 w-4 text-muted-foreground" />
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold">{userStats.total_certifications}</div>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Questions par niveau</CardTitle>
-                        <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-1">
-                          {Object.entries(questionsStats).map(([level, count]) => (
-                            <div key={level} className="flex justify-between text-sm">
-                              <span>Niveau {level}:</span>
-                              <span className="font-medium">{count}</span>
+                  <div className="space-y-6">
+                    {/* Statistiques générales */}
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+                      <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                          <CardTitle className="text-sm font-medium">Utilisateurs totaux</CardTitle>
+                          <Users className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold">{userStats.total_auth_users}</div>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                          <CardTitle className="text-sm font-medium">Sessions de test</CardTitle>
+                          <FileText className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold">{userStats.total_test_sessions}</div>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                          <CardTitle className="text-sm font-medium">Questions totales</CardTitle>
+                          <FileText className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold">{userStats.total_questions}</div>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                          <CardTitle className="text-sm font-medium">Certifications</CardTitle>
+                          <Award className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold">{userStats.total_certifications}</div>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                          <CardTitle className="text-sm font-medium">Questions par niveau</CardTitle>
+                          <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-1">
+                            {Object.entries(questionsStats).map(([level, count]) => (
+                              <div key={level} className="flex justify-between text-sm">
+                                <span>Niveau {level}:</span>
+                                <span className="font-medium">{count}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Statistiques de connexion */}
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4">Statistiques de connexion</h3>
+                      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                        <Card>
+                          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Apprenants actifs (semaine)</CardTitle>
+                            <Users className="h-4 w-4 text-muted-foreground" />
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-2xl font-bold">
+                              {connectionStats.loading ? (
+                                <div className="animate-pulse bg-muted h-8 w-12 rounded"></div>
+                              ) : (
+                                connectionStats.weeklyActiveUsers
+                              )}
                             </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
+                            <p className="text-xs text-muted-foreground">
+                              Connectés cette semaine
+                            </p>
+                          </CardContent>
+                        </Card>
+                        <Card>
+                          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Apprenants actifs (mois)</CardTitle>
+                            <Users className="h-4 w-4 text-muted-foreground" />
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-2xl font-bold">
+                              {connectionStats.loading ? (
+                                <div className="animate-pulse bg-muted h-8 w-12 rounded"></div>
+                              ) : (
+                                connectionStats.monthlyActiveUsers
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              Connectés ce mois
+                            </p>
+                          </CardContent>
+                        </Card>
+                        <Card>
+                          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Temps moyen (semaine)</CardTitle>
+                            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-2xl font-bold">
+                              {connectionStats.loading ? (
+                                <div className="animate-pulse bg-muted h-8 w-16 rounded"></div>
+                              ) : (
+                                `${connectionStats.weeklyAvgConnectionTime}min`
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              Par session cette semaine
+                            </p>
+                          </CardContent>
+                        </Card>
+                        <Card>
+                          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Temps moyen (mois)</CardTitle>
+                            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-2xl font-bold">
+                              {connectionStats.loading ? (
+                                <div className="animate-pulse bg-muted h-8 w-16 rounded"></div>
+                              ) : (
+                                `${connectionStats.monthlyAvgConnectionTime}min`
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              Par session ce mois
+                            </p>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   <div className="flex items-center justify-center h-32">
