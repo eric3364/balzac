@@ -324,6 +324,10 @@ const InitialAssessmentCard = () => {
                       autoComplete="off"
                       autoCorrect="off"
                       autoCapitalize="off"
+                      data-gramm="false"
+                      data-gramm_editor="false"
+                      data-enable-grammarly="false"
+                      lang="fr"
                     />
                   ) : (
                     <Input
@@ -335,6 +339,10 @@ const InitialAssessmentCard = () => {
                       autoComplete="off"
                       autoCorrect="off"
                       autoCapitalize="off"
+                      data-gramm="false"
+                      data-gramm_editor="false"
+                      data-enable-grammarly="false"
+                      lang="fr"
                       onKeyPress={(e) => {
                         if (e.key === 'Enter' && currentAnswer.trim()) {
                           handleAnswer(currentAnswer.trim());
