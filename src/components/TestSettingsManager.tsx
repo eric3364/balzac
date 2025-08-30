@@ -3,9 +3,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Save, TestTube } from 'lucide-react';
+import { useAntiCheatConfig } from '@/hooks/useAntiCheatConfig';
+import { Save, TestTube, Shield } from 'lucide-react';
 
 interface Level {
   id: string;
@@ -30,6 +32,7 @@ export const TestSettingsManager = () => {
   const [saving, setSaving] = useState(false);
   const [levels, setLevels] = useState<Level[]>([]);
   const [testConfigs, setTestConfigs] = useState<TestLevelConfig[]>([]);
+  const { isEnabled: antiCheatEnabled, loading: antiCheatLoading, updateConfig: updateAntiCheatConfig } = useAntiCheatConfig();
 
   const loadLevels = async () => {
     try {
@@ -147,11 +150,27 @@ export const TestSettingsManager = () => {
     }
   };
 
+  const handleAntiCheatToggle = async (enabled: boolean) => {
+    const success = await updateAntiCheatConfig(enabled);
+    if (success) {
+      toast({
+        title: "Configuration mise à jour",
+        description: `Système anti-triche ${enabled ? 'activé' : 'désactivé'} avec succès.`,
+      });
+    } else {
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour la configuration anti-triche.",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     loadLevels();
   }, []);
 
-  if (loading) {
+  if (loading || antiCheatLoading) {
     return (
       <Card>
         <CardContent className="flex items-center justify-center py-6">
@@ -163,6 +182,48 @@ export const TestSettingsManager = () => {
 
   return (
     <div className="space-y-6">
+      {/* Configuration Anti-triche */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5" />
+            Système anti-triche
+          </CardTitle>
+          <CardDescription>
+            Contrôlez l'activation du système anti-triche qui empêche les apprenants de quitter la fenêtre pendant les tests.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="space-y-1">
+              <Label htmlFor="anti-cheat-toggle" className="text-base font-medium">
+                Activer le système anti-triche
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                Empêche les apprenants de changer de fenêtre, d'utiliser certains raccourcis clavier, 
+                et surveille les tentatives de triche pendant les tests.
+              </p>
+            </div>
+            <Switch
+              id="anti-cheat-toggle"
+              checked={antiCheatEnabled}
+              onCheckedChange={handleAntiCheatToggle}
+            />
+          </div>
+          
+          <div className="text-sm text-muted-foreground space-y-2">
+            <p><strong>Fonctionnalités du système anti-triche :</strong></p>
+            <ul className="list-disc pl-6 space-y-1">
+              <li>Détection du changement de fenêtre ou d'onglet</li>
+              <li>Blocage des raccourcis clavier (F12, Ctrl+Shift+I, etc.)</li>
+              <li>Désactivation du clic droit</li>
+              <li>Prévention de la navigation avec les boutons du navigateur</li>
+              <li>Avertissements et interruption automatique après plusieurs tentatives</li>
+            </ul>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

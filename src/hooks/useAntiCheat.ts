@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { toast } from '@/components/ui/use-toast';
+import { useAntiCheatConfig } from './useAntiCheatConfig';
 
 interface AntiCheatOptions {
   onTestTerminated: () => void;
@@ -19,9 +20,13 @@ export const useAntiCheat = ({
   const [isLocked, setIsLocked] = useState(false);
   const hasShownWarning = useRef(false);
   const lockMessageShown = useRef(false);
+  const { isEnabled: antiCheatEnabled } = useAntiCheatConfig();
+
+  // Si l'anti-triche est désactivé dans l'admin, on désactive toutes les fonctionnalités
+  const shouldBeActive = isActive && antiCheatEnabled;
 
   const handleSuspiciousActivity = (type: 'tab_switch' | 'window_blur' | 'page_unload' | 'navigation') => {
-    if (!isActive || isTerminated) return;
+    if (!shouldBeActive || isTerminated) return;
 
     if (strictMode) {
       // En mode strict, terminer immédiatement le test
@@ -67,7 +72,7 @@ export const useAntiCheat = ({
   };
 
   useEffect(() => {
-    if (!isActive) return;
+    if (!shouldBeActive) return;
 
     setIsLocked(true);
 
@@ -254,13 +259,13 @@ export const useAntiCheat = ({
         });
       }
     };
-  }, [isActive, attempts, isTerminated, maxAttempts, onTestTerminated, strictMode]);
+  }, [shouldBeActive, attempts, isTerminated, maxAttempts, onTestTerminated, strictMode]);
 
   return {
     attempts,
     isTerminated,
     isLocked,
     remainingAttempts: maxAttempts - attempts,
-    warningMessage: isActive ? "Session de test en cours ! Vous ne pouvez pas quitter la fenêtre - Sinon le test sera interrompu" : null
+    warningMessage: shouldBeActive ? "Session de test en cours ! Vous ne pouvez pas quitter la fenêtre - Sinon le test sera interrompu" : null
   };
 };
