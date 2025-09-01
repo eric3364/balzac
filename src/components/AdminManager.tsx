@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Trash2, Edit2, Plus, Shield, UserCog } from 'lucide-react';
+import { Trash2, Edit2, Plus, Shield, UserCog, Mail } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -81,16 +81,63 @@ export const AdminManager = () => {
         if (error) throw error;
         toast.success('Administrateur modifié avec succès');
       } else {
-        // Ajouter un nouvel administrateur
-        const { error } = await supabase
+        // Ajouter un nouvel administrateur avec création de compte et envoi d'email
+        
+        // Générer un mot de passe temporaire
+        const tempPassword = generateTemporaryPassword();
+        
+        // Créer le compte utilisateur via Supabase Auth
+        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+          email: formData.email,
+          password: tempPassword,
+          email_confirm: true,
+          user_metadata: {
+            force_password_change: true,
+            is_admin: true
+          }
+        });
+
+        if (authError) {
+          console.error('Auth error:', authError);
+          if (authError.message?.includes('already registered')) {
+            toast.error('Un utilisateur avec cet email existe déjà');
+          } else {
+            toast.error('Erreur lors de la création du compte: ' + authError.message);
+          }
+          return;
+        }
+
+        // Ajouter l'administrateur dans la table administrators
+        const { error: adminError } = await supabase
           .from('administrators')
           .insert({
             email: formData.email,
-            is_super_admin: formData.is_super_admin
+            is_super_admin: formData.is_super_admin,
+            user_id: authData.user?.id
           });
 
-        if (error) throw error;
-        toast.success('Administrateur ajouté avec succès');
+        if (adminError) {
+          console.error('Admin table error:', adminError);
+          // Nettoyer le compte créé si l'insertion échoue
+          await supabase.auth.admin.deleteUser(authData.user!.id);
+          throw adminError;
+        }
+
+        // Envoyer l'email d'invitation
+        const { error: emailError } = await supabase.functions.invoke('send-admin-invitation', {
+          body: {
+            email: formData.email,
+            is_super_admin: formData.is_super_admin,
+            temporary_password: tempPassword
+          }
+        });
+
+        if (emailError) {
+          console.error('Email error:', emailError);
+          toast.error('Administrateur créé mais erreur lors de l\'envoi de l\'email');
+        } else {
+          toast.success('Administrateur ajouté et email d\'invitation envoyé');
+        }
       }
 
       setIsDialogOpen(false);
@@ -105,6 +152,27 @@ export const AdminManager = () => {
         toast.error('Erreur lors de la sauvegarde');
       }
     }
+  };
+
+  // Fonction pour générer un mot de passe temporaire sécurisé
+  const generateTemporaryPassword = (): string => {
+    const length = 12;
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+    let password = "";
+    
+    // Assurer au moins un caractère de chaque type
+    password += "ABCDEFGHIJKLMNOPQRSTUVWXYZ".charAt(Math.floor(Math.random() * 26)); // Majuscule
+    password += "abcdefghijklmnopqrstuvwxyz".charAt(Math.floor(Math.random() * 26)); // Minuscule
+    password += "0123456789".charAt(Math.floor(Math.random() * 10)); // Chiffre
+    password += "!@#$%^&*".charAt(Math.floor(Math.random() * 8)); // Caractère spécial
+    
+    // Remplir le reste
+    for (let i = password.length; i < length; i++) {
+      password += charset.charAt(Math.floor(Math.random() * charset.length));
+    }
+    
+    // Mélanger les caractères
+    return password.split('').sort(() => Math.random() - 0.5).join('');
   };
 
   const handleEdit = (admin: AdminUser) => {
@@ -149,19 +217,19 @@ export const AdminManager = () => {
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button onClick={openAddDialog} className="flex items-center gap-2">
-                <Plus className="h-4 w-4" />
-                Ajouter un administrateur
+                <Mail className="h-4 w-4" />
+                Inviter un administrateur
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>
-                  {editingAdmin ? 'Modifier l\'administrateur' : 'Ajouter un administrateur'}
+                  {editingAdmin ? 'Modifier l\'administrateur' : 'Inviter un administrateur'}
                 </DialogTitle>
                 <DialogDescription>
                   {editingAdmin 
                     ? 'Modifiez les informations de l\'administrateur'
-                    : 'Ajoutez un nouvel administrateur à la plateforme'
+                    : 'Invitez un nouvel administrateur. Un email avec les informations de connexion sera automatiquement envoyé.'
                   }
                 </DialogDescription>
               </DialogHeader>
@@ -190,7 +258,7 @@ export const AdminManager = () => {
                     Annuler
                   </Button>
                   <Button type="submit">
-                    {editingAdmin ? 'Modifier' : 'Ajouter'}
+                    {editingAdmin ? 'Modifier' : 'Inviter'}
                   </Button>
                 </DialogFooter>
               </form>

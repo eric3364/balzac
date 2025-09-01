@@ -46,10 +46,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Vérifier si c'est la première connexion d'un apprenant
+        // Vérifier si c'est la première connexion d'un apprenant ou un admin qui doit changer son mot de passe
         if (session?.user && event === 'SIGNED_IN') {
           setTimeout(async () => {
             try {
+              // Vérifier si l'utilisateur doit changer son mot de passe (administrateur)
+              if (session.user.user_metadata?.force_password_change === true) {
+                window.location.href = '/force-password-change';
+                return;
+              }
+
+              // Vérifier si c'est un apprenant inactif
               const { data: userData, error } = await supabase
                 .from('users')
                 .select('is_active, user_id')

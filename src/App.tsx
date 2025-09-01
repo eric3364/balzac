@@ -11,6 +11,7 @@ import Index from '@/pages/Index';
 import Auth from '@/pages/Auth';
 import AuthCallback from '@/pages/AuthCallback';
 import SetPassword from '@/pages/SetPassword';
+import { ForcePasswordChange } from '@/pages/ForcePasswordChange';
 import Dashboard from '@/pages/Dashboard';
 import Admin from '@/pages/Admin';
 import AdminAuth from '@/pages/AdminAuth';
@@ -40,6 +41,7 @@ function App() {
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/set-password" element={<SetPassword />} />
+                <Route path="/force-password-change" element={<ForcePasswordChange />} />
                 <Route path="/dashboard" element={<Dashboard />} />
 
                 <Route path="/admin" element={<Admin />} />
