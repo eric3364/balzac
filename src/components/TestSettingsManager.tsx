@@ -183,8 +183,8 @@ export const TestSettingsManager = () => {
     const success = await updateInstructions(tempInstructions);
     if (success) {
       toast({
-        title: "Message mis à jour",
-        description: "Le message d'instructions a été sauvegardé avec succès.",
+        title: "Succès",
+        description: "Votre modification a été enregistrée",
       });
     } else {
       toast({
