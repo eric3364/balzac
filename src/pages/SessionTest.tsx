@@ -760,7 +760,7 @@ const SessionTest = () => {
                       value={currentAnswer}
                       onChange={(e) => handleAnswerChange(e.target.value)}
                       placeholder="Tapez votre réponse ici..."
-                      className="text-lg bg-white border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary"
+                      className="text-lg"
                     />
                   </div>
                 )}
