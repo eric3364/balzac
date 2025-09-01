@@ -4,10 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAntiCheatConfig } from '@/hooks/useAntiCheatConfig';
-import { Save, TestTube, Shield } from 'lucide-react';
+import { useTestInstructions } from '@/hooks/useTestInstructions';
+import { Save, TestTube, Shield, MessageSquare } from 'lucide-react';
 
 interface Level {
   id: string;
@@ -33,6 +35,8 @@ export const TestSettingsManager = () => {
   const [levels, setLevels] = useState<Level[]>([]);
   const [testConfigs, setTestConfigs] = useState<TestLevelConfig[]>([]);
   const { isEnabled: antiCheatEnabled, loading: antiCheatLoading, updateConfig: updateAntiCheatConfig } = useAntiCheatConfig();
+  const { instructions, loading: instructionsLoading, updateInstructions } = useTestInstructions();
+  const [tempInstructions, setTempInstructions] = useState<string>('');
 
   const loadLevels = async () => {
     try {
@@ -166,9 +170,41 @@ export const TestSettingsManager = () => {
     }
   };
 
+  const handleInstructionsChange = async () => {
+    if (tempInstructions.trim() === '') {
+      toast({
+        title: "Erreur",
+        description: "Le message d'instructions ne peut pas être vide.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const success = await updateInstructions(tempInstructions);
+    if (success) {
+      toast({
+        title: "Message mis à jour",
+        description: "Le message d'instructions a été sauvegardé avec succès.",
+      });
+    } else {
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour le message d'instructions.",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     loadLevels();
   }, []);
+
+  // Initialiser tempInstructions avec les instructions chargées
+  useEffect(() => {
+    if (instructions && !instructionsLoading) {
+      setTempInstructions(instructions);
+    }
+  }, [instructions, instructionsLoading]);
 
   if (loading || antiCheatLoading) {
     return (
@@ -220,6 +256,47 @@ export const TestSettingsManager = () => {
               <li>Prévention de la navigation avec les boutons du navigateur</li>
               <li>Avertissements et interruption automatique après plusieurs tentatives</li>
             </ul>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Configuration du message d'instructions */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MessageSquare className="h-5 w-5" />
+            Message d'instructions pour les tests
+          </CardTitle>
+          <CardDescription>
+            Personnalisez le message d'avertissement qui s'affiche au début de chaque test pour donner des instructions aux apprenants.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="instructions-message">
+              Message d'instructions
+            </Label>
+            <Textarea
+              id="instructions-message"
+              placeholder="Entrez le message d'instructions qui sera affiché dans les tests..."
+              value={tempInstructions}
+              onChange={(e) => setTempInstructions(e.target.value)}
+              rows={4}
+              className="w-full"
+            />
+            <p className="text-sm text-muted-foreground">
+              Ce message apparaîtra dans un encadré d'avertissement au début de chaque test pour informer les apprenants des règles de réponse.
+            </p>
+          </div>
+          
+          <div className="flex justify-end">
+            <Button 
+              onClick={handleInstructionsChange} 
+              disabled={instructionsLoading || tempInstructions.trim() === ''}
+            >
+              <Save className="h-4 w-4 mr-2" />
+              Sauvegarder le message
+            </Button>
           </div>
         </CardContent>
       </Card>

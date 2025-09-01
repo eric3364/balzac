@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useSessionProgress } from '@/hooks/useSessionProgress';
 import { useUserStats } from '@/hooks/useUserStats';
 import { useAntiCheat } from '@/hooks/useAntiCheat';
+import { useTestInstructions } from '@/hooks/useTestInstructions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -44,6 +45,7 @@ const SessionTest = () => {
   
   const { progress, updateProgress, recordFailedQuestion } = useSessionProgress(sessionLevel);
   const { refetchStats } = useUserStats();
+  const { instructions } = useTestInstructions();
 
   // États du test
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -712,8 +714,7 @@ const SessionTest = () => {
                   <div className="text-sm text-amber-800">
                     <p className="font-medium mb-2">⚠️ Important - Instructions pour les réponses</p>
                     <p>
-                      Attention vos réponses doivent être écrites parfaitement en respectant la casse et la ponctuation éventuelle. 
-                      Vous ne pouvez-pas répondre réponse 1, 2 ou 3 ou bien A, B, C. !
+                      {instructions}
                     </p>
                   </div>
                 </div>
