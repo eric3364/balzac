@@ -30,6 +30,58 @@ export const useUserStats = () => {
     loading: true,
   });
 
+  // Set up real-time subscription for updates
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('user-stats-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'test_sessions',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          console.log('Test session updated, refreshing stats');
+          fetchUserStats();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'question_attempts',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          console.log('Question attempt updated, refreshing stats');
+          fetchUserStats();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_certifications',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          console.log('Certification updated, refreshing stats');
+          fetchUserStats();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
   const fetchUserStats = useCallback(async () => {
     if (!user) return;
     
