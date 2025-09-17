@@ -14,7 +14,7 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { Textarea } from '@/components/ui/textarea';
 import { BadgeConfiguration } from '@/components/BadgeConfiguration';
 import { CertificationBadge } from '@/components/CertificationBadge';
-import { Users, Settings, BarChart3, Shield, ArrowLeft, Save, Plus, Edit2, Trash2, Award, FileText, Upload } from 'lucide-react';
+import { Users, Settings, BarChart3, Shield, ArrowLeft, Save, Plus, Edit2, Trash2, Award, FileText, Upload, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserManagement } from '@/components/UserManagement';
 import { QuestionsManager } from '@/components/QuestionsManager';
@@ -90,6 +90,7 @@ const Admin = () => {
   const [administrators, setAdministrators] = useState<AdminUser[]>([]);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [loadingData, setLoadingData] = useState(true);
+  const [refreshingStats, setRefreshingStats] = useState(false);
   const connectionStats = useConnectionStats();
 
   // --- Vérifie si l'utilisateur est admin (RPC is_super_admin + fallback table administrators)
@@ -136,7 +137,8 @@ const Admin = () => {
   };
 
   // --- Stats
-  const loadUserStats = async () => {
+  const loadUserStats = async (showRefreshing = false) => {
+    if (showRefreshing) setRefreshingStats(true);
     try {
       const { count: authUsersCount, error: usersCountError } = await supabase
         .from('profiles')
@@ -176,7 +178,20 @@ const Admin = () => {
       console.error('Erreur lors du chargement des statistiques:', error);
     } finally {
       setLoadingData(false);
+      if (showRefreshing) setRefreshingStats(false);
     }
+  };
+
+  const refreshStats = async () => {
+    await Promise.all([
+      loadUserStats(true),
+      loadQuestions(),
+      connectionStats.refetchStats?.()
+    ]);
+    toast({
+      title: "Statistiques mises à jour",
+      description: "Les données ont été actualisées avec succès.",
+    });
   };
 
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -282,13 +297,27 @@ const Admin = () => {
           <TabsContent value="stats" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5" />
-                  Statistiques générales
-                </CardTitle>
-                <CardDescription>
-                  Vue d'ensemble de l'activité de la plateforme
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <BarChart3 className="h-5 w-5" />
+                      Statistiques générales
+                    </CardTitle>
+                    <CardDescription>
+                      Vue d'ensemble de l'activité de la plateforme
+                    </CardDescription>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={refreshStats}
+                    disabled={refreshingStats || loadingData}
+                    className="flex items-center gap-2"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${refreshingStats ? 'animate-spin' : ''}`} />
+                    Actualiser
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 {userStats ? (
