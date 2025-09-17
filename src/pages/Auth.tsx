@@ -7,12 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ArrowLeft, CheckCircle } from 'lucide-react';
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showSignupSuccess, setShowSignupSuccess] = useState(false);
   const { user, signIn, signUp, resetPassword } = useAuth();
   const navigate = useNavigate();
   const { pendingPurchase } = usePendingPurchase();
@@ -56,7 +58,11 @@ const Auth = () => {
     const school = formData.get('school') as string;
     const className = formData.get('className') as string;
 
-    await signUp(email, password, firstName, lastName, school, className);
+    const { error } = await signUp(email, password, firstName, lastName, school, className);
+    
+    if (!error) {
+      setShowSignupSuccess(true);
+    }
     
     setIsLoading(false);
   };
@@ -261,6 +267,31 @@ const Auth = () => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        <Dialog open={showSignupSuccess} onOpenChange={setShowSignupSuccess}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-green-100 rounded-full">
+                <CheckCircle className="w-6 h-6 text-green-600" />
+              </div>
+              <DialogTitle className="text-center">Inscription réussie !</DialogTitle>
+              <DialogDescription className="text-center space-y-2">
+                <p>Votre compte a été créé avec succès.</p>
+                <p className="font-medium">
+                  Pour finaliser votre inscription, veuillez vérifier votre boîte email et cliquer sur le lien de validation.
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Pensez à vérifier vos spams si vous ne recevez pas l'email.
+                </p>
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-center mt-4">
+              <Button onClick={() => setShowSignupSuccess(false)}>
+                J'ai compris
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
