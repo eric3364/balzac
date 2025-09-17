@@ -8,7 +8,7 @@ import { useLevelAccess } from '@/hooks/useLevelAccess';
 import { useDifficultyLevels } from '@/hooks/useDifficultyLevels';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Settings, Lock, BookOpen, Target, Clock, TrendingUp, Award, BarChart3 } from 'lucide-react';
+import { Lock, BookOpen, Target, Clock, TrendingUp, Award, BarChart3 } from 'lucide-react';
 import CertificationBadges from '@/components/CertificationBadges';
 import InitialAssessmentCard from '@/components/InitialAssessmentCard';
 import StatsCard from '@/components/dashboard/StatsCard';
@@ -62,8 +62,8 @@ const Dashboard = () => {
               Bonjour, {user.user_metadata?.first_name || user.email}
             </span>
             {isAdmin && (
-              <Button variant="ghost" size="icon" onClick={() => navigate('/admin')} title="Administration">
-                <Settings className="h-4 w-4" />
+              <Button variant="ghost" onClick={() => navigate('/admin')} title="Administration">
+                Paramétrage
               </Button>
             )}
             <Button variant="outline" onClick={async () => {
