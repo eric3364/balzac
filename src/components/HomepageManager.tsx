@@ -9,7 +9,7 @@ import { FooterManager } from './FooterManager';
 import { LegalPageManager } from './LegalPageManager';
 import { AdminManager } from './AdminManager';
 import { Separator } from '@/components/ui/separator';
-import { Home, Type, Image, BarChart, MessageCircle, Settings, FileText, Save } from 'lucide-react';
+import { Home, Type, Image, BarChart, MessageCircle, FileText, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
 
@@ -383,8 +383,10 @@ export const HomepageManager = () => {
       {/* Séparateur pour les paramètres du footer */}
       <div className="pt-8">
         <Separator className="mb-6" />
-        <div className="flex items-center gap-2 mb-6">
-          <Settings className="h-5 w-5 text-primary" />
+        <div className="flex items-center gap-4 mb-6">
+          <Button variant="secondary" size="sm" className="font-medium">
+            Paramétrage
+          </Button>
           <h2 className="text-2xl font-bold">Paramètres du footer et pages légales</h2>
         </div>
       </div>
