@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { ArrowLeft, Clock, Trophy, CheckCircle, AlertTriangle, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
+import { getLevelName } from '@/lib/levelMapping';
 
 interface Question {
   id: number;
@@ -191,6 +192,7 @@ export default function Test() {
 
   const loadQuestionsForLevel = async (level: number, excludeIds: number[] = []) => {
     try {
+      const levelName = getLevelName(level);
       // Get completed question IDs for this level
       const { data: attemptsData } = await supabase
         .from('question_attempts')
@@ -208,7 +210,7 @@ export default function Test() {
       let query = supabase
         .from('questions')
         .select('*')
-        .eq('level', level)
+        .eq('level', levelName)
         .limit(questionsPerTest);
       
       if (allExcludedIds.length > 0) {
@@ -454,6 +456,7 @@ export default function Test() {
 
   const checkCertificationEligibility = async (level: number) => {
     try {
+      const levelName = getLevelName(level);
       // Get all correct attempts for this level
       const { data: correctAttempts } = await supabase
         .from('question_attempts')
@@ -466,7 +469,7 @@ export default function Test() {
       const { data: totalQuestions } = await supabase
         .from('questions')
         .select('id')
-        .eq('level', level);
+        .eq('level', levelName);
       
       const correctCount = correctAttempts?.length || 0;
       const totalCount = totalQuestions?.length || 0;

@@ -5,6 +5,7 @@ import { useSessionProgress } from '@/hooks/useSessionProgress';
 import { useUserStats } from '@/hooks/useUserStats';
 import { useAntiCheat } from '@/hooks/useAntiCheat';
 import { useTestInstructions } from '@/hooks/useTestInstructions';
+import { getLevelName } from '@/lib/levelMapping';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -90,7 +91,8 @@ const SessionTest = () => {
 
     try {
       setIsLoading(true);
-      console.log('Loading session questions for:', { sessionLevel, sessionNumber, sessionType });
+      const levelName = getLevelName(sessionLevel);
+      console.log('Loading session questions for:', { sessionLevel, levelName, sessionNumber, sessionType });
 
       // Récupérer le pourcentage de questions configuré
       const { data: configData, error: configError } = await supabase
@@ -108,7 +110,7 @@ const SessionTest = () => {
       const { data: questionsCount, error: countError } = await supabase
         .from('questions')
         .select('id')
-        .eq('level', sessionLevel);
+        .eq('level', levelName);
 
       console.log('Questions count for level', sessionLevel, ':', questionsCount?.length, 'Error:', countError);
 
@@ -167,7 +169,7 @@ const SessionTest = () => {
             .from('questions')
             .select('*')
             .in('id', questionIds)
-            .eq('level', sessionLevel)
+            .eq('level', levelName)
             .order('id');
             
           sessionQuestions = questionsData;
@@ -182,7 +184,7 @@ const SessionTest = () => {
         const { data, error: rpcError } = await supabase
           .from('questions')
           .select('*')
-          .eq('level', sessionLevel)
+          .eq('level', levelName)
           .range(offset, offset + questionsPerSession - 1)
           .order('id');
           
