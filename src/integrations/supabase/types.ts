@@ -524,7 +524,7 @@ export type Database = {
           created_at: string | null
           explanation: string | null
           id: number
-          level: number | null
+          level: string | null
           rule: string | null
           type: string | null
         }
@@ -535,7 +535,7 @@ export type Database = {
           created_at?: string | null
           explanation?: string | null
           id?: number
-          level?: number | null
+          level?: string | null
           rule?: string | null
           type?: string | null
         }
@@ -546,7 +546,7 @@ export type Database = {
           created_at?: string | null
           explanation?: string | null
           id?: number
-          level?: number | null
+          level?: string | null
           rule?: string | null
           type?: string | null
         }
@@ -960,7 +960,7 @@ export type Database = {
           content: string
           explanation: string
           id: number
-          level: number
+          level: string
           rule: string
           type: string
         }[]
