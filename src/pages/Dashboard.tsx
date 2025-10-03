@@ -52,7 +52,7 @@ const Dashboard = () => {
       <div className="min-h-screen bg-background">
         {/* Header */}
         <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-primary">Balzac Certification</h1>
             <p className="text-sm text-muted-foreground">Plateforme d'apprentissage du français</p>
