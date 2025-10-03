@@ -45,11 +45,11 @@ export const useInitialAssessment = () => {
 
   const getAssessmentQuestions = useCallback(async (): Promise<AssessmentQuestion[]> => {
     try {
-      // Récupérer des questions aléatoires de tous les niveaux (1-4)
+      // Récupérer des questions aléatoires de tous les niveaux
       const { data: questions, error } = await supabase
         .from('questions')
         .select('*')
-        .in('level', [1, 2, 3, 4]);
+        .in('level', ['élémentaire', 'intermédiaire', 'avancé']);
 
       if (error) throw error;
 
@@ -69,22 +69,21 @@ export const useInitialAssessment = () => {
           rule: q.rule || '',
           type: q.type || 'multiple_choice',
           created_at: q.created_at || new Date().toISOString(),
-          level: q.level || 1,
+          level: q.level || 'élémentaire',
           category: categorizeQuestion(q.rule || '')
         }));
 
       // Grouper par niveau
       const questionsByLevel = {
-        1: categorizedQuestions.filter(q => q.level === 1),
-        2: categorizedQuestions.filter(q => q.level === 2),
-        3: categorizedQuestions.filter(q => q.level === 3),
-        4: categorizedQuestions.filter(q => q.level === 4)
+        'élémentaire': categorizedQuestions.filter(q => q.level === 'élémentaire'),
+        'intermédiaire': categorizedQuestions.filter(q => q.level === 'intermédiaire'),
+        'avancé': categorizedQuestions.filter(q => q.level === 'avancé')
       };
 
       const selectedQuestions: AssessmentQuestion[] = [];
 
       // Sélectionner 10 questions aléatoires par niveau
-      [1, 2, 3, 4].forEach(level => {
+      ['élémentaire', 'intermédiaire', 'avancé'].forEach(level => {
         const levelQuestions = questionsByLevel[level as keyof typeof questionsByLevel];
         if (levelQuestions.length > 0) {
           // Mélanger les questions du niveau
