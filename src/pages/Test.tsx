@@ -19,9 +19,8 @@ interface Question {
   id: number;
   content: string;
   choices: string[] | null;
-  answer: string;
   type: string;
-  level: number;
+  level: string;
   rule?: string;
   explanation?: string;
 }
@@ -192,7 +191,6 @@ export default function Test() {
 
   const loadQuestionsForLevel = async (level: number, excludeIds: number[] = []) => {
     try {
-      const levelName = getLevelName(level);
       // Get completed question IDs for this level
       const { data: attemptsData } = await supabase
         .from('question_attempts')
@@ -202,22 +200,17 @@ export default function Test() {
         .eq('is_correct', true);
       
       const completedIds = attemptsData?.map(a => a.question_id) || [];
-      const allExcludedIds = [...completedIds, ...excludeIds];
-      
       setCompletedQuestionIds(new Set(completedIds));
       
-      // Load new batch of questions, excluding completed ones
-      let query = supabase
-        .from('questions')
-        .select('*')
-        .eq('level', levelName)
-        .limit(questionsPerTest);
-      
-      if (allExcludedIds.length > 0) {
-        query = query.not('id', 'in', `(${allExcludedIds.join(',')})`);
-      }
-      
-      const { data: questionsData, error } = await query;
+      // Get questions via edge function (secure - no answers exposed)
+      const { data: questionsData, error } = await supabase.functions.invoke('get-session-questions', {
+        body: {
+          level: level,
+          session_number: 1,
+          session_type: 'regular',
+          questions_percentage: 100 // Get all questions for this mode
+        }
+      });
       
       if (error) throw error;
       
@@ -227,18 +220,25 @@ export default function Test() {
         return;
       }
       
-      // Shuffle questions
-      const shuffledQuestions = questionsData.sort(() => Math.random() - 0.5);
-      setQuestions(shuffledQuestions.map(q => ({
-        ...q,
+      // Filter out completed questions and shuffle
+      const availableQuestions = questionsData
+        .filter((q: any) => !completedIds.includes(q.id) && !excludeIds.includes(q.id))
+        .sort(() => Math.random() - 0.5)
+        .slice(0, questionsPerTest);
+      
+      if (availableQuestions.length === 0) {
+        await checkCertificationEligibility(level);
+        return;
+      }
+      
+      setQuestions(availableQuestions.map((q: any) => ({
+        id: q.id,
         content: q.content || '',
         type: q.type || 'multiple_choice',
-        level: q.level || 1,
+        level: q.level || '',
         rule: q.rule || '',
-        answer: q.answer || '',
         explanation: q.explanation || '',
-        created_at: q.created_at || '',
-        choices: q.answer ? JSON.parse(q.answer || '[]') : []
+        choices: Array.isArray(q.choices) ? q.choices : []
       })));
       
       // First, complete any existing in-progress sessions and clean up deleted ones
@@ -341,55 +341,67 @@ export default function Test() {
     }
 
     const currentQuestion = questions[currentQuestionIndex];
-    const isCorrect = selectedAnswer === currentQuestion.answer;
     
-    // Update counters
-    const newTotalAnswered = totalAnswered + 1;
-    const newCorrectAnswers = correctAnswers + (isCorrect ? 1 : 0);
-    const newBatchScore = Math.round((newCorrectAnswers / newTotalAnswered) * 100);
-    
-    setTotalAnswered(newTotalAnswered);
-    setCorrectAnswers(newCorrectAnswers);
-    setBatchScore(newBatchScore);
-    
-    // Show explanation for incorrect answers
-    if (!isCorrect && currentQuestion.explanation) {
-      setLastAnswer({ correct: false, explanation: currentQuestion.explanation });
-      setShowExplanation(true);
-    } else {
-      setLastAnswer({ correct: isCorrect });
-    }
-    
-    // Save/update question attempt
-    await saveQuestionAttempt(currentQuestion.id, isCorrect);
-    
-    // Save answer to test_answers - Skip this table as it expects UUID and we have bigint
-    // We'll rely on question_attempts for statistics
-    // if (testSession && user) {
-    //   await supabase.from('test_answers').insert({
-    //     session_id: testSession.id,
-    //     question_id: currentQuestion.id.toString(),
-    //     user_answer: selectedAnswer,
-    //     is_correct: isCorrect,
-    //     user_id: user.id,
-    //     answered_at: new Date().toISOString(),
-    //     created_at: new Date().toISOString()
-    //   });
-    // }
+    try {
+      // Validate answer via secure edge function
+      const { data: validationResult, error } = await supabase.functions.invoke('validate-answer', {
+        body: {
+          question_id: currentQuestion.id,
+          user_answer: selectedAnswer
+        }
+      });
 
-    // Update local state
-    setUserAnswers(prev => ({ ...prev, [currentQuestion.id]: selectedAnswer }));
-    
-    if (!isCorrect) {
-      setIncorrectQuestions(prev => new Set([...prev, currentQuestion.id]));
-    }
+      if (error) throw error;
 
-    if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-      setSelectedAnswer('');
-    } else {
-      // Batch completed
-      await completeBatch();
+      const isCorrect = validationResult.is_correct;
+      
+      // Update counters
+      const newTotalAnswered = totalAnswered + 1;
+      const newCorrectAnswers = correctAnswers + (isCorrect ? 1 : 0);
+      const newBatchScore = Math.round((newCorrectAnswers / newTotalAnswered) * 100);
+      
+      setTotalAnswered(newTotalAnswered);
+      setCorrectAnswers(newCorrectAnswers);
+      setBatchScore(newBatchScore);
+      
+      // Show explanation for incorrect answers (from server response)
+      if (!isCorrect && validationResult.explanation) {
+        setLastAnswer({ correct: false, explanation: validationResult.explanation });
+        setShowExplanation(true);
+        // Update question with server explanation
+        setQuestions(prev => prev.map((q, idx) => 
+          idx === currentQuestionIndex 
+            ? { ...q, explanation: validationResult.explanation, rule: validationResult.rule }
+            : q
+        ));
+      } else {
+        setLastAnswer({ correct: isCorrect });
+      }
+      
+      // Save/update question attempt
+      await saveQuestionAttempt(currentQuestion.id, isCorrect);
+
+      // Update local state
+      setUserAnswers(prev => ({ ...prev, [currentQuestion.id]: selectedAnswer }));
+      
+      if (!isCorrect) {
+        setIncorrectQuestions(prev => new Set([...prev, currentQuestion.id]));
+      }
+
+      if (currentQuestionIndex < questions.length - 1) {
+        setCurrentQuestionIndex(currentQuestionIndex + 1);
+        setSelectedAnswer('');
+      } else {
+        // Batch completed
+        await completeBatch();
+      }
+    } catch (error) {
+      console.error('Error validating answer:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de valider votre réponse. Veuillez réessayer.",
+        variant: "destructive"
+      });
     }
   };
 

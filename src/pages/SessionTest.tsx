@@ -21,9 +21,8 @@ interface Question {
   id: number;
   content: string;
   choices: string[] | null;
-  answer: string;
   type: string;
-  level: number;
+  level: string;
   rule?: string;
   explanation?: string;
 }
@@ -91,145 +90,52 @@ const SessionTest = () => {
 
     try {
       setIsLoading(true);
-      const levelName = getLevelName(sessionLevel);
-      console.log('Loading session questions for:', { sessionLevel, levelName, sessionNumber, sessionType });
+      console.log('Loading session questions for:', { sessionLevel, sessionNumber, sessionType });
 
       // Récupérer le pourcentage de questions configuré
-      const { data: configData, error: configError } = await supabase
+      const { data: configData } = await supabase
         .from('site_configuration')
         .select('config_value')
         .eq('config_key', 'questions_percentage_per_level')
         .single();
 
-      console.log('Config data:', configData, 'Error:', configError);
-
       const questionsPercentage = parseInt(configData?.config_value as string) || 20;
-      console.log('Questions percentage:', questionsPercentage);
 
-      // Vérifier d'abord s'il y a des questions pour ce niveau
-      const { data: questionsCount, error: countError } = await supabase
-        .from('questions')
-        .select('id')
-        .eq('level', levelName);
-
-      console.log('Questions count for level', sessionLevel, ':', questionsCount?.length, 'Error:', countError);
-
-      if (!questionsCount || questionsCount.length === 0) {
-        toast({
-          title: "Aucune question disponible",
-          description: `Aucune question n'est disponible pour le niveau ${sessionLevel}.`,
-          variant: "destructive"
-        });
-        navigate('/dashboard');
-        return;
-      }
-
-      // Calculer les questions par session et l'offset avec numérotation simplifiée
-      const questionsPerSession = Math.floor(questionsCount.length * questionsPercentage / 100);
-      const sessionIndex = sessionNumber - 1; // Session 1 = index 0, Session 2 = index 1, etc.
-      const offset = sessionIndex * questionsPerSession;
-
-      console.log('Session calculation:', {
-        totalQuestions: questionsCount.length,
-        questionsPerSession,
-        sessionIndex,
-        offset
+      // Appeler l'edge function sécurisée pour récupérer les questions
+      const { data: sessionQuestions, error } = await supabase.functions.invoke('get-session-questions', {
+        body: {
+          level: sessionLevel,
+          session_number: sessionNumber,
+          session_type: sessionType,
+          questions_percentage: questionsPercentage
+        }
       });
 
-      let sessionQuestions, error;
-      
-      if (sessionType === 'remedial') {
-        // Pour les sessions de rattrapage, récupérer directement TOUTES les questions échouées
-        console.log('Loading remedial session - fetching all failed questions for level', sessionLevel);
-        
-        const { data: failedQuestionsData, error: failedError } = await supabase
-          .from('failed_questions')
-          .select('question_id')
-          .eq('user_id', user.id)
-          .eq('level', sessionLevel)
-          .eq('is_remediated', false);
-
-        if (failedError) {
-          error = failedError;
-          sessionQuestions = null;
-        } else if (!failedQuestionsData || failedQuestionsData.length === 0) {
-          toast({
-            title: "Aucune question de rattrapage",
-            description: "Vous n'avez aucune question échouée à revoir pour ce niveau.",
-            variant: "default"
-          });
-          navigate('/dashboard');
-          return;
-        } else {
-          // Récupérer les détails des questions échouées
-          const questionIds = failedQuestionsData.map(fq => fq.question_id);
-          console.log('Failed question IDs:', questionIds);
-          
-          const { data: questionsData, error: questionsError } = await supabase
-            .from('questions')
-            .select('*')
-            .in('id', questionIds)
-            .eq('level', levelName)
-            .order('id');
-            
-          sessionQuestions = questionsData;
-          error = questionsError;
-        }
-      } else {
-        // Pour les sessions normales, utiliser la méthode simple avec offset
-        const questionsPerSession = Math.floor(questionsCount.length * questionsPercentage / 100);
-        const sessionIndex = sessionNumber - 1;
-        const offset = sessionIndex * questionsPerSession;
-        
-        const { data, error: rpcError } = await supabase
-          .from('questions')
-          .select('*')
-          .eq('level', levelName)
-          .range(offset, offset + questionsPerSession - 1)
-          .order('id');
-          
-        sessionQuestions = data;
-        error = rpcError;
-      }
-
-      console.log('Session questions:', sessionQuestions, 'Error:', error);
+      console.log('Session questions from edge function:', sessionQuestions, 'Error:', error);
 
       if (error) throw error;
 
       if (!sessionQuestions || sessionQuestions.length === 0) {
         toast({
           title: "Aucune question",
-          description: "Aucune question disponible pour cette session.",
-          variant: "destructive"
+          description: sessionType === 'remedial' 
+            ? "Vous n'avez aucune question échouée à revoir pour ce niveau."
+            : "Aucune question disponible pour cette session.",
+          variant: sessionType === 'remedial' ? 'default' : 'destructive'
         });
         navigate('/dashboard');
         return;
       }
 
-      setQuestions(sessionQuestions.map(q => {
-        console.log('Processing question:', {
-          id: q.id,
-          type: q.type,
-          choices_raw: q.choices,
-          choices_type: typeof q.choices,
-          choices_isArray: Array.isArray(q.choices)
-        });
-        
-        const processedChoices = Array.isArray(q.choices) ? q.choices : (q.choices ? [q.choices] : []);
-        console.log('Processed choices:', processedChoices);
-        
-        return {
-          ...q,
-          content: q.content || '',
-          type: q.type || 'multiple_choice',
-          level: q.level || 1,
-          rule: q.rule || '',
-          answer: q.answer || '',
-          explanation: q.explanation || '',
-          created_at: q.created_at || '',
-          choices: processedChoices
-        };
-      }));
+      setQuestions(sessionQuestions.map((q: any) => ({
+        id: q.id,
+        content: q.content || '',
+        type: q.type || 'multiple_choice',
+        level: q.level || '',
+        rule: q.rule || '',
+        explanation: q.explanation || '',
+        choices: Array.isArray(q.choices) ? q.choices : (q.choices ? [q.choices] : [])
+      })));
       
       // Enregistrer le temps de début de la session
       if (!sessionStartTime.current) {
@@ -250,7 +156,7 @@ const SessionTest = () => {
   }, [user, sessionLevel, sessionNumber, navigate]);
 
   // Enregistrer la réponse actuelle
-  const submitAnswer = useCallback(() => {
+  const submitAnswer = useCallback(async () => {
     if (!currentAnswer.trim()) {
       toast({
         title: "Réponse requise",
@@ -261,37 +167,64 @@ const SessionTest = () => {
     }
 
     const currentQuestion = questions[currentQuestionIndex];
-    const isCorrect = currentAnswer.toLowerCase().trim() === currentQuestion.answer.toLowerCase().trim();
 
-    const answer: SessionAnswer = {
-      question_id: currentQuestion.id,
-      user_answer: currentAnswer,
-      is_correct: isCorrect
-    };
-
-    setUserAnswers(prev => [...prev, answer]);
-
-    // Enregistrer les questions échouées
-    if (!isCorrect) {
-      recordFailedQuestion(currentQuestion.id);
-    }
-
-    // Si correct, passer directement à la question suivante
-    // Si incorrect, afficher l'explication
-    if (isCorrect) {
-      // Petite pause pour que l'utilisateur voie que c'est correct
-      setTimeout(() => {
-        if (currentQuestionIndex < questions.length - 1) {
-          setCurrentQuestionIndex(prev => prev + 1);
-          setCurrentAnswer('');
-          setShowExplanation(false);
-        } else {
-          // Déclencher la complétion via un state
-          setTestCompleted(true);
+    try {
+      // Valider la réponse via l'edge function sécurisée
+      const { data: validationResult, error } = await supabase.functions.invoke('validate-answer', {
+        body: {
+          question_id: currentQuestion.id,
+          user_answer: currentAnswer
         }
-      }, 500);
-    } else {
-      setShowExplanation(true);
+      });
+
+      if (error) throw error;
+
+      const isCorrect = validationResult.is_correct;
+
+      const answer: SessionAnswer = {
+        question_id: currentQuestion.id,
+        user_answer: currentAnswer,
+        is_correct: isCorrect
+      };
+
+      setUserAnswers(prev => [...prev, answer]);
+
+      // Enregistrer les questions échouées
+      if (!isCorrect) {
+        recordFailedQuestion(currentQuestion.id);
+      }
+
+      // Si correct, passer directement à la question suivante
+      // Si incorrect, afficher l'explication
+      if (isCorrect) {
+        setTimeout(() => {
+          if (currentQuestionIndex < questions.length - 1) {
+            setCurrentQuestionIndex(prev => prev + 1);
+            setCurrentAnswer('');
+            setShowExplanation(false);
+          } else {
+            setTestCompleted(true);
+          }
+        }, 500);
+      } else {
+        // Afficher l'explication retournée par le serveur
+        setShowExplanation(true);
+        // Mettre à jour la question avec l'explication serveur si nécessaire
+        if (validationResult.explanation) {
+          setQuestions(prev => prev.map((q, idx) => 
+            idx === currentQuestionIndex 
+              ? { ...q, explanation: validationResult.explanation, rule: validationResult.rule }
+              : q
+          ));
+        }
+      }
+    } catch (error) {
+      console.error('Error validating answer:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de valider votre réponse. Veuillez réessayer.",
+        variant: "destructive"
+      });
     }
   }, [currentAnswer, questions, currentQuestionIndex, recordFailedQuestion]);
 
