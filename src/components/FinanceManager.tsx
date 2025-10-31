@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Euro, Users, ShoppingCart, Gift, TrendingUp, Trash2, Edit, Settings, CreditCard } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AdminManager } from '@/components/AdminManager';
 
 interface Purchase {
   id: string;
@@ -396,6 +397,7 @@ export const FinanceManager: React.FC = () => {
           <TabsTrigger value="sales">Ventes</TabsTrigger>
           <TabsTrigger value="promo">Codes promo</TabsTrigger>
           <TabsTrigger value="stripe">Configuration Stripe</TabsTrigger>
+          <TabsTrigger value="administration">Administration</TabsTrigger>
         </TabsList>
 
         <TabsContent value="sales" className="space-y-4">
@@ -895,6 +897,10 @@ export const FinanceManager: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="administration" className="space-y-4">
+          <AdminManager />
         </TabsContent>
       </Tabs>
     </div>
