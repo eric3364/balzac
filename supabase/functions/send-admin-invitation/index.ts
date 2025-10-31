@@ -44,18 +44,25 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Check if user is super admin
-    const { data: isAdmin } = await supabaseClient.rpc('is_super_admin');
+    // Check if user is super admin by querying the administrators table
+    const { data: adminRecord, error: adminCheckError } = await supabaseClient
+      .from('administrators')
+      .select('is_super_admin')
+      .eq('user_id', user.id)
+      .single();
     
-    if (!isAdmin) {
+    if (adminCheckError || !adminRecord || !adminRecord.is_super_admin) {
+      console.error('Admin check failed:', adminCheckError);
       return new Response(
-        JSON.stringify({ error: 'Accès refusé' }),
+        JSON.stringify({ error: 'Accès refusé - seuls les super administrateurs peuvent inviter' }),
         { 
           status: 403, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
     }
+
+    console.log('Super admin verified, proceeding with invitation');
 
     const { email, is_super_admin, temporary_password }: AdminInviteRequest = await req.json();
 
