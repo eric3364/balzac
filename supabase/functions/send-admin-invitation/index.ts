@@ -259,7 +259,7 @@ const handler = async (req: Request): Promise<Response> => {
     `;
 
     const emailResponse = await resend.emails.send({
-      from: "Administration <noreply@certification-balzac.fr>",
+      from: "Administration <onboarding@resend.dev>",
       to: [email],
       subject: isNewUser ? "Accès administrateur - Plateforme de certification" : "Droits d'administration accordés",
       html: emailHtml,
