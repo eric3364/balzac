@@ -104,50 +104,13 @@ export const AdminManager = () => {
         if (error) throw error;
         toast.success('Administrateur modifié avec succès');
       } else {
-        // Ajouter un nouvel administrateur avec création de compte et envoi d'email
+        // Ajouter un nouvel administrateur via edge function
         
         // Générer un mot de passe temporaire
         const tempPassword = generateTemporaryPassword();
         
-        // Créer le compte utilisateur via Supabase Auth
-        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-          email: formData.email,
-          password: tempPassword,
-          email_confirm: true,
-          user_metadata: {
-            force_password_change: true,
-            is_admin: true
-          }
-        });
-
-        if (authError) {
-          console.error('Auth error:', authError);
-          if (authError.message?.includes('already registered')) {
-            toast.error('Un utilisateur avec cet email existe déjà');
-          } else {
-            toast.error('Erreur lors de la création du compte: ' + authError.message);
-          }
-          return;
-        }
-
-        // Ajouter l'administrateur dans la table administrators
-        const { error: adminError } = await supabase
-          .from('administrators')
-          .insert({
-            email: formData.email,
-            is_super_admin: formData.is_super_admin,
-            user_id: authData.user?.id
-          });
-
-        if (adminError) {
-          console.error('Admin table error:', adminError);
-          // Nettoyer le compte créé si l'insertion échoue
-          await supabase.auth.admin.deleteUser(authData.user!.id);
-          throw adminError;
-        }
-
-        // Envoyer l'email d'invitation
-        const { error: emailError } = await supabase.functions.invoke('send-admin-invitation', {
+        // Appeler l'edge function qui crée le compte et envoie l'email
+        const { data, error: inviteError } = await supabase.functions.invoke('send-admin-invitation', {
           body: {
             email: formData.email,
             is_super_admin: formData.is_super_admin,
@@ -155,12 +118,19 @@ export const AdminManager = () => {
           }
         });
 
-        if (emailError) {
-          console.error('Email error:', emailError);
-          toast.error('Administrateur créé mais erreur lors de l\'envoi de l\'email');
-        } else {
-          toast.success('Administrateur ajouté et email d\'invitation envoyé');
+        if (inviteError) {
+          console.error('Invite error:', inviteError);
+          toast.error(inviteError.message || 'Erreur lors de l\'invitation');
+          return;
         }
+
+        if (data?.error) {
+          console.error('Server error:', data.error);
+          toast.error(data.error);
+          return;
+        }
+
+        toast.success('Administrateur ajouté et email d\'invitation envoyé');
       }
 
       setIsDialogOpen(false);

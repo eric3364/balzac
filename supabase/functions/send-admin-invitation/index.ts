@@ -59,7 +59,59 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { email, is_super_admin, temporary_password }: AdminInviteRequest = await req.json();
 
-    console.log('Sending admin invitation email to:', email);
+    console.log('Creating admin account for:', email);
+
+    // Create user account with service role key
+    const { data: newUser, error: createError } = await supabaseClient.auth.admin.createUser({
+      email: email,
+      password: temporary_password,
+      email_confirm: true,
+      user_metadata: {
+        force_password_change: true,
+        is_admin: true
+      }
+    });
+
+    if (createError) {
+      console.error('Error creating user:', createError);
+      
+      if (createError.message?.includes('already registered')) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Un utilisateur avec cet email existe déjà',
+            details: createError.message 
+          }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          }
+        );
+      }
+      
+      throw createError;
+    }
+
+    console.log('User created:', newUser.user?.id);
+
+    // Add to administrators table
+    const { error: adminError } = await supabaseClient
+      .from('administrators')
+      .insert({
+        email: email,
+        is_super_admin: is_super_admin,
+        user_id: newUser.user?.id
+      });
+
+    if (adminError) {
+      console.error('Error inserting into administrators table:', adminError);
+      
+      // Cleanup: delete the user account if admin table insert fails
+      await supabaseClient.auth.admin.deleteUser(newUser.user!.id);
+      
+      throw adminError;
+    }
+
+    console.log('Admin record created, sending email to:', email);
 
     // Send invitation email
     const emailResponse = await resend.emails.send({
