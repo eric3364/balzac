@@ -87,6 +87,7 @@ const Admin = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("stats");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [administrators, setAdministrators] = useState<AdminUser[]>([]);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [loadingData, setLoadingData] = useState(true);
@@ -100,6 +101,7 @@ const Admin = () => {
       const { data: isAdminFlag, error: rpcErr } = await supabase.rpc('is_super_admin');
       if (!rpcErr && isAdminFlag === true) {
         setIsAdmin(true);
+        setIsSuperAdmin(true);
         return;
       }
       const { data, error } = await supabase
@@ -107,10 +109,15 @@ const Admin = () => {
         .select('is_super_admin')
         .eq('user_id', user.id)
         .single();
-      if (!error && data?.is_super_admin) {
+      
+      if (!error && data) {
+        // L'utilisateur est un administrateur
         setIsAdmin(true);
+        setIsSuperAdmin(data.is_super_admin || false);
         return;
       }
+      
+      // Pas un administrateur, rediriger vers le dashboard
       navigate('/dashboard');
     } catch (err) {
       console.error('checkAdminStatus error:', err);
@@ -280,14 +287,16 @@ const Admin = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7">
+          <TabsList className={`grid w-full ${isSuperAdmin ? 'grid-cols-7' : 'grid-cols-6'}`}>
             <TabsTrigger value="stats">Statistiques</TabsTrigger>
             <TabsTrigger value="students">Apprenants</TabsTrigger>
             <TabsTrigger value="homepage">Page d'accueil</TabsTrigger>
             <TabsTrigger value="levels">Certification</TabsTrigger>
             <TabsTrigger value="questions">Questions</TabsTrigger>
             <TabsTrigger value="test-settings">Paramètres des tests</TabsTrigger>
-            <TabsTrigger value="finance">Finance/admin</TabsTrigger>
+            {isSuperAdmin && (
+              <TabsTrigger value="finance">Finance/admin</TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="students" className="space-y-6">
@@ -483,10 +492,12 @@ const Admin = () => {
             <TestSettingsManager />
           </TabsContent>
 
-          {/* Finance */}
-          <TabsContent value="finance" className="space-y-6">
-            <FinanceManager />
-          </TabsContent>
+          {/* Finance - Accessible uniquement aux super administrateurs */}
+          {isSuperAdmin && (
+            <TabsContent value="finance" className="space-y-6">
+              <FinanceManager />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </div>
