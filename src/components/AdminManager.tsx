@@ -120,13 +120,13 @@ export const AdminManager = () => {
 
         if (inviteError) {
           console.error('Invite error:', inviteError);
-          toast.error(inviteError.message || 'Erreur lors de l\'invitation');
+          toast.error(`Erreur: ${inviteError.message || 'Impossible d\'inviter l\'administrateur'}`);
           return;
         }
 
         if (data?.error) {
-          console.error('Server error:', data.error);
-          toast.error(data.error);
+          console.error('Server error:', data.error, data.details);
+          toast.error(`${data.error}${data.details ? ` - ${data.details}` : ''}`);
           return;
         }
 

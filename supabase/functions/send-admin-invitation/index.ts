@@ -22,6 +22,8 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    console.log('=== START send-admin-invitation ===');
+    
     // Initialize Supabase client with service role key
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -29,30 +31,63 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
     // Verify admin user is authenticated and is super admin
-    const authHeader = req.headers.get('Authorization')!;
-    const token = authHeader.replace('Bearer ', '');
+    const authHeader = req.headers.get('Authorization');
+    console.log('Auth header present:', !!authHeader);
     
-    const { data: { user } } = await supabaseClient.auth.getUser(token);
-    
-    if (!user) {
+    if (!authHeader) {
+      console.error('Missing Authorization header');
       return new Response(
-        JSON.stringify({ error: 'Non autorisé' }),
+        JSON.stringify({ error: 'Non autorisé - header manquant' }),
         { 
           status: 401, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
     }
+    
+    const token = authHeader.replace('Bearer ', '');
+    
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
+    
+    if (userError || !user) {
+      console.error('User authentication failed:', userError);
+      return new Response(
+        JSON.stringify({ error: 'Non autorisé - utilisateur invalide' }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+    
+    console.log('User authenticated:', user.id);
 
     // Check if user is super admin by querying the administrators table
+    console.log('Checking super admin status for user:', user.id);
     const { data: adminRecord, error: adminCheckError } = await supabaseClient
       .from('administrators')
       .select('is_super_admin')
       .eq('user_id', user.id)
       .single();
     
-    if (adminCheckError || !adminRecord || !adminRecord.is_super_admin) {
-      console.error('Admin check failed:', adminCheckError);
+    console.log('Admin record:', adminRecord, 'Error:', adminCheckError);
+    
+    if (adminCheckError) {
+      console.error('Error checking admin status:', adminCheckError);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Erreur lors de la vérification des permissions',
+          details: adminCheckError.message 
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+    
+    if (!adminRecord || !adminRecord.is_super_admin) {
+      console.error('User is not super admin:', { adminRecord });
       return new Response(
         JSON.stringify({ error: 'Accès refusé - seuls les super administrateurs peuvent inviter' }),
         { 
