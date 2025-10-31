@@ -287,7 +287,7 @@ const Admin = () => {
             <TabsTrigger value="levels">Certification</TabsTrigger>
             <TabsTrigger value="questions">Questions</TabsTrigger>
             <TabsTrigger value="test-settings">Paramètres des tests</TabsTrigger>
-            <TabsTrigger value="finance">Finance</TabsTrigger>
+            <TabsTrigger value="finance">Finance/admin</TabsTrigger>
           </TabsList>
 
           <TabsContent value="students" className="space-y-6">
