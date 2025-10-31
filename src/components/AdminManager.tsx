@@ -130,13 +130,17 @@ export const AdminManager = () => {
           return;
         }
 
+        console.log('Admin invitation successful:', data);
         toast.success('Administrateur ajouté et email d\'invitation envoyé');
       }
 
       setIsDialogOpen(false);
       setEditingAdmin(null);
       setFormData({ email: '', is_super_admin: false });
-      loadAdministrators();
+      
+      // Recharger immédiatement et après un court délai pour être sûr
+      await loadAdministrators();
+      setTimeout(() => loadAdministrators(), 1000);
     } catch (error: any) {
       console.error('Erreur:', error);
       if (error.code === '23505') {
