@@ -929,20 +929,14 @@ export type Database = {
         Args: { level_num: number; questions_percentage?: number }
         Returns: number
       }
-      can_resend: {
-        Args:
-          | { _email: string; _ip: unknown; _window_seconds?: number }
-          | { p_email: string }
-        Returns: boolean
-      }
-      generate_credential_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_temporary_access_code: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      can_resend:
+        | { Args: { p_email: string }; Returns: boolean }
+        | {
+            Args: { _email: string; _ip: unknown; _window_seconds?: number }
+            Returns: boolean
+          }
+      generate_credential_id: { Args: never; Returns: string }
+      generate_temporary_access_code: { Args: never; Returns: string }
       get_free_sessions_for_level: {
         Args: { level_num: number }
         Returns: number
@@ -965,18 +959,11 @@ export type Database = {
           type: string
         }[]
       }
-      get_user_max_level: {
-        Args: { user_uuid?: string }
-        Returns: number
-      }
-      get_users_count: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      is_super_admin: {
-        Args: Record<PropertyKey, never> | { uid: string }
-        Returns: boolean
-      }
+      get_user_max_level: { Args: { user_uuid?: string }; Returns: number }
+      get_users_count: { Args: never; Returns: number }
+      is_super_admin:
+        | { Args: { uid: string }; Returns: boolean }
+        | { Args: never; Returns: boolean }
       user_has_purchased_level: {
         Args: { level_num: number; user_uuid: string }
         Returns: boolean
@@ -985,10 +972,9 @@ export type Database = {
         Args: { certification_level: number; code_text: string }
         Returns: Json
       }
-      write_resend_log: {
-        Args: { _email: string; _ip: unknown } | { p_email: string }
-        Returns: undefined
-      }
+      write_resend_log:
+        | { Args: { p_email: string }; Returns: undefined }
+        | { Args: { _email: string; _ip: unknown }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
