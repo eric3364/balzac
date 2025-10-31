@@ -66,6 +66,29 @@ export const UserManagement = () => {
     applyFilters();
   }, [usersWithStats, searchTerm, schoolFilter, classFilter, statusFilter, sortField, sortDirection]);
 
+  // Écoute en temps réel des changements sur la table users
+  useEffect(() => {
+    const channel = supabase
+      .channel('users-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'users'
+        },
+        (payload) => {
+          console.log('Changement détecté dans la table users:', payload);
+          refetch(); // Rafraîchir les données
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refetch]);
+
   const applyFilters = () => {
     let filtered = [...usersWithStats];
 

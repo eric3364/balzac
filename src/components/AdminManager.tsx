@@ -59,6 +59,29 @@ export const AdminManager = () => {
     loadAdministrators();
   }, []);
 
+  // Écoute en temps réel des changements sur la table administrators
+  useEffect(() => {
+    const channel = supabase
+      .channel('administrators-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'administrators'
+        },
+        (payload) => {
+          console.log('Changement détecté dans la table administrators:', payload);
+          loadAdministrators(); // Rafraîchir les données
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
