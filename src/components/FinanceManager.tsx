@@ -20,6 +20,9 @@ interface Purchase {
   purchased_at: string;
   payment_method: string | null;
   user_id: string;
+  first_name?: string | null;
+  last_name?: string | null;
+  promo_code?: string | null;
 }
 
 interface PromoCode {
@@ -96,16 +99,35 @@ export const FinanceManager: React.FC = () => {
     try {
       setLoading(true);
       
-      // Charger les achats
+      // Charger les achats avec les informations utilisateurs
       const { data: purchasesData, error: purchasesError } = await supabase
         .from('user_level_purchases')
-        .select('*')
+        .select(`
+          *,
+          users!user_level_purchases_user_id_fkey (
+            first_name,
+            last_name
+          )
+        `)
         .order('purchased_at', { ascending: false });
 
       if (purchasesError) throw purchasesError;
+      
+      // Charger les codes promo pour associer aux achats
+      const { data: allPromoCodes } = await supabase
+        .from('promo_codes')
+        .select('*');
+      
+      const promoCodesMap = new Map(
+        (allPromoCodes || []).map(pc => [pc.used_by, pc.code])
+      );
+      
       setPurchases((purchasesData || []).map(p => ({
         ...p,
-        payment_method: p.payment_method || 'stripe'
+        payment_method: p.payment_method || 'stripe',
+        first_name: (p.users as any)?.first_name,
+        last_name: (p.users as any)?.last_name,
+        promo_code: p.payment_method === 'promo_code' ? promoCodesMap.get(p.user_id) : null
       })));
 
       // Charger les codes promo
@@ -413,16 +435,24 @@ export const FinanceManager: React.FC = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Date</TableHead>
+                    <TableHead>Acheteur</TableHead>
                     <TableHead>Niveau</TableHead>
                     <TableHead>Montant</TableHead>
                     <TableHead>Statut</TableHead>
                     <TableHead>Méthode</TableHead>
+                    <TableHead>Code promo</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {purchases.map((purchase) => (
                     <TableRow key={purchase.id}>
                       <TableCell>{formatDate(purchase.purchased_at)}</TableCell>
+                      <TableCell>
+                        {purchase.first_name || purchase.last_name 
+                          ? `${purchase.first_name || ''} ${purchase.last_name || ''}`.trim()
+                          : 'N/A'
+                        }
+                      </TableCell>
                       <TableCell>Niveau {purchase.level}</TableCell>
                       <TableCell>{formatCurrency(Number(purchase.price_paid))}</TableCell>
                       <TableCell>
@@ -432,7 +462,16 @@ export const FinanceManager: React.FC = () => {
                           {purchase.status === 'completed' ? 'Complété' : purchase.status}
                         </Badge>
                       </TableCell>
-                      <TableCell>{purchase.payment_method}</TableCell>
+                      <TableCell>
+                        {purchase.payment_method === 'promo_code' ? 'Code promo' : 'Stripe'}
+                      </TableCell>
+                      <TableCell>
+                        {purchase.promo_code ? (
+                          <Badge variant="secondary" className="font-mono">
+                            {purchase.promo_code}
+                          </Badge>
+                        ) : '—'}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
