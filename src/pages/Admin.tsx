@@ -147,10 +147,10 @@ const Admin = () => {
   const loadUserStats = async (showRefreshing = false) => {
     if (showRefreshing) setRefreshingStats(true);
     try {
-      const { count: authUsersCount, error: usersCountError } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true });
-      if (usersCountError) console.error('profiles count error:', usersCountError);
+      // Utiliser la fonction RPC pour compter les vrais utilisateurs auth
+      const { data: authUsersCount, error: usersCountError } = await supabase
+        .rpc('get_users_count');
+      if (usersCountError) console.error('get_users_count error:', usersCountError);
 
       const { data: users, error: profilesErr } = await supabase
         .from('profiles')
@@ -216,6 +216,68 @@ const Admin = () => {
       loadUserStats();
       loadQuestions();
     }
+  }, [isAdmin]);
+
+  // Mises à jour en temps réel
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    const channels = [
+      // Écouter les changements sur les sessions de test
+      supabase
+        .channel('test_sessions_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'test_sessions'
+          },
+          () => {
+            loadUserStats();
+          }
+        )
+        .subscribe(),
+
+      // Écouter les changements sur les certifications
+      supabase
+        .channel('certifications_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'user_certifications'
+          },
+          () => {
+            loadUserStats();
+          }
+        )
+        .subscribe(),
+
+      // Écouter les changements sur les questions
+      supabase
+        .channel('questions_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'questions'
+          },
+          () => {
+            loadUserStats();
+            loadQuestions();
+          }
+        )
+        .subscribe(),
+    ];
+
+    return () => {
+      channels.forEach(channel => {
+        supabase.removeChannel(channel);
+      });
+    };
   }, [isAdmin]);
 
   const loadQuestions = async () => {
