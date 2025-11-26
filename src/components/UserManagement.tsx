@@ -66,26 +66,82 @@ export const UserManagement = () => {
     applyFilters();
   }, [usersWithStats, searchTerm, schoolFilter, classFilter, statusFilter, sortField, sortDirection]);
 
-  // Écoute en temps réel des changements sur la table users
+  // Écoute en temps réel des changements sur les tables liées
   useEffect(() => {
-    const channel = supabase
-      .channel('users-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'users'
-        },
-        (payload) => {
-          console.log('Changement détecté dans la table users:', payload);
-          refetch(); // Rafraîchir les données
-        }
-      )
-      .subscribe();
+    const channels = [
+      // Changements sur la table users
+      supabase
+        .channel('users-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'users'
+          },
+          () => {
+            console.log('Changement détecté dans la table users');
+            refetch();
+          }
+        )
+        .subscribe(),
+
+      // Changements sur les sessions de test
+      supabase
+        .channel('test-sessions-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'test_sessions'
+          },
+          () => {
+            console.log('Changement détecté dans les sessions de test');
+            refetch();
+          }
+        )
+        .subscribe(),
+
+      // Changements sur les certifications
+      supabase
+        .channel('user-certifications-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'user_certifications'
+          },
+          () => {
+            console.log('Changement détecté dans les certifications');
+            refetch();
+          }
+        )
+        .subscribe(),
+
+      // Changements sur les tentatives de questions
+      supabase
+        .channel('question-attempts-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'question_attempts'
+          },
+          () => {
+            console.log('Changement détecté dans les tentatives de questions');
+            refetch();
+          }
+        )
+        .subscribe(),
+    ];
 
     return () => {
-      supabase.removeChannel(channel);
+      channels.forEach(channel => {
+        supabase.removeChannel(channel);
+      });
     };
   }, [refetch]);
 
