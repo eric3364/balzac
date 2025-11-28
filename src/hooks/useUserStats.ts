@@ -112,7 +112,8 @@ export const useUserStats = () => {
 
         // Calculer le temps total passé uniquement sur les tests complétés
         console.log('Sessions data:', sessions);
-        const validSessions = sessions?.filter(session => {
+        const safeSessions = Array.isArray(sessions) ? sessions : [];
+        const validSessions = safeSessions.filter(session => {
           // Ne pas compter les sessions supprimées
           if (session.deleted_at) {
             console.log('Ignoring deleted session:', session.id);
@@ -153,9 +154,10 @@ export const useUserStats = () => {
 
         console.log('Total time spent:', timeSpent, 'minutes');
 
-        const totalTests = sessions?.length || 0;
-        const totalQuestions = attempts?.length || 0;
-        const correctAnswers = attempts?.filter(attempt => attempt.is_correct).length || 0;
+        const safeAttempts = Array.isArray(attempts) ? attempts : [];
+        const totalTests = safeSessions.length;
+        const totalQuestions = safeAttempts.length;
+        const correctAnswers = safeAttempts.filter(attempt => attempt.is_correct).length;
         const incorrectAnswers = totalQuestions - correctAnswers;
         const progressPercentage = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0;
         const certificationsCount = certifications?.length || 0;

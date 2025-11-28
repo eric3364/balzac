@@ -115,7 +115,16 @@ const SessionTest = () => {
 
       if (error) throw error;
 
-      if (!sessionQuestions || sessionQuestions.length === 0) {
+      // Sécuriser les données - gérer tous les formats possibles
+      const safeQuestions = Array.isArray(sessionQuestions) 
+        ? sessionQuestions 
+        : Array.isArray(sessionQuestions?.questions) 
+          ? sessionQuestions.questions 
+          : Array.isArray(sessionQuestions?.data) 
+            ? sessionQuestions.data 
+            : [];
+
+      if (safeQuestions.length === 0) {
         toast({
           title: "Aucune question",
           description: sessionType === 'remedial' 
@@ -127,7 +136,7 @@ const SessionTest = () => {
         return;
       }
 
-      setQuestions(sessionQuestions.map((q: any) => ({
+      setQuestions(safeQuestions.map((q: any) => ({
         id: q.id,
         content: q.content || '',
         type: q.type || 'multiple_choice',

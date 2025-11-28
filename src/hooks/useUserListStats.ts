@@ -94,30 +94,35 @@ export const useUserListStats = () => {
           supabase.rpc('get_user_max_level', { user_uuid: user.user_id })
         ]);
 
+        // Sécuriser les données
+        const safeSessions = Array.isArray(sessionsData) ? sessionsData : [];
+        const safeAttempts = Array.isArray(attemptsData) ? attemptsData : [];
+        const safeCertifications = Array.isArray(certificationsData) ? certificationsData : [];
+
         // Calculer les statistiques
-        const totalTests = sessionsData?.length || 0;
-        const totalQuestions = attemptsData?.length || 0;
-        const correctAnswers = attemptsData?.filter(a => a.is_correct)?.length || 0;
-        const certificationsCount = certificationsData?.length || 0;
+        const totalTests = safeSessions.length;
+        const totalQuestions = safeAttempts.length;
+        const correctAnswers = safeAttempts.filter(a => a.is_correct).length;
+        const certificationsCount = safeCertifications.length;
         const maxLevel = maxLevelData || 0;
 
         // Calculer le score moyen
         const avgScore = totalTests > 0 
-          ? Math.round((sessionsData?.reduce((sum, s) => sum + (s.score || 0), 0) || 0) / totalTests)
+          ? Math.round(safeSessions.reduce((sum, s) => sum + (s.score || 0), 0) / totalTests)
           : 0;
 
         // Calculer le temps total en minutes
-        const timeSpentMinutes = sessionsData?.reduce((total, session) => {
+        const timeSpentMinutes = safeSessions.reduce((total, session) => {
           if (session.started_at && session.ended_at) {
             const duration = new Date(session.ended_at).getTime() - new Date(session.started_at).getTime();
             return total + Math.round(duration / (1000 * 60));
           }
           return total;
-        }, 0) || 0;
+        }, 0);
 
         // Dernière activité
-        const lastActivity = (sessionsData && sessionsData.length > 0)
-          ? sessionsData[sessionsData.length - 1]?.started_at 
+        const lastActivity = safeSessions.length > 0
+          ? safeSessions[safeSessions.length - 1]?.started_at 
           : null;
 
         usersWithStats.push({
@@ -133,11 +138,11 @@ export const useUserListStats = () => {
           total_questions: totalQuestions,
           correct_answers: correctAnswers,
           certifications_count: certificationsCount,
-          certifications: certificationsData?.filter(cert => cert.certified_at).map(cert => ({
+          certifications: safeCertifications.filter(cert => cert.certified_at).map(cert => ({
             level: cert.level,
             score: cert.score,
             certified_at: cert.certified_at!
-          })) || [],
+          })),
           max_level: maxLevel,
           avg_score: avgScore,
           time_spent_minutes: timeSpentMinutes,
