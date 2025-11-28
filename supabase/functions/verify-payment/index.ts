@@ -7,13 +7,52 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Simple in-memory rate limiting
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT = 10; // 10 verification attempts per window
+const RATE_WINDOW_MS = 60 * 1000; // 1 minute
+
+function checkRateLimit(userId: string): boolean {
+  const now = Date.now();
+  const record = rateLimitMap.get(userId);
+  
+  if (!record || now > record.resetAt) {
+    rateLimitMap.set(userId, { count: 1, resetAt: now + RATE_WINDOW_MS });
+    return true;
+  }
+  
+  if (record.count >= RATE_LIMIT) {
+    return false;
+  }
+  
+  record.count++;
+  return true;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { sessionId } = await req.json();
+    const requestBody = await req.json();
+    const { sessionId } = requestBody;
+
+    // Input validation
+    if (!sessionId || typeof sessionId !== "string") {
+      return new Response(
+        JSON.stringify({ error: "Session ID requis" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
+    }
+
+    // Validate sessionId format (Stripe session IDs start with cs_)
+    if (!sessionId.startsWith("cs_") || sessionId.length > 100) {
+      return new Response(
+        JSON.stringify({ error: "Format de session ID invalide" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
+    }
     
     if (!sessionId) {
       throw new Error("Session ID requis");
