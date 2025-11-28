@@ -41,3 +41,4 @@ jobs:
           remote_path: www/
           sftp_only: true
           delete_remote_files: false
+          sftpArgs: '-o StrictHostKeyChecking=no'
