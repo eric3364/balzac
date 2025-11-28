@@ -56,7 +56,7 @@ Deno.serve(async (req) => {
 
       if (!failedQuestionsData || failedQuestionsData.length === 0) {
         return new Response(
-          JSON.stringify({ questions: [], message: 'Aucune question de rattrapage' }),
+          JSON.stringify([]),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
@@ -101,9 +101,10 @@ Deno.serve(async (req) => {
     }
 
     // CRITICAL: Never send the 'answer' field to the client
-    // Questions are returned without correct answers
+    // Questions are returned without correct answers - directly as array
+    const safeQuestions = Array.isArray(questions) ? questions : [];
     return new Response(
-      JSON.stringify({ questions }),
+      JSON.stringify(safeQuestions),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 

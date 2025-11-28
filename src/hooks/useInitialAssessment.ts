@@ -53,12 +53,15 @@ export const useInitialAssessment = () => {
 
       if (error) throw error;
 
-      if (!questions || questions.length === 0) {
+      // Sécuriser les données
+      const safeQuestions = Array.isArray(questions) ? questions : [];
+      
+      if (safeQuestions.length === 0) {
         return [];
       }
 
       // Classifier les questions par catégorie basée sur la règle
-      const categorizedQuestions: AssessmentQuestion[] = questions
+      const categorizedQuestions: AssessmentQuestion[] = safeQuestions
         .filter(q => q.content && q.answer) // Filtrer les questions valides (content et answer obligatoires)
         .map(q => ({
           ...q,

@@ -214,14 +214,23 @@ export default function Test() {
       
       if (error) throw error;
       
-      if (!questionsData || questionsData.length === 0) {
+      // Sécuriser les données - gérer tous les formats possibles
+      const safeQuestionsData = Array.isArray(questionsData) 
+        ? questionsData 
+        : Array.isArray(questionsData?.questions) 
+          ? questionsData.questions 
+          : Array.isArray(questionsData?.data) 
+            ? questionsData.data 
+            : [];
+      
+      if (safeQuestionsData.length === 0) {
         // No more questions available for this level
         await checkCertificationEligibility(level);
         return;
       }
       
       // Filter out completed questions and shuffle
-      const availableQuestions = questionsData
+      const availableQuestions = safeQuestionsData
         .filter((q: any) => !completedIds.includes(q.id) && !excludeIds.includes(q.id))
         .sort(() => Math.random() - 0.5)
         .slice(0, questionsPerTest);
@@ -264,7 +273,7 @@ export default function Test() {
         .insert({
           user_id: user!.id,
           status: 'in_progress',
-          total_questions: shuffledQuestions.length,
+          total_questions: availableQuestions.length,
           current_level: level,
           current_batch: 1,
           certification_target: true
@@ -286,7 +295,7 @@ export default function Test() {
           user_id: user!.id,
           batch_number: 1,
           level: level,
-          questions_count: shuffledQuestions.length
+          questions_count: availableQuestions.length
         })
         .select()
         .single();

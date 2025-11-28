@@ -297,9 +297,9 @@ const InitialAssessmentCard = () => {
             )}
             <h3 className="text-lg font-semibold mb-4">{question.content}</h3>
             
-            {question.type === 'multiple_choice' && question.choices && question.choices.length > 0 ? (
+            {question.type === 'multiple_choice' && Array.isArray(question.choices) && question.choices.length > 0 ? (
               <div className="space-y-2">
-                {question.choices.map((choice, index) => (
+                {(Array.isArray(question.choices) ? question.choices : []).map((choice, index) => (
                   <Button
                     key={index}
                     variant="outline"
