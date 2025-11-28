@@ -13,10 +13,23 @@ serve(async (req) => {
   }
 
   try {
-    const { level } = await req.json();
-    
-    if (!level) {
-      throw new Error("Niveau requis");
+    const requestBody = await req.json();
+    const { level } = requestBody;
+
+    // Input validation
+    if (level === undefined || level === null) {
+      return new Response(
+        JSON.stringify({ error: "Niveau requis" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
+    }
+
+    const levelNumber = parseInt(String(level), 10);
+    if (isNaN(levelNumber) || levelNumber < 1 || levelNumber > 10) {
+      return new Response(
+        JSON.stringify({ error: "Niveau invalide (doit être entre 1 et 10)" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
     }
 
     // Authentification utilisateur
@@ -34,8 +47,31 @@ serve(async (req) => {
       throw new Error("Utilisateur non authentifié");
     }
 
+    // Rate limiting: Check pending purchases in the last hour
+    const supabaseService = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
+
+    const oneHourAgo = new Date(Date.now() - 3600000).toISOString();
+    const { count: pendingCount } = await supabaseService
+      .from("user_level_purchases")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("status", "pending")
+      .gte("created_at", oneHourAgo);
+
+    if (pendingCount !== null && pendingCount >= 5) {
+      console.log(`Rate limit exceeded for user ${user.id}: ${pendingCount} pending purchases`);
+      return new Response(
+        JSON.stringify({ error: "Trop de tentatives de paiement. Veuillez réessayer plus tard." }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 429 }
+      );
+    }
+
     // Vérifier le prix du niveau depuis les templates de certificats
-    const { data: pricingData } = await supabaseClient
+    const { data: pricingData } = await supabaseService
       .from('certificate_templates')
       .select(`
         price_euros,

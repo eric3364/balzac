@@ -1,10 +1,21 @@
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Input validation helpers
+function validateEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email) && email.length <= 255;
+}
+
+function sanitizeString(str: string | undefined | null, maxLength: number): string {
+  if (!str) return '';
+  return str.trim().substring(0, maxLength);
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -13,16 +24,38 @@ serve(async (req) => {
   }
 
   try {
-    const { email, first_name, last_name, school, class_name, password } = await req.json();
+    const requestBody = await req.json();
+    const { email, first_name, last_name, school, class_name, password } = requestBody;
 
+    // Input validation
     if (!email) {
       return new Response(
         JSON.stringify({ error: 'Email requis' }), 
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    if (typeof email !== 'string' || !validateEmail(email)) {
+      return new Response(
+        JSON.stringify({ error: 'Format d\'email invalide' }), 
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Sanitize and validate optional fields
+    const sanitizedFirstName = sanitizeString(first_name, 100);
+    const sanitizedLastName = sanitizeString(last_name, 100);
+    const sanitizedSchool = sanitizeString(school, 200);
+    const sanitizedClassName = sanitizeString(class_name, 100);
+
+    // Validate password if provided
+    if (password !== undefined && password !== null) {
+      if (typeof password !== 'string' || password.length < 6 || password.length > 100) {
+        return new Response(
+          JSON.stringify({ error: 'Le mot de passe doit contenir entre 6 et 100 caractères' }), 
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -108,14 +141,14 @@ serve(async (req) => {
 
     // 1) Créer l'utilisateur Auth
     const createUserOptions: any = {
-      email,
+      email: email.toLowerCase().trim(),
       email_confirm: true, // Confirme automatiquement l'email
       user_metadata: { 
         role: "learner", 
-        first_name: first_name || '', 
-        last_name: last_name || '', 
-        school: school || '', 
-        class_name: class_name || '' 
+        first_name: sanitizedFirstName, 
+        last_name: sanitizedLastName, 
+        school: sanitizedSchool, 
+        class_name: sanitizedClassName 
       },
     };
 
@@ -148,11 +181,11 @@ serve(async (req) => {
       .from("users")
       .insert({
         user_id: userId,
-        email: email,
-        first_name: first_name || '',
-        last_name: last_name || '',
-        school: school || '',
-        class_name: class_name || '',
+        email: email.toLowerCase().trim(),
+        first_name: sanitizedFirstName,
+        last_name: sanitizedLastName,
+        school: sanitizedSchool,
+        class_name: sanitizedClassName,
         is_active: password ? true : false
       });
 
