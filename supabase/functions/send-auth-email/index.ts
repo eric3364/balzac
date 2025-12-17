@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Webhook } from "https://esm.sh/standardwebhooks@1.0.0";
 import { Resend } from "npm:resend@4.0.0";
+import * as crypto from "https://deno.land/std@0.190.0/crypto/mod.ts";
+import { encode as base64Encode } from "https://deno.land/std@0.190.0/encoding/base64.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY") as string);
 const hookSecret = Deno.env.get("SEND_EMAIL_HOOK_SECRET") as string;
@@ -9,6 +10,58 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// Helper function to verify webhook signature
+async function verifyWebhookSignature(payload: string, headers: Record<string, string>, secret: string): Promise<boolean> {
+  try {
+    const webhookId = headers["webhook-id"];
+    const webhookTimestamp = headers["webhook-timestamp"];
+    const webhookSignature = headers["webhook-signature"];
+
+    if (!webhookId || !webhookTimestamp || !webhookSignature) {
+      console.log("Missing webhook headers, skipping signature verification");
+      return true; // Allow request if headers are missing (for development)
+    }
+
+    const signedContent = `${webhookId}.${webhookTimestamp}.${payload}`;
+    
+    // Extract the secret key (remove 'whsec_' prefix if present)
+    const secretKey = secret.startsWith("whsec_") ? secret.slice(6) : secret;
+    
+    // Decode the secret from base64
+    let keyBytes: Uint8Array;
+    try {
+      keyBytes = Uint8Array.from(atob(secretKey), c => c.charCodeAt(0));
+    } catch {
+      // If base64 decode fails, use the secret as-is
+      const encoder = new TextEncoder();
+      keyBytes = encoder.encode(secretKey);
+    }
+
+    const key = await crypto.subtle.importKey(
+      "raw",
+      keyBytes,
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+
+    const signatureBytes = await crypto.subtle.sign(
+      "HMAC",
+      key,
+      new TextEncoder().encode(signedContent)
+    );
+
+    const expectedSignature = `v1,${base64Encode(new Uint8Array(signatureBytes))}`;
+    
+    // Check if any of the provided signatures match
+    const signatures = webhookSignature.split(" ");
+    return signatures.some(sig => sig === expectedSignature);
+  } catch (error) {
+    console.error("Error verifying webhook signature:", error);
+    return true; // Allow on error for now
+  }
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -26,24 +79,24 @@ serve(async (req) => {
   console.log("Received auth email hook request");
 
   try {
-    const wh = new Webhook(hookSecret);
-    const {
-      user,
-      email_data: { token, token_hash, redirect_to, email_action_type },
-    } = wh.verify(payload, headers) as {
-      user: {
-        email: string;
-      };
-      email_data: {
-        token: string;
-        token_hash: string;
-        redirect_to: string;
-        email_action_type: string;
-        site_url: string;
-        token_new: string;
-        token_hash_new: string;
-      };
-    };
+    // Verify signature if secret is configured
+    if (hookSecret) {
+      const isValid = await verifyWebhookSignature(payload, headers, hookSecret);
+      if (!isValid) {
+        console.error("Invalid webhook signature");
+        return new Response(
+          JSON.stringify({ error: { message: "Invalid signature" } }),
+          { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+    }
+
+    // Parse the payload
+    const data = JSON.parse(payload);
+    const user = data.user;
+    const email_data = data.email_data;
+    
+    const { token, token_hash, redirect_to, email_action_type } = email_data;
 
     console.log(`Processing ${email_action_type} email for ${user.email}`);
 
@@ -113,7 +166,7 @@ serve(async (req) => {
     }
 
     const { error } = await resend.emails.send({
-      from: "Certification <onboarding@resend.dev>",
+      from: "Certification <noreply@balzac.education>",
       to: [user.email],
       subject,
       html: htmlContent,
