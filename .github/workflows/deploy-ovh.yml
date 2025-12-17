@@ -35,6 +35,13 @@ jobs:
           rm -rf deploy/lovable-uploads || true
           find deploy -type d -name "lovable-uploads" -print -exec rm -rf {} + || true
 
+      - name: List deploy contents
+        run: |
+          echo "Deploy folder contents:"
+          ls -la deploy/
+          echo "Index.html first 20 lines:"
+          head -20 deploy/index.html || echo "No index.html found"
+
       - name: Deploy via SFTP
         uses: wlixcc/SFTP-Deploy-Action@v1.2.5
         with:
@@ -42,8 +49,8 @@ jobs:
           port: ${{ secrets.SFTP_PORT }}
           username: ${{ secrets.SFTP_USERNAME }}
           password: ${{ secrets.SFTP_PASSWORD }}
-          local_path: ./deploy/.
+          local_path: deploy/*
           remote_path: www/
           sftp_only: true
-          delete_remote_files: false
+          delete_remote_files: true
           sftpArgs: '-o StrictHostKeyChecking=no'
