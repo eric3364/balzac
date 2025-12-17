@@ -14,11 +14,8 @@
 
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-
-    "baseUrl": ".",
     "paths": {
-      "./src/*"
-  ]
+      "@/*": ["./src/*"]
     },
 
     "types": ["react", "react-dom"]
