@@ -1,0 +1,148 @@
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { Webhook } from "https://esm.sh/standardwebhooks@1.0.0";
+import { Resend } from "npm:resend@4.0.0";
+
+const resend = new Resend(Deno.env.get("RESEND_API_KEY") as string);
+const hookSecret = Deno.env.get("SEND_EMAIL_HOOK_SECRET") as string;
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  if (req.method !== "POST") {
+    return new Response("Method not allowed", { status: 405 });
+  }
+
+  const payload = await req.text();
+  const headers = Object.fromEntries(req.headers);
+
+  console.log("Received auth email hook request");
+
+  try {
+    const wh = new Webhook(hookSecret);
+    const {
+      user,
+      email_data: { token, token_hash, redirect_to, email_action_type },
+    } = wh.verify(payload, headers) as {
+      user: {
+        email: string;
+      };
+      email_data: {
+        token: string;
+        token_hash: string;
+        redirect_to: string;
+        email_action_type: string;
+        site_url: string;
+        token_new: string;
+        token_hash_new: string;
+      };
+    };
+
+    console.log(`Processing ${email_action_type} email for ${user.email}`);
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const verificationLink = `${supabaseUrl}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${redirect_to}`;
+
+    let subject = "";
+    let htmlContent = "";
+
+    switch (email_action_type) {
+      case "signup":
+        subject = "Confirmez votre inscription";
+        htmlContent = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h1 style="color: #333; text-align: center;">Bienvenue !</h1>
+            <p style="color: #666; font-size: 16px;">Merci de vous être inscrit. Pour activer votre compte, veuillez cliquer sur le bouton ci-dessous :</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${verificationLink}" style="background-color: #4F46E5; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">Confirmer mon inscription</a>
+            </div>
+            <p style="color: #999; font-size: 14px;">Ou copiez ce code de vérification : <strong>${token}</strong></p>
+            <p style="color: #999; font-size: 12px;">Si vous n'avez pas créé de compte, vous pouvez ignorer cet email.</p>
+          </div>
+        `;
+        break;
+
+      case "recovery":
+      case "magiclink":
+        subject = "Réinitialisez votre mot de passe";
+        htmlContent = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h1 style="color: #333; text-align: center;">Réinitialisation du mot de passe</h1>
+            <p style="color: #666; font-size: 16px;">Vous avez demandé à réinitialiser votre mot de passe. Cliquez sur le bouton ci-dessous pour continuer :</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${verificationLink}" style="background-color: #4F46E5; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">Réinitialiser mon mot de passe</a>
+            </div>
+            <p style="color: #999; font-size: 14px;">Ou copiez ce code : <strong>${token}</strong></p>
+            <p style="color: #999; font-size: 12px;">Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.</p>
+          </div>
+        `;
+        break;
+
+      case "email_change":
+        subject = "Confirmez votre nouvelle adresse email";
+        htmlContent = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h1 style="color: #333; text-align: center;">Changement d'email</h1>
+            <p style="color: #666; font-size: 16px;">Cliquez sur le bouton ci-dessous pour confirmer votre nouvelle adresse email :</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${verificationLink}" style="background-color: #4F46E5; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">Confirmer le changement</a>
+            </div>
+            <p style="color: #999; font-size: 12px;">Si vous n'avez pas demandé ce changement, ignorez cet email.</p>
+          </div>
+        `;
+        break;
+
+      default:
+        subject = "Vérification de votre compte";
+        htmlContent = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h1 style="color: #333; text-align: center;">Vérification</h1>
+            <p style="color: #666; font-size: 16px;">Cliquez sur le bouton ci-dessous pour vérifier votre compte :</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${verificationLink}" style="background-color: #4F46E5; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">Vérifier</a>
+            </div>
+          </div>
+        `;
+    }
+
+    const { error } = await resend.emails.send({
+      from: "Certification <onboarding@resend.dev>",
+      to: [user.email],
+      subject,
+      html: htmlContent,
+    });
+
+    if (error) {
+      console.error("Error sending email:", error);
+      throw error;
+    }
+
+    console.log(`Email sent successfully to ${user.email}`);
+
+    return new Response(JSON.stringify({}), {
+      status: 200,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
+  } catch (error: any) {
+    console.error("Error in send-auth-email function:", error);
+    return new Response(
+      JSON.stringify({
+        error: {
+          http_code: error.code || 500,
+          message: error.message,
+        },
+      }),
+      {
+        status: 401,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      }
+    );
+  }
+});
