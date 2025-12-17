@@ -15,10 +15,11 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
 
-    "baseUrl": ".",
-    "paths": {
-      "./src/*"
-  ]
+    
+"paths": {
+  "@/*": ["./src/*"]
+}
+
     },
 
     "types": ["react", "react-dom"]
