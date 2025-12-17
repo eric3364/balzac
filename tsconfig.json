@@ -17,7 +17,8 @@
 
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "./src/*"
+  ]
     },
 
     "types": ["react", "react-dom"]
