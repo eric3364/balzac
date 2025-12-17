@@ -7,7 +7,6 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -31,31 +30,19 @@ jobs:
           cp -r dist/* deploy/
           if [ -f public/.htaccess ]; then cp public/.htaccess deploy/.htaccess; fi
 
-      - name: Install lftp
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y lftp
+          # IMPORTANT: avoid deploying Lovable temp upload folder (can break SFTP if remote dir doesn't exist)
+          rm -rf deploy/lovable-uploads
+          find deploy -type d -name "lovable-uploads" -prune -exec rm -rf {} +
 
-      - name: Deploy via SFTP (lftp, no Docker)
-        shell: bash
-        env:
-          SFTP_HOST: ${{ secrets.SFTP_HOST }}
-          SFTP_PORT: ${{ secrets.SFTP_PORT }}
-          SFTP_USERNAME: ${{ secrets.SFTP_USERNAME }}
-          SFTP_PASSWORD: ${{ secrets.SFTP_PASSWORD }}
-        run: |
-          set -euo pipefail
-
-          echo "Deploying ./deploy -> ${SFTP_HOST}:${SFTP_PORT}/www/"
-
-          lftp -e "
-            set net:max-retries 3;
-            set net:reconnect-interval-base 5;
-            set sftp:auto-confirm yes;
-            set ssl:verify-certificate no;
-            open -u ${SFTP_USERNAME},${SFTP_PASSWORD} sftp://${SFTP_HOST}:${SFTP_PORT};
-            lcd deploy;
-            cd www;
-            mirror -R --verbose --only-newer --parallel=2 . .;
-            bye;
-          "
+      - name: Deploy via SFTP
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.5
+        with:
+          server: ${{ secrets.SFTP_HOST }}
+          port: ${{ secrets.SFTP_PORT }}
+          username: ${{ secrets.SFTP_USERNAME }}
+          password: ${{ secrets.SFTP_PASSWORD }}
+          local_path: ./deploy/*
+          remote_path: www/
+          sftp_only: true
+          delete_remote_files: false
+          sftpArgs: '-o StrictHostKeyChecking=no'
