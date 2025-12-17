@@ -64,7 +64,7 @@ export const useInitialAssessment = () => {
       const categorizedQuestions: AssessmentQuestion[] = safeQuestions
         .filter(q => q.content && q.answer) // Filtrer les questions valides (content et answer obligatoires)
         .map(q => ({
-          ...q,
+          id: q.id,
           content: q.content!,
           answer: q.answer!,
           choices: [], // Colonne choices non utilisée

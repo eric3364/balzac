@@ -48,7 +48,7 @@ const BadgeCriteria = () => {
           supabase
             .from('questions')
             .select('count')
-            .eq('level', parseInt(level))
+            .eq('level', level)
         ]);
 
         if (!difficultyResult.data) {

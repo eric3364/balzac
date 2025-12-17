@@ -15,7 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 
 interface Question {
   id: number;
-  level: number | null;
+  level: string | null;
   content: string | null;
   type: string | null;
   rule: string | null;
@@ -117,7 +117,7 @@ export const QuestionsManager: React.FC<QuestionsManagerProps> = ({ difficultyLe
     }
 
     if (selectedLevel !== 'all') {
-      filtered = filtered.filter(q => q.level === parseInt(selectedLevel));
+      filtered = filtered.filter(q => q.level === selectedLevel);
     }
 
     if (selectedType !== 'all') {
@@ -202,8 +202,8 @@ export const QuestionsManager: React.FC<QuestionsManagerProps> = ({ difficultyLe
     currentPage * questionsPerPage
   );
 
-  const getLevelInfo = (levelNumber: number) => {
-    return difficultyLevels.find(l => l.level_number === levelNumber);
+  const getLevelInfo = (levelString: string | null) => {
+    return difficultyLevels.find(l => l.name === levelString);
   };
 
   if (loading) {
@@ -301,7 +301,7 @@ export const QuestionsManager: React.FC<QuestionsManagerProps> = ({ difficultyLe
             </TableHeader>
             <TableBody>
               {currentQuestions.map((question) => {
-                const levelInfo = getLevelInfo(question.level || 1);
+                const levelInfo = getLevelInfo(question.level);
                 return (
                   <TableRow key={question.id}>
                     <TableCell className="font-mono text-sm">
@@ -418,7 +418,7 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
   const [formData, setFormData] = useState({
     content: '',
     type: 'multiple_choice',
-    level: 1,
+    level: 'élémentaire',
     rule: '',
     answer: '',
     choices: [] as string[],
@@ -430,7 +430,7 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
       setFormData({
         content: question.content || '',
         type: question.type || 'multiple_choice',
-        level: question.level || 1,
+        level: question.level || 'élémentaire',
         rule: question.rule || '',
         answer: question.answer || '',
         choices: question.choices || [],
@@ -440,7 +440,7 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
       setFormData({
         content: '',
         type: 'multiple_choice',
-        level: 1,
+        level: 'élémentaire',
         rule: '',
         answer: '',
         choices: [],
@@ -492,15 +492,15 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
           <div className="space-y-2">
             <Label>Niveau</Label>
             <Select
-              value={formData.level.toString()}
-              onValueChange={(value) => setFormData({ ...formData, level: parseInt(value) })}
+              value={formData.level}
+              onValueChange={(value) => setFormData({ ...formData, level: value })}
             >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {difficultyLevels.map((level) => (
-                  <SelectItem key={level.id} value={level.level_number.toString()}>
+                  <SelectItem key={level.id} value={level.name}>
                     Niveau {level.level_number} - {level.name}
                   </SelectItem>
                 ))}
