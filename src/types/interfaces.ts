@@ -3,7 +3,7 @@ export interface Question {
   id: number;
   content: string;
   type: string;
-  level: number;
+  level: string;
   rule: string;
   answer: string;
   explanation: string;

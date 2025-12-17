@@ -25,6 +25,7 @@ interface Question {
   level: string;
   rule?: string;
   explanation?: string;
+  answer?: string;
 }
 
 interface SessionAnswer {
