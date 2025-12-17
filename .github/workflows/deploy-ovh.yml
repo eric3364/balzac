@@ -7,33 +7,58 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
+      # 1) Récupération du code
       - name: Checkout
         uses: actions/checkout@v4
 
+      # 2) Node.js
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
+      # 3) Dépendances
       - name: Install deps
         run: npm install --no-audit --legacy-peer-deps
 
+      # 4) Build
       - name: Build
         run: npm run build
 
+      # 5) Préparation du dossier de déploiement (NETTOYAGE INCLUS)
       - name: Prepare deploy folder
         shell: bash
         run: |
+          set -euo pipefail
+
+          echo "===> Clean deploy folder"
           rm -rf deploy
           mkdir -p deploy
+
+          echo "===> Copy dist/* into deploy/"
           cp -r dist/* deploy/
-          if [ -f public/.htaccess ]; then cp public/.htaccess deploy/.htaccess; fi
 
-          # IMPORTANT: avoid deploying Lovable temp upload folder (can break SFTP if remote dir doesn't exist)
-          rm -rf deploy/lovable-uploads
-          find deploy -type d -name "lovable-uploads" -prune -exec rm -rf {} +
+          if [ -f public/.htaccess ]; then
+            echo "===> Copy .htaccess"
+            cp public/.htaccess deploy/.htaccess
+          fi
 
+          echo "===> Before cleanup (top-level)"
+          ls -la deploy || true
+
+          echo "===> Remove any 'lovable-uploads' directories"
+          rm -rf deploy/lovable-uploads || true
+          find deploy -type d -name "lovable-uploads" -print -exec rm -rf {} + || true
+
+          echo "===> Verify no lovable-uploads remains"
+          find deploy -type d -name "lovable-uploads" -print || true
+
+          echo "===> Final deploy tree (depth 2)"
+          find deploy -maxdepth 2 -print
+
+      # 6) Déploiement SFTP (wlixcc)
       - name: Deploy via SFTP
         uses: wlixcc/SFTP-Deploy-Action@v1.2.5
         with:
