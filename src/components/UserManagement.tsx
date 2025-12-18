@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Trash2, Edit2, Plus, Download, Upload, Search, Filter, Award, Clock, Target, Activity, TrendingUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { SCHOOLS, CLASS_LEVELS, School, ClassLevel } from '@/constants/userData';
 import { useUserListStats, UserListStats } from '@/hooks/useUserListStats';
 
@@ -39,6 +40,7 @@ interface UserFormData {
 }
 
 export const UserManagement = () => {
+  const { user: currentUser } = useAuth();
   const { users: usersWithStats, loading, refetch } = useUserListStats();
   const [filteredUsers, setFilteredUsers] = useState<UserListStats[]>([]);
   const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
@@ -345,18 +347,24 @@ export const UserManagement = () => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) return;
 
     try {
-      // Debug: vérifier l'utilisateur actuel
-      const { data: sessionData } = await supabase.auth.getSession();
-      const currentUserId = sessionData?.session?.user?.id;
-      console.log('Current user ID:', currentUserId);
+      // Utiliser l'utilisateur du contexte d'auth
+      const currentUserId = currentUser?.id;
+      console.log('Current user ID from context:', currentUserId);
+      
+      if (!currentUserId) {
+        toast({
+          title: "Erreur d'authentification",
+          description: "Vous devez être connecté pour effectuer cette action.",
+          variant: "destructive"
+        });
+        return;
+      }
       
       // Debug: vérifier si l'utilisateur est admin
-      const { data: adminCheck, error: adminError } = currentUserId 
-        ? await supabase
-            .from('administrators')
-            .select('*')
-            .eq('user_id', currentUserId)
-        : { data: null, error: null };
+      const { data: adminCheck, error: adminError } = await supabase
+        .from('administrators')
+        .select('*')
+        .eq('user_id', currentUserId);
       console.log('Admin check result:', adminCheck, 'Error:', adminError);
 
       const { data, error } = await supabase
@@ -373,7 +381,7 @@ export const UserManagement = () => {
       if (!data || data.length === 0) {
         toast({
           title: "Erreur de permission",
-          description: `Vous n'avez pas les droits pour supprimer cet utilisateur. Votre ID: ${currentUserId || 'non connecté'}. Admin trouvé: ${adminCheck?.length || 0}`,
+          description: `Vous n'avez pas les droits pour supprimer cet utilisateur. Votre ID: ${currentUserId}. Admin trouvé: ${adminCheck?.length || 0}`,
           variant: "destructive"
         });
         return;
