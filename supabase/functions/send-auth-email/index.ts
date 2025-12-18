@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@4.0.0";
-import * as crypto from "https://deno.land/std@0.190.0/crypto/mod.ts";
 import { encode as base64Encode } from "https://deno.land/std@0.190.0/encoding/base64.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY") as string);
@@ -38,7 +37,7 @@ async function verifyWebhookSignature(payload: string, headers: Record<string, s
       keyBytes = encoder.encode(secretKey);
     }
 
-    const key = await crypto.subtle.importKey(
+    const key = await globalThis.crypto.subtle.importKey(
       "raw",
       keyBytes,
       { name: "HMAC", hash: "SHA-256" },
@@ -46,13 +45,13 @@ async function verifyWebhookSignature(payload: string, headers: Record<string, s
       ["sign"]
     );
 
-    const signatureBytes = await crypto.subtle.sign(
+    const signatureBytes = await globalThis.crypto.subtle.sign(
       "HMAC",
       key,
       new TextEncoder().encode(signedContent)
     );
 
-    const expectedSignature = `v1,${base64Encode(new Uint8Array(signatureBytes))}`;
+    const expectedSignature = `v1,${base64Encode(signatureBytes)}`;
     
     // Check if any of the provided signatures match
     const signatures = webhookSignature.split(" ");

@@ -173,12 +173,13 @@ Deno.serve(async (req) => {
           user_id: authUser.user?.id
         })
 
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Erreur pour', userData.email, ':', error)
+        const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
         results.push({
           email: userData.email,
           success: false,
-          error: error.message
+          error: errorMessage
         })
       }
     }
@@ -200,10 +201,11 @@ Deno.serve(async (req) => {
       }
     )
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Erreur générale:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
