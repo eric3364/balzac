@@ -4,6 +4,10 @@ on:
   push:
     branches: [ main ]
 
+concurrency:
+  group: deploy-ovh-main
+  cancel-in-progress: true
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -18,7 +22,7 @@ jobs:
           node-version: 20
 
       - name: Install deps
-        run: npm install --no-audit --legacy-peer-deps
+        run: npm ci --no-audit --legacy-peer-deps
 
       - name: Build
         run: npm run build
@@ -45,11 +49,26 @@ jobs:
         run: |
           sshpass -p "${{ secrets.SFTP_PASSWORD }}" ssh -o StrictHostKeyChecking=no -p ${{ secrets.SFTP_PORT }} \
             ${{ secrets.SFTP_USERNAME }}@${{ secrets.SFTP_HOST }} \
-            "mkdir -p /home/${{ secrets.SFTP_USERNAME }}/www && ls -la /home/${{ secrets.SFTP_USERNAME }}/www | head -n 50"
+            "mkdir -p /home/${{ secrets.SFTP_USERNAME }}/www"
 
       - name: Deploy (rsync over SSH)
         run: |
           sshpass -p "${{ secrets.SFTP_PASSWORD }}" rsync -az --delete \
+            --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r \
             -e "ssh -o StrictHostKeyChecking=no -p ${{ secrets.SFTP_PORT }}" \
             deploy/ \
             ${{ secrets.SFTP_USERNAME }}@${{ secrets.SFTP_HOST }}:/home/${{ secrets.SFTP_USERNAME }}/www/
+
+      - name: Post-deploy smoke test (asset must be JS, not HTML)
+        run: |
+          # On récupère le premier asset JS référencé par dist/index.html
+          ASSET_PATH=$(node -e "const fs=require('fs'); const html=fs.readFileSync('dist/index.html','utf8'); const m=html.match(/src=\"(\\/assets\\/[^\\\"]+\\.js)\"/); if(!m){process.exit(2)} console.log(m[1]);")
+          echo "Testing asset: $ASSET_PATH"
+
+          # On vérifie que le serveur ne renvoie pas du HTML pour cet asset
+          curl -fsSL "https://www.balzac.education${ASSET_PATH}" | head -n 5 | tee /tmp/asset_head.txt
+
+          if grep -qi "<!doctype html" /tmp/asset_head.txt || grep -qi "<html" /tmp/asset_head.txt; then
+            echo "ERROR: Asset is returning HTML (rewrite misconfiguration)."
+            exit 1
+          fi
