@@ -35,7 +35,7 @@ export const useConnectionStats = () => {
         .select('user_id, started_at, ended_at, status')
         .gte('started_at', weekStart.toISOString())
         .eq('status', 'completed')
-        .not('deleted_at', 'is', null);
+        .is('deleted_at', null);
 
       // Récupérer les sessions du mois courant
       const { data: monthlySessions } = await supabase
@@ -43,7 +43,7 @@ export const useConnectionStats = () => {
         .select('user_id, started_at, ended_at, status')
         .gte('started_at', monthStart.toISOString())
         .eq('status', 'completed')
-        .not('deleted_at', 'is', null);
+        .is('deleted_at', null);
 
       // Calculer les utilisateurs uniques de la semaine
       const weeklyUniqueUsers = new Set(
