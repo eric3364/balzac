@@ -185,7 +185,7 @@ serve(async (req) => {
     }
 
     const { error } = await resend.emails.send({
-      from: "Certification <noreply@balzac.education>",
+      from: "Balzac Certification <noreply@send.balzac.education>",
       to: [user.email],
       subject,
       html: htmlContent,
