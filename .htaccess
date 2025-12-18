@@ -1,20 +1,75 @@
+############################################
+# Balzac.education – SPA Vite / React
+# Apache (.htaccess) – Version robuste
+############################################
+
+# --------------------------------------------------
+# 1) Activation du moteur de réécriture
+# --------------------------------------------------
 RewriteEngine On
 
-RewriteCond %{HTTPS} !=on [OR]
-RewriteCond %{HTTP_HOST} !^www\.balzac\.education$ [NC]
-RewriteRule ^(.*)$ https://www.balzac.education/$1 [R=301,L]
+# --------------------------------------------------
+# 2) NE JAMAIS réécrire les assets statiques
+#    (clé pour éviter les erreurs MIME JS)
+# --------------------------------------------------
+RewriteRule ^assets/ - [L]
+RewriteRule ^images/ - [L]
+RewriteRule ^favicon\.ico$ - [L]
+RewriteRule ^robots\.txt$ - [L]
+RewriteRule ^placeholder\.svg$ - [L]
+RewriteRule ^og-image\.jpg$ - [L]
 
+# --------------------------------------------------
+# 3) Servir normalement les fichiers / dossiers existants
+# --------------------------------------------------
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
-RewriteRule - [L]
+RewriteRule ^ - [L]
 
+# --------------------------------------------------
+# 4) Fallback SPA : tout le reste → index.html
+# --------------------------------------------------
 RewriteRule ^ index.html [L]
 
-<IfModule mod_expires.c>
-  ExpiresActive On
-  ExpiresDefault "access plus 1 hour"
-  <FilesMatch "\.(js|css|png|jpg|jpeg|gif|svg|ico|woff2?)$">
-    ExpiresDefault "access plus 1 year"
-    Header append Cache-Control "public"
+# ==================================================
+# 5) HEADERS HTTP – Cache maîtrisé
+# ==================================================
+<IfModule mod_headers.c>
+
+  # index.html : toujours frais (évite mismatch index/assets)
+  <Files "index.html">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+  </Files>
+
+  # Assets hashés : cache long (performances)
+  <FilesMatch "\.(js|css|png|jpg|jpeg|svg|webp|ico|woff2?)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
   </FilesMatch>
+
 </IfModule>
+
+# ==================================================
+# 6) Sécurité minimale (sans casser la SPA)
+# ==================================================
+<IfModule mod_headers.c>
+
+  # Empêche l’injection MIME
+  Header always set X-Content-Type-Options "nosniff"
+
+  # Protection clickjacking
+  Header always set X-Frame-Options "SAMEORIGIN"
+
+  # Protection XSS basique
+  Header always set X-XSS-Protection "1; mode=block"
+
+  # Réduction fuite referrer
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+</IfModule>
+
+# ==================================================
+# 7) Encodage
+# ==================================================
+AddDefaultCharset UTF-8
