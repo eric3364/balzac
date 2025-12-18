@@ -345,12 +345,23 @@ export const UserManagement = () => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) return;
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('users')
         .delete()
-        .eq('id', userId);
+        .eq('id', userId)
+        .select();
 
       if (error) throw error;
+
+      // Vérifier si des lignes ont été supprimées (RLS peut bloquer silencieusement)
+      if (!data || data.length === 0) {
+        toast({
+          title: "Erreur de permission",
+          description: "Vous n'avez pas les droits pour supprimer cet utilisateur. Seuls les super administrateurs peuvent effectuer cette action.",
+          variant: "destructive"
+        });
+        return;
+      }
 
       toast({
         title: "Utilisateur supprimé",
