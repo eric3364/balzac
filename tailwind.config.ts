@@ -29,7 +29,7 @@ export default {
           foreground: "hsl(var(--primary-foreground))",
         },
         // Couleur ajoutée pour permettre l'utilisation de `via-primary-glow`
-        "primary-glow": "#93c5fd",
+        "primary-glow": "#60a5fa",
 
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
