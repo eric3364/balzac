@@ -1,0 +1,20 @@
+RewriteEngine On
+
+RewriteCond %{HTTPS} !=on [OR]
+RewriteCond %{HTTP_HOST} !^www\.balzac\.education$ [NC]
+RewriteRule ^(.*)$ https://www.balzac.education/$1 [R=301,L]
+
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule - [L]
+
+RewriteRule ^ index.html [L]
+
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresDefault "access plus 1 hour"
+  <FilesMatch "\.(js|css|png|jpg|jpeg|gif|svg|ico|woff2?)$">
+    ExpiresDefault "access plus 1 year"
+    Header append Cache-Control "public"
+  </FilesMatch>
+</IfModule>
