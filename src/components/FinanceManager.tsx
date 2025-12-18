@@ -675,11 +675,9 @@ export const FinanceManager: React.FC = () => {
                         )}
                       </TableCell>
                       <TableCell>
-                        {(promo as any).usage_count > 0 ? (
-                          <Badge variant="secondary">
-                            {(promo as any).usage_count} fois
-                          </Badge>
-                        ) : '-'}
+                        <Badge variant={(promo as any).usage_count > 0 ? "secondary" : "outline"}>
+                          {(promo as any).usage_count || 0} fois
+                        </Badge>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
