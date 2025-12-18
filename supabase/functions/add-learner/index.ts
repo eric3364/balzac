@@ -218,10 +218,11 @@ serve(async (req) => {
       }
     );
 
-  } catch (e) {
+  } catch (e: unknown) {
     console.error('Erreur générale:', e);
+    const errorMessage = e instanceof Error ? e.message : String(e);
     return new Response(
-      JSON.stringify({ error: `Erreur serveur: ${String(e?.message ?? e)}` }), 
+      JSON.stringify({ error: `Erreur serveur: ${errorMessage}` }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
