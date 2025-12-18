@@ -28,30 +28,28 @@ jobs:
           rm -rf deploy
           mkdir -p deploy
           cp -r dist/* deploy/
-          if [ -f .htaccess ]; then cp .htaccess deploy/.htaccess; fi
 
-      # ✅ IMPORTANT : créer le dossier remote avant le SFTP
+          # Copie .htaccess (selon ton repo: ".htaccess" ou "htaccess")
+          if [ -f .htaccess ]; then
+            cp .htaccess deploy/.htaccess
+          elif [ -f htaccess ]; then
+            cp htaccess deploy/.htaccess
+          fi
+
+      - name: Install rsync + sshpass
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rsync sshpass
+
       - name: Ensure remote www directory exists
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SFTP_HOST }}
-          port: ${{ secrets.SFTP_PORT }}
-          username: ${{ secrets.SFTP_USERNAME }}
-          password: ${{ secrets.SFTP_PASSWORD }}
-          script: |
-            mkdir -p /home/${{ secrets.SFTP_USERNAME }}/www
-            ls -la /home/${{ secrets.SFTP_USERNAME }} | head -n 50
-            ls -la /home/${{ secrets.SFTP_USERNAME }}/www | head -n 50
+        run: |
+          sshpass -p "${{ secrets.SFTP_PASSWORD }}" ssh -o StrictHostKeyChecking=no -p ${{ secrets.SFTP_PORT }} \
+            ${{ secrets.SFTP_USERNAME }}@${{ secrets.SFTP_HOST }} \
+            "mkdir -p /home/${{ secrets.SFTP_USERNAME }}/www && ls -la /home/${{ secrets.SFTP_USERNAME }}/www | head -n 50"
 
-      - name: Deploy via SFTP
-        uses: wlixcc/SFTP-Deploy-Action@v1.2.5
-        with:
-          server: ${{ secrets.SFTP_HOST }}
-          port: ${{ secrets.SFTP_PORT }}
-          username: ${{ secrets.SFTP_USERNAME }}
-          password: ${{ secrets.SFTP_PASSWORD }}
-          local_path: ./deploy/*
-          remote_path: /home/${{ secrets.SFTP_USERNAME }}/www/
-          sftp_only: true
-          delete_remote_files: false
-          sftpArgs: "-o StrictHostKeyChecking=no"
+      - name: Deploy (rsync over SSH)
+        run: |
+          sshpass -p "${{ secrets.SFTP_PASSWORD }}" rsync -az --delete \
+            -e "ssh -o StrictHostKeyChecking=no -p ${{ secrets.SFTP_PORT }}" \
+            deploy/ \
+            ${{ secrets.SFTP_USERNAME }}@${{ secrets.SFTP_HOST }}:/home/${{ secrets.SFTP_USERNAME }}/www/
