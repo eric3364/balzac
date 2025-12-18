@@ -280,8 +280,8 @@ const Auth = () => {
                 <p className="font-medium">
                   Pour finaliser votre inscription, veuillez vérifier votre boîte email et cliquer sur le lien de validation.
                 </p>
-                <p className="text-sm text-muted-foreground">
-                  Pensez à vérifier vos spams si vous ne recevez pas l'email.
+                <p className="text-sm font-semibold text-destructive mt-2">
+                  MERCI DE VÉRIFIER VOS SPAMS !
                 </p>
               </DialogDescription>
             </DialogHeader>
