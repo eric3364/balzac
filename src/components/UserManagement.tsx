@@ -343,45 +343,52 @@ export const UserManagement = () => {
     }
   };
 
-  const deleteUser = async (userId: string) => {
+  const deleteUser = async (authUserId: string) => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) return;
 
     try {
-      // Utiliser l'utilisateur du contexte d'auth
-      const currentUserId = currentUser?.id;
-      console.log('Current user ID from context:', currentUserId);
-      
-      if (!currentUserId) {
+      // Récupérer le token de session
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+
+      if (!token) {
         toast({
-          title: "Erreur d'authentification",
-          description: "Vous devez être connecté pour effectuer cette action.",
+          title: "Session expirée",
+          description: "Session expirée, reconnectez-vous",
           variant: "destructive"
         });
         return;
       }
-      
-      // Debug: vérifier si l'utilisateur est admin
-      const { data: adminCheck, error: adminError } = await supabase
-        .from('administrators')
-        .select('*')
-        .eq('user_id', currentUserId);
-      console.log('Admin check result:', adminCheck, 'Error:', adminError);
 
-      const { data, error } = await supabase
-        .from('users')
-        .delete()
-        .eq('id', userId)
-        .select();
+      console.log('Calling delete_user_admin for auth user:', authUserId);
 
-      console.log('Delete result - data:', data, 'error:', error);
+      // Appel à l'Edge Function
+      const res = await fetch(
+        'https://rglaszkaqbagpbtursjf.supabase.co/functions/v1/delete_user_admin',
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ user_id: authUserId })
+        }
+      );
 
-      if (error) throw error;
+      const text = await res.text();
+      console.log('delete_user_admin', res.status, text);
 
-      // Vérifier si des lignes ont été supprimées (RLS peut bloquer silencieusement)
-      if (!data || data.length === 0) {
+      let responseData: { error?: string; details?: string; message?: string };
+      try {
+        responseData = JSON.parse(text);
+      } catch {
+        responseData = { error: text };
+      }
+
+      if (!res.ok) {
         toast({
-          title: "Erreur de permission",
-          description: `Vous n'avez pas les droits pour supprimer cet utilisateur. Votre ID: ${currentUserId}. Admin trouvé: ${adminCheck?.length || 0}`,
+          title: "Erreur de suppression",
+          description: responseData.error || responseData.details || responseData.message || "Erreur inconnue",
           variant: "destructive"
         });
         return;
