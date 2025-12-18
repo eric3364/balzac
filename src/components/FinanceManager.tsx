@@ -99,17 +99,22 @@ export const FinanceManager: React.FC = () => {
     try {
       setLoading(true);
       
-      // Charger les achats avec les informations utilisateurs
+      // Charger les achats
       const { data: purchasesData, error: purchasesError } = await supabase
         .from('user_level_purchases')
-        .select(`
-          *,
-          users!user_level_purchases_user_id_fkey (
-            first_name,
-            last_name
-          )
-        `)
+        .select('*')
         .order('purchased_at', { ascending: false });
+
+      if (purchasesError) throw purchasesError;
+
+      // Charger les utilisateurs pour associer les noms
+      const { data: usersData } = await supabase
+        .from('users')
+        .select('user_id, first_name, last_name');
+      
+      const usersMap = new Map(
+        (usersData || []).map(u => [u.user_id, { first_name: u.first_name, last_name: u.last_name }])
+      );
 
       if (purchasesError) throw purchasesError;
       
@@ -122,13 +127,16 @@ export const FinanceManager: React.FC = () => {
         (allPromoCodes || []).map(pc => [pc.used_by, pc.code])
       );
       
-      setPurchases((purchasesData || []).map(p => ({
-        ...p,
-        payment_method: p.payment_method || 'stripe',
-        first_name: (p.users as any)?.first_name,
-        last_name: (p.users as any)?.last_name,
-        promo_code: p.payment_method === 'promo_code' ? promoCodesMap.get(p.user_id) : null
-      })));
+      setPurchases((purchasesData || []).map(p => {
+        const user = usersMap.get(p.user_id);
+        return {
+          ...p,
+          payment_method: p.payment_method || 'stripe',
+          first_name: user?.first_name,
+          last_name: user?.last_name,
+          promo_code: p.payment_method === 'promo_code' ? promoCodesMap.get(p.user_id) : null
+        };
+      }));
 
       // Charger les codes promo
       const { data: promoData, error: promoError } = await supabase
