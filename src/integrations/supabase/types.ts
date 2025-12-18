@@ -935,6 +935,7 @@ export type Database = {
             Returns: boolean
           }
         | { Args: { p_email: string }; Returns: boolean }
+      check_is_super_admin: { Args: never; Returns: boolean }
       generate_credential_id: { Args: never; Returns: string }
       generate_temporary_access_code: { Args: never; Returns: string }
       get_free_sessions_for_level: {
