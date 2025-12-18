@@ -49,7 +49,7 @@ async function verifyWebhookSignature(payload: string, headers: Record<string, s
 
     const key = await globalThis.crypto.subtle.importKey(
       "raw",
-      keyBytes,
+      keyBytes.buffer as ArrayBuffer,
       { name: "HMAC", hash: "SHA-256" },
       false,
       ["sign"]
