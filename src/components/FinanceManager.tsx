@@ -145,7 +145,22 @@ export const FinanceManager: React.FC = () => {
         .order('created_at', { ascending: false });
 
       if (promoError) throw promoError;
-      setPromoCodes(promoData || []);
+      
+      // Compter les utilisations de chaque code promo (achats avec payment_method = 'promo_code')
+      const promoUsageCount = new Map<string, number>();
+      (purchasesData || []).forEach(p => {
+        if (p.payment_method === 'promo_code') {
+          const code = promoCodesMap.get(p.user_id);
+          if (code) {
+            promoUsageCount.set(code, (promoUsageCount.get(code) || 0) + 1);
+          }
+        }
+      });
+      
+      setPromoCodes((promoData || []).map(promo => ({
+        ...promo,
+        usage_count: promoUsageCount.get(promo.code) || 0
+      })));
 
       // Charger les niveaux de certification actifs
       const { data: levelsData, error: levelsError } = await supabase
@@ -660,10 +675,10 @@ export const FinanceManager: React.FC = () => {
                         )}
                       </TableCell>
                       <TableCell>
-                        {promo.used_by ? (
-                          <span className="text-sm text-muted-foreground">
-                            {promo.used_at ? formatDate(promo.used_at) : 'Utilisé'}
-                          </span>
+                        {(promo as any).usage_count > 0 ? (
+                          <Badge variant="secondary">
+                            {(promo as any).usage_count} fois
+                          </Badge>
                         ) : '-'}
                       </TableCell>
                       <TableCell>
