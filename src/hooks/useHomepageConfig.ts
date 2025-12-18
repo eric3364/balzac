@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 // Debounce utility
 function useDebounce(callback: Function, delay: number) {
-  const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
+  const [debounceTimer, setDebounceTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
 
   const debouncedCallback = useCallback((...args: any[]) => {
     if (debounceTimer) {
