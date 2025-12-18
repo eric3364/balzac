@@ -403,6 +403,51 @@ export type Database = {
         }
         Relationships: []
       }
+      planning_objectives: {
+        Row: {
+          class_name: string | null
+          created_at: string
+          created_by: string | null
+          deadline: string
+          description: string | null
+          id: string
+          is_active: boolean
+          objective_type: string
+          school: string
+          target_certification_level: number | null
+          target_progression_percentage: number | null
+          updated_at: string
+        }
+        Insert: {
+          class_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          deadline: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          objective_type?: string
+          school: string
+          target_certification_level?: number | null
+          target_progression_percentage?: number | null
+          updated_at?: string
+        }
+        Update: {
+          class_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          deadline?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          objective_type?: string
+          school?: string
+          target_certification_level?: number | null
+          target_progression_percentage?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

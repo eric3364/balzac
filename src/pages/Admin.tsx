@@ -22,6 +22,7 @@ import { FinanceManager } from '@/components/FinanceManager';
 import { LevelsAndCertificatesManager } from '@/components/LevelsAndCertificatesManager';
 import { TestSettingsManager } from '@/components/TestSettingsManager';
 import { HomepageManager } from '@/components/HomepageManager';
+import { PlanningManager } from '@/components/PlanningManager';
 import { useConnectionStats } from '@/hooks/useConnectionStats';
 
 interface AdminUser {
@@ -349,11 +350,12 @@ const Admin = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className={`grid w-full ${isSuperAdmin ? 'grid-cols-7' : 'grid-cols-6'}`}>
+          <TabsList className={`grid w-full ${isSuperAdmin ? 'grid-cols-8' : 'grid-cols-7'}`}>
             <TabsTrigger value="stats">Statistiques</TabsTrigger>
             <TabsTrigger value="students">Apprenants</TabsTrigger>
             <TabsTrigger value="homepage">Page d'accueil</TabsTrigger>
             <TabsTrigger value="levels">Certification</TabsTrigger>
+            <TabsTrigger value="planning">Planification</TabsTrigger>
             <TabsTrigger value="questions">Questions</TabsTrigger>
             <TabsTrigger value="test-settings">Paramètres des tests</TabsTrigger>
             {isSuperAdmin && (
@@ -543,6 +545,10 @@ const Admin = () => {
 
           <TabsContent value="levels" className="space-y-6">
             <LevelsAndCertificatesManager />
+          </TabsContent>
+
+          <TabsContent value="planning" className="space-y-6">
+            <PlanningManager />
           </TabsContent>
 
           <TabsContent value="questions" className="space-y-6">

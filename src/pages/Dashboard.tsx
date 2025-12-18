@@ -16,6 +16,7 @@ import ProgressChart from '@/components/dashboard/ProgressChart';
 import ScoreGauge from '@/components/dashboard/ScoreGauge';
 import StudyTimeChart from '@/components/dashboard/StudyTimeChart';
 import ActivityHeatmap from '@/components/dashboard/ActivityHeatmap';
+import ObjectiveCountdown from '@/components/dashboard/ObjectiveCountdown';
 
 const Dashboard = () => {
   const { user, loading, signOut } = useAuth();
@@ -80,18 +81,25 @@ const Dashboard = () => {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8 space-y-8">
-        {/* Test d'évaluation initiale */}
+        {/* Objectifs avec compte à rebours */}
         <div className="animate-fade-in">
+          <ObjectiveCountdown 
+            progressPercentage={userStats.progressPercentage}
+            currentCertificationLevel={userStats.currentLevel}
+          />
+        </div>
+
+        {/* Test d'évaluation initiale */}
+        <div className="animate-fade-in" style={{ animationDelay: '0.05s' }}>
           <InitialAssessmentCard />
         </div>
 
         {/* Section des badges de certification */}
-        <div className="animate-fade-in" style={{ animationDelay: '0.05s' }}>
+        <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
           <CertificationBadges />
         </div>
-
         {/* Sessions de test */}
-        <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
+        <div className="animate-fade-in" style={{ animationDelay: '0.15s' }}>
           <Card>
             <CardHeader>
               <CardTitle>Sessions de test</CardTitle>
