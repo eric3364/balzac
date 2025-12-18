@@ -6,15 +6,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ArrowLeft, CheckCircle } from 'lucide-react';
+import { SCHOOLS, CLASS_LEVELS } from '@/constants/userData';
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showSignupSuccess, setShowSignupSuccess] = useState(false);
+  const [selectedSchool, setSelectedSchool] = useState('');
+  const [selectedClass, setSelectedClass] = useState('');
   const { user, signIn, signUp, resetPassword } = useAuth();
   const navigate = useNavigate();
   const { pendingPurchase } = usePendingPurchase();
@@ -55,10 +59,8 @@ const Auth = () => {
     const password = formData.get('password') as string;
     const firstName = formData.get('firstName') as string;
     const lastName = formData.get('lastName') as string;
-    const school = formData.get('school') as string;
-    const className = formData.get('className') as string;
 
-    const { error } = await signUp(email, password, firstName, lastName, school, className);
+    const { error } = await signUp(email, password, firstName, lastName, selectedSchool, selectedClass);
     
     if (!error) {
       setShowSignupSuccess(true);
@@ -243,23 +245,35 @@ const Auth = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="school">École</Label>
-                    <Input
-                      id="school"
-                      name="school"
-                      placeholder="ESCEN"
-                      required
-                    />
+                    <Select value={selectedSchool} onValueChange={setSelectedSchool} required>
+                      <SelectTrigger id="school">
+                        <SelectValue placeholder="Sélectionnez votre école" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SCHOOLS.map((school) => (
+                          <SelectItem key={school} value={school}>
+                            {school}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="className">Classe</Label>
-                    <Input
-                      id="className"
-                      name="className"
-                      placeholder="N1"
-                      required
-                    />
+                    <Select value={selectedClass} onValueChange={setSelectedClass} required>
+                      <SelectTrigger id="className">
+                        <SelectValue placeholder="Sélectionnez votre classe" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CLASS_LEVELS.map((className) => (
+                          <SelectItem key={className} value={className}>
+                            {className}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
+                  <Button type="submit" className="w-full" disabled={isLoading || !selectedSchool || !selectedClass}>
                     {isLoading ? 'Inscription...' : "S'inscrire"}
                   </Button>
                 </form>
