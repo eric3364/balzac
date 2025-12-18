@@ -155,7 +155,8 @@ export const useUserStats = () => {
         console.log('Total time spent:', timeSpent, 'minutes');
 
         const safeAttempts = Array.isArray(attempts) ? attempts : [];
-        const totalTests = safeSessions.length;
+        // Compter uniquement les sessions complétées
+        const totalTests = validSessions.length;
         const totalQuestions = safeAttempts.length;
         const correctAnswers = safeAttempts.filter(attempt => attempt.is_correct).length;
         const incorrectAnswers = totalQuestions - correctAnswers;
