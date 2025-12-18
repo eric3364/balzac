@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Edit2, Plus, Download, Upload, Search, Filter, Award, Clock, Target, Activity, TrendingUp } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Trash2, Edit2, Plus, Download, Upload, Search, Filter, Award, Clock, Target, Activity, TrendingUp, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -55,6 +56,12 @@ export const UserManagement = () => {
   const [classes] = useState<ClassLevel[]>([...CLASS_LEVELS]);
   const { toast } = useToast();
 
+  // États pour la sélection multiple
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
+  const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
+  const [bulkDeleteConfirmText, setBulkDeleteConfirmText] = useState('');
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
   const [userForm, setUserForm] = useState<UserFormData>({
     email: '',
     first_name: '',
@@ -63,7 +70,6 @@ export const UserManagement = () => {
     class_name: '',
     is_active: true
   });
-
   useEffect(() => {
     applyFilters();
   }, [usersWithStats, searchTerm, schoolFilter, classFilter, statusFilter, sortField, sortDirection]);
@@ -410,6 +416,119 @@ export const UserManagement = () => {
     }
   };
 
+  // Fonctions de sélection multiple
+  const toggleUserSelection = (userId: string) => {
+    setSelectedUserIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(userId)) {
+        newSet.delete(userId);
+      } else {
+        newSet.add(userId);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedUserIds.size === filteredUsers.filter(u => u.user_id).length) {
+      setSelectedUserIds(new Set());
+    } else {
+      setSelectedUserIds(new Set(filteredUsers.filter(u => u.user_id).map(u => u.user_id!)));
+    }
+  };
+
+  const isAllSelected = filteredUsers.length > 0 && 
+    selectedUserIds.size === filteredUsers.filter(u => u.user_id).length;
+
+  const bulkDeleteUsers = async () => {
+    if (bulkDeleteConfirmText !== 'oui je confirme la suppression !') {
+      toast({
+        title: "Confirmation invalide",
+        description: "Veuillez écrire exactement : oui je confirme la suppression !",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsBulkDeleting(true);
+
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+
+      if (!token) {
+        toast({
+          title: "Session expirée",
+          description: "Session expirée, reconnectez-vous",
+          variant: "destructive"
+        });
+        setIsBulkDeleting(false);
+        return;
+      }
+
+      const userIdsToDelete = Array.from(selectedUserIds);
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const userId of userIdsToDelete) {
+        try {
+          console.log('Bulk delete - deleting user:', userId);
+          const res = await fetch(
+            'https://rglaszkaqbagpbtursjf.supabase.co/functions/v1/delete_user_admin',
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ user_id: userId })
+            }
+          );
+
+          const text = await res.text();
+          console.log('delete_user_admin bulk', res.status, text);
+
+          if (res.ok) {
+            successCount++;
+          } else {
+            errorCount++;
+          }
+        } catch (error) {
+          console.error('Error deleting user:', userId, error);
+          errorCount++;
+        }
+      }
+
+      setIsBulkDeleteDialogOpen(false);
+      setBulkDeleteConfirmText('');
+      setSelectedUserIds(new Set());
+
+      if (errorCount === 0) {
+        toast({
+          title: "Suppression réussie",
+          description: `${successCount} apprenant(s) supprimé(s) avec succès`
+        });
+      } else {
+        toast({
+          title: "Suppression partielle",
+          description: `${successCount} supprimé(s), ${errorCount} erreur(s)`,
+          variant: "destructive"
+        });
+      }
+
+      refetch();
+    } catch (error) {
+      console.error('Erreur lors de la suppression groupée:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer les utilisateurs",
+        variant: "destructive"
+      });
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  };
+
   const exportToCSV = () => {
     const csvContent = [
       [
@@ -658,6 +777,16 @@ export const UserManagement = () => {
               Ajouter un apprenant
             </Button>
             
+            {selectedUserIds.size > 0 && (
+              <Button 
+                variant="destructive" 
+                onClick={() => setIsBulkDeleteDialogOpen(true)}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Supprimer la sélection ({selectedUserIds.size})
+              </Button>
+            )}
+            
             <Button variant="outline" onClick={exportToCSV}>
               <Download className="mr-2 h-4 w-4" />
               Exporter CSV
@@ -689,6 +818,13 @@ export const UserManagement = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[50px]">
+                    <Checkbox
+                      checked={isAllSelected}
+                      onCheckedChange={toggleSelectAll}
+                      aria-label="Sélectionner tout"
+                    />
+                  </TableHead>
                   <TableHead>Apprenant</TableHead>
                   <TableHead>École / Classe</TableHead>
                   <TableHead className="text-center">
@@ -728,6 +864,15 @@ export const UserManagement = () => {
               <TableBody>
                 {filteredUsers.map((user) => (
                   <TableRow key={user.user_id || user.email}>
+                    <TableCell>
+                      {user.user_id && (
+                        <Checkbox
+                          checked={selectedUserIds.has(user.user_id)}
+                          onCheckedChange={() => toggleUserSelection(user.user_id!)}
+                          aria-label={`Sélectionner ${user.first_name} ${user.last_name}`}
+                        />
+                      )}
+                    </TableCell>
                     <TableCell>
                       <div>
                         <div className="font-medium">
@@ -942,6 +1087,54 @@ export const UserManagement = () => {
             </Button>
             <Button onClick={saveUser} disabled={!userForm.email}>
               {editingUser ? 'Modifier' : 'Créer'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de confirmation de suppression groupée */}
+      <Dialog open={isBulkDeleteDialogOpen} onOpenChange={setIsBulkDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="text-destructive">
+              Supprimer {selectedUserIds.size} apprenant(s)
+            </DialogTitle>
+            <DialogDescription>
+              Cette action est irréversible. Pour confirmer, écrivez exactement :
+              <br />
+              <span className="font-mono font-bold text-destructive">oui je confirme la suppression !</span>
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="confirm-text">Confirmation</Label>
+              <Input
+                id="confirm-text"
+                value={bulkDeleteConfirmText}
+                onChange={(e) => setBulkDeleteConfirmText(e.target.value)}
+                placeholder="oui je confirme la suppression !"
+                className="font-mono"
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setIsBulkDeleteDialogOpen(false);
+                setBulkDeleteConfirmText('');
+              }}
+            >
+              Annuler
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={bulkDeleteUsers}
+              disabled={isBulkDeleting || bulkDeleteConfirmText !== 'oui je confirme la suppression !'}
+            >
+              {isBulkDeleting ? 'Suppression...' : 'Supprimer définitivement'}
             </Button>
           </DialogFooter>
         </DialogContent>
