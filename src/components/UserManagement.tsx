@@ -345,11 +345,27 @@ export const UserManagement = () => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) return;
 
     try {
+      // Debug: vérifier l'utilisateur actuel
+      const { data: sessionData } = await supabase.auth.getSession();
+      const currentUserId = sessionData?.session?.user?.id;
+      console.log('Current user ID:', currentUserId);
+      
+      // Debug: vérifier si l'utilisateur est admin
+      const { data: adminCheck, error: adminError } = currentUserId 
+        ? await supabase
+            .from('administrators')
+            .select('*')
+            .eq('user_id', currentUserId)
+        : { data: null, error: null };
+      console.log('Admin check result:', adminCheck, 'Error:', adminError);
+
       const { data, error } = await supabase
         .from('users')
         .delete()
         .eq('id', userId)
         .select();
+
+      console.log('Delete result - data:', data, 'error:', error);
 
       if (error) throw error;
 
@@ -357,7 +373,7 @@ export const UserManagement = () => {
       if (!data || data.length === 0) {
         toast({
           title: "Erreur de permission",
-          description: "Vous n'avez pas les droits pour supprimer cet utilisateur. Seuls les super administrateurs peuvent effectuer cette action.",
+          description: `Vous n'avez pas les droits pour supprimer cet utilisateur. Votre ID: ${currentUserId || 'non connecté'}. Admin trouvé: ${adminCheck?.length || 0}`,
           variant: "destructive"
         });
         return;
