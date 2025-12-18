@@ -7,6 +7,7 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -23,28 +24,24 @@ jobs:
         run: npm run build
 
       - name: Prepare deploy folder
-        shell: bash
         run: |
           rm -rf deploy
           mkdir -p deploy
+          cp -r dist/* deploy/
+          if [ -f .htaccess ]; then cp .htaccess deploy/.htaccess; fi
 
-          # Copie le contenu de dist/ (et pas dist lui-même)
-          cp -R dist/. deploy/
-
-          # Ajoute .htaccess (SPA + cache + redirect) si tu le maintiens dans public/
-          if [ -f public/.htaccess ]; then
-            cp public/.htaccess deploy/.htaccess
-          fi
-
-          # IMPORTANT: on supprime toute trace de "lovable-uploads" (dossier ou symlink)
-          rm -rf deploy/lovable-uploads || true
-          find deploy -type l -name "lovable-uploads" -delete || true
-
-          # Debug utile (dans les logs Actions)
-          echo "== DEPLOY CONTENT =="
-          ls -la deploy
-          echo "== SYMLINKS =="
-          find deploy -type l -maxdepth 3 -print || true
+      # ✅ IMPORTANT : créer le dossier remote avant le SFTP
+      - name: Ensure remote www directory exists
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SFTP_HOST }}
+          port: ${{ secrets.SFTP_PORT }}
+          username: ${{ secrets.SFTP_USERNAME }}
+          password: ${{ secrets.SFTP_PASSWORD }}
+          script: |
+            mkdir -p /home/${{ secrets.SFTP_USERNAME }}/www
+            ls -la /home/${{ secrets.SFTP_USERNAME }} | head -n 50
+            ls -la /home/${{ secrets.SFTP_USERNAME }}/www | head -n 50
 
       - name: Deploy via SFTP
         uses: wlixcc/SFTP-Deploy-Action@v1.2.5
@@ -54,7 +51,7 @@ jobs:
           username: ${{ secrets.SFTP_USERNAME }}
           password: ${{ secrets.SFTP_PASSWORD }}
           local_path: ./deploy/*
-          remote_path: www/
+          remote_path: /home/${{ secrets.SFTP_USERNAME }}/www/
           sftp_only: true
           delete_remote_files: false
           sftpArgs: "-o StrictHostKeyChecking=no"
