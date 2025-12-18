@@ -962,6 +962,7 @@ export type Database = {
       }
       get_user_max_level: { Args: { user_uuid?: string }; Returns: number }
       get_users_count: { Args: never; Returns: number }
+      is_any_admin: { Args: never; Returns: boolean }
       is_super_admin:
         | { Args: never; Returns: boolean }
         | { Args: { uid: string }; Returns: boolean }
