@@ -9,7 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Trash2, Edit2, Plus, Download, Upload, Search, Filter, Award, Clock, Target, Activity, TrendingUp, Users, Smile, Frown, Goal } from 'lucide-react';
+import { Trash2, Edit2, Plus, Download, Upload, Search, Filter, Award, Clock, Target, Activity, TrendingUp, Users, Smile, Frown, Goal, UserCheck } from 'lucide-react';
+import { useImpersonation } from '@/hooks/useImpersonation';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -48,6 +50,8 @@ export const UserManagement = () => {
   const { user: currentUser } = useAuth();
   const { users: usersWithStats, loading, refetch } = useUserListStats();
   const { objectives, getUserObjectiveStatus } = useUserObjectiveStatus();
+  const { startImpersonation } = useImpersonation();
+  const navigate = useNavigate();
   const [userObjectiveStatuses, setUserObjectiveStatuses] = useState<Record<string, UserObjectiveStatus>>({});
   const [filteredUsers, setFilteredUsers] = useState<UserListStats[]>([]);
   const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
@@ -1058,6 +1062,36 @@ export const UserManagement = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
+                        {user.user_id && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    startImpersonation({
+                                      user_id: user.user_id!,
+                                      email: user.email,
+                                      first_name: user.first_name,
+                                      last_name: user.last_name,
+                                      school: user.school,
+                                      class_name: user.class_name,
+                                      city: user.city,
+                                    });
+                                    navigate('/dashboard');
+                                  }}
+                                  className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                                >
+                                  <UserCheck className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Voir en tant que cet utilisateur</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
                         <Button
                           variant="outline"
                           size="sm"

@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from 'next-themes';
 import { AuthProvider } from '@/hooks/useAuth';
+import { ImpersonationProvider } from '@/hooks/useImpersonation';
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 
@@ -34,6 +35,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
         <AuthProvider>
+          <ImpersonationProvider>
           <BrowserRouter>
             <div className="min-h-screen bg-background font-sans antialiased">
               <Routes>
@@ -68,6 +70,7 @@ function App() {
             <Toaster />
             <Sonner />
           </BrowserRouter>
+          </ImpersonationProvider>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>

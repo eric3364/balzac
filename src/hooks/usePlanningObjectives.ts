@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useImpersonation } from '@/hooks/useImpersonation';
 
 export interface PlanningObjective {
   id: string;
@@ -50,13 +51,19 @@ export const usePlanningObjectives = () => {
 // Hook pour récupérer les objectifs applicables à l'utilisateur courant
 export const useUserPlanningObjectives = () => {
   const { user } = useAuth();
+  const { impersonatedUser, isImpersonating } = useImpersonation();
   const [objectives, setObjectives] = useState<PlanningObjective[]>([]);
   const [userSchool, setUserSchool] = useState<string | null>(null);
   const [userClass, setUserClass] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Utiliser l'ID et les infos de l'utilisateur impersonné si en mode impersonnation
+  const effectiveUserId = isImpersonating && impersonatedUser ? impersonatedUser.user_id : user?.id;
+  const effectiveSchool = isImpersonating && impersonatedUser ? impersonatedUser.school : null;
+  const effectiveClass = isImpersonating && impersonatedUser ? impersonatedUser.class_name : null;
+
   const fetchUserAndObjectives = useCallback(async () => {
-    if (!user) {
+    if (!effectiveUserId) {
       setLoading(false);
       return;
     }
@@ -64,23 +71,32 @@ export const useUserPlanningObjectives = () => {
     try {
       setLoading(true);
       
-      // Récupérer les infos de l'utilisateur (école et classe)
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('school, class_name')
-        .eq('user_id', user.id)
-        .single();
+      let school = effectiveSchool;
+      let className = effectiveClass;
+      
+      // Si pas d'infos d'impersonnation, récupérer depuis la base
+      if (!isImpersonating) {
+        // Récupérer les infos de l'utilisateur (école et classe)
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('school, class_name')
+          .eq('user_id', effectiveUserId)
+          .single();
 
-      if (userError) {
-        console.error('Error fetching user data:', userError);
-        setLoading(false);
-        return;
+        if (userError) {
+          console.error('Error fetching user data:', userError);
+          setLoading(false);
+          return;
+        }
+        
+        school = userData?.school || null;
+        className = userData?.class_name || null;
       }
 
-      setUserSchool(userData?.school || null);
-      setUserClass(userData?.class_name || null);
+      setUserSchool(school);
+      setUserClass(className);
 
-      if (!userData?.school) {
+      if (!school) {
         setLoading(false);
         return;
       }
@@ -90,7 +106,7 @@ export const useUserPlanningObjectives = () => {
         .from('planning_objectives')
         .select('*')
         .eq('is_active', true)
-        .eq('school', userData.school)
+        .eq('school', school)
         .gte('deadline', new Date().toISOString())
         .order('deadline', { ascending: true });
 
@@ -100,7 +116,7 @@ export const useUserPlanningObjectives = () => {
 
       // Filtrer les objectifs applicables (même classe ou pas de classe spécifiée)
       const applicableObjectives = (objectivesData || []).filter((obj: any) => {
-        return obj.class_name === null || obj.class_name === userData.class_name;
+        return obj.class_name === null || obj.class_name === className;
       });
 
       setObjectives(applicableObjectives as PlanningObjective[]);
@@ -109,7 +125,7 @@ export const useUserPlanningObjectives = () => {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [effectiveUserId, isImpersonating, effectiveSchool, effectiveClass]);
 
   useEffect(() => {
     fetchUserAndObjectives();
