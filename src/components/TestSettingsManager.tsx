@@ -153,7 +153,7 @@ export const TestSettingsManager = () => {
 
       toast({
         title: "Configuration sauvegardée",
-        description: "Les paramètres des tests ont été mis à jour avec succès.",
+        description: "Les paramètres des sessions ont été mis à jour avec succès.",
       });
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
