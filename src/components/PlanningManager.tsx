@@ -18,15 +18,18 @@ import { CITIES } from '@/constants/userData';
 import { format, formatDistanceToNow, isPast, differenceInDays, differenceInWeeks } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
-// Nombre estimé de questions par niveau de certification
-const QUESTIONS_PER_LEVEL: Record<number, number> = {
-  1: 150,
-  2: 200,
-  3: 250,
+// Mapping des niveaux numériques vers les noms de niveau en base
+const LEVEL_NAME_MAP: Record<number, string> = {
+  1: 'élémentaire',
+  2: 'intermédiaire',
+  3: 'avancé',
 };
 
 // Calculer l'effort requis pour atteindre l'objectif
-const calculateWorkload = (objective: PlanningObjective) => {
+const calculateWorkload = (
+  objective: PlanningObjective, 
+  questionCounts: Record<string, number>
+) => {
   const now = new Date();
   const deadline = new Date(objective.deadline);
   
@@ -41,15 +44,17 @@ const calculateWorkload = (objective: PlanningObjective) => {
   
   if (objective.objective_type === 'certification') {
     const level = objective.target_certification_level || 1;
-    totalQuestions = QUESTIONS_PER_LEVEL[level] || 150;
+    const levelName = LEVEL_NAME_MAP[level] || 'élémentaire';
+    totalQuestions = questionCounts[levelName] || 0;
   } else {
-    // Pour la progression, estimer basé sur un pourcentage de questions
+    // Pour la progression, calculer basé sur le pourcentage des questions totales
     const progressTarget = objective.target_progression_percentage || 100;
-    totalQuestions = Math.round((progressTarget / 100) * 200); // Estimation moyenne
+    const allQuestions = Object.values(questionCounts).reduce((sum, count) => sum + count, 0);
+    totalQuestions = Math.round((progressTarget / 100) * allQuestions);
   }
   
-  const questionsPerDay = Math.ceil(totalQuestions / daysRemaining);
-  const questionsPerWeek = Math.ceil(totalQuestions / weeksRemaining);
+  const questionsPerDay = totalQuestions > 0 ? Math.ceil(totalQuestions / daysRemaining) : 0;
+  const questionsPerWeek = totalQuestions > 0 ? Math.ceil(totalQuestions / weeksRemaining) : 0;
   
   return {
     perDay: questionsPerDay,
@@ -78,6 +83,7 @@ export const PlanningManager = () => {
   const [uniqueSchools, setUniqueSchools] = useState<string[]>([]);
   const [uniqueClasses, setUniqueClasses] = useState<string[]>([]);
   const [administrators, setAdministrators] = useState<Administrator[]>([]);
+  const [questionCounts, setQuestionCounts] = useState<Record<string, number>>({});
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingObjective, setEditingObjective] = useState<PlanningObjective | null>(null);
   
@@ -141,6 +147,31 @@ export const PlanningManager = () => {
     };
 
     fetchSchoolClasses();
+  }, []);
+
+  // Charger le nombre de questions par niveau
+  useEffect(() => {
+    const fetchQuestionCounts = async () => {
+      const { data, error } = await supabase
+        .from('questions')
+        .select('level');
+      
+      if (error) {
+        console.error('Error fetching question counts:', error);
+        return;
+      }
+
+      const counts: Record<string, number> = {};
+      (data || []).forEach((q: any) => {
+        if (q.level) {
+          counts[q.level] = (counts[q.level] || 0) + 1;
+        }
+      });
+
+      setQuestionCounts(counts);
+    };
+
+    fetchQuestionCounts();
   }, []);
 
   // Charger les administrateurs
@@ -588,7 +619,7 @@ export const PlanningManager = () => {
               <TableBody>
                 {objectives.map((objective) => {
                   const isExpired = isPast(new Date(objective.deadline));
-                  const workload = calculateWorkload(objective);
+                  const workload = calculateWorkload(objective, questionCounts);
                   return (
                     <TableRow key={objective.id}>
                       <TableCell>
