@@ -6,6 +6,7 @@ export interface PlanningObjective {
   id: string;
   school: string;
   class_name: string | null;
+  city: string | null;
   objective_type: 'certification' | 'progression';
   target_certification_level: number | null;
   target_progression_percentage: number | null;
