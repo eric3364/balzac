@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Calendar, Plus, Edit2, Trash2, Target, Users, School, GraduationCap, MapPin } from 'lucide-react';
+import { Calendar, Plus, Edit2, Trash2, Target, Users, School, GraduationCap, MapPin, UserCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { usePlanningObjectives, PlanningObjective } from '@/hooks/usePlanningObjectives';
 import { useDifficultyLevels } from '@/hooks/useDifficultyLevels';
@@ -24,6 +24,11 @@ interface SchoolClass {
   count: number;
 }
 
+interface Administrator {
+  user_id: string;
+  email: string;
+}
+
 export const PlanningManager = () => {
   const { toast } = useToast();
   const { objectives, loading, refetch } = usePlanningObjectives();
@@ -31,6 +36,7 @@ export const PlanningManager = () => {
   const [schoolClasses, setSchoolClasses] = useState<SchoolClass[]>([]);
   const [uniqueSchools, setUniqueSchools] = useState<string[]>([]);
   const [uniqueClasses, setUniqueClasses] = useState<string[]>([]);
+  const [administrators, setAdministrators] = useState<Administrator[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingObjective, setEditingObjective] = useState<PlanningObjective | null>(null);
   
@@ -44,7 +50,8 @@ export const PlanningManager = () => {
     target_progression_percentage: 80,
     deadline: '',
     description: '',
-    is_active: true
+    is_active: true,
+    reference_admin_id: ''
   });
 
   // Charger les écoles et classes depuis la table users
@@ -95,6 +102,25 @@ export const PlanningManager = () => {
     fetchSchoolClasses();
   }, []);
 
+  // Charger les administrateurs
+  useEffect(() => {
+    const fetchAdministrators = async () => {
+      const { data, error } = await supabase
+        .from('administrators')
+        .select('user_id, email')
+        .not('user_id', 'is', null);
+      
+      if (error) {
+        console.error('Error fetching administrators:', error);
+        return;
+      }
+
+      setAdministrators((data || []).filter((admin): admin is Administrator => admin.user_id !== null));
+    };
+
+    fetchAdministrators();
+  }, []);
+
   const resetForm = () => {
     setFormData({
       school: '',
@@ -105,7 +131,8 @@ export const PlanningManager = () => {
       target_progression_percentage: 80,
       deadline: '',
       description: '',
-      is_active: true
+      is_active: true,
+      reference_admin_id: ''
     });
     setEditingObjective(null);
   };
@@ -121,7 +148,8 @@ export const PlanningManager = () => {
       target_progression_percentage: objective.target_progression_percentage || 80,
       deadline: objective.deadline ? objective.deadline.slice(0, 16) : '',
       description: objective.description || '',
-      is_active: objective.is_active
+      is_active: objective.is_active,
+      reference_admin_id: objective.reference_admin_id || ''
     });
     setIsDialogOpen(true);
   };
@@ -145,7 +173,8 @@ export const PlanningManager = () => {
       target_progression_percentage: formData.objective_type === 'progression' ? formData.target_progression_percentage : null,
       deadline: new Date(formData.deadline).toISOString(),
       description: formData.description || null,
-      is_active: formData.is_active
+      is_active: formData.is_active,
+      reference_admin_id: formData.reference_admin_id || null
     };
 
     try {
@@ -396,6 +425,35 @@ export const PlanningManager = () => {
                       value={formData.deadline}
                       onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
                     />
+                  </div>
+
+                  {/* Admin de référence */}
+                  <div className="space-y-2">
+                    <Label htmlFor="reference_admin">Admin de référence (optionnel)</Label>
+                    <Select
+                      value={formData.reference_admin_id}
+                      onValueChange={(value) => setFormData({ ...formData, reference_admin_id: value === 'none' ? '' : value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionnez un admin" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">
+                          <div className="flex items-center gap-2">
+                            <UserCheck className="h-4 w-4" />
+                            Aucun admin assigné
+                          </div>
+                        </SelectItem>
+                        {administrators.map((admin) => (
+                          <SelectItem key={admin.user_id} value={admin.user_id}>
+                            <div className="flex items-center gap-2">
+                              <UserCheck className="h-4 w-4" />
+                              {admin.email}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   {/* Description */}

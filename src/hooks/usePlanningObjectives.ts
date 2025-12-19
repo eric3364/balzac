@@ -16,6 +16,7 @@ export interface PlanningObjective {
   created_at: string;
   updated_at: string;
   created_by: string | null;
+  reference_admin_id: string | null;
 }
 
 export const usePlanningObjectives = () => {
