@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,12 +8,14 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Trash2, Edit2, Plus, Download, Upload, Search, Filter, Award, Clock, Target, Activity, TrendingUp, Users } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Trash2, Edit2, Plus, Download, Upload, Search, Filter, Award, Clock, Target, Activity, TrendingUp, Users, Smile, Goal } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { SCHOOLS, CLASS_LEVELS, CITIES, School, ClassLevel, City } from '@/constants/userData';
 import { useUserListStats, UserListStats } from '@/hooks/useUserListStats';
+import { useUserObjectiveStatus, UserObjectiveStatus } from '@/hooks/useUserObjectiveStatus';
 
 interface User {
   id: string;
@@ -45,6 +47,8 @@ interface UserFormData {
 export const UserManagement = () => {
   const { user: currentUser } = useAuth();
   const { users: usersWithStats, loading, refetch } = useUserListStats();
+  const { objectives, getUserObjectiveStatus } = useUserObjectiveStatus();
+  const [userObjectiveStatuses, setUserObjectiveStatuses] = useState<Record<string, UserObjectiveStatus>>({});
   const [filteredUsers, setFilteredUsers] = useState<UserListStats[]>([]);
   const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -78,6 +82,31 @@ export const UserManagement = () => {
   useEffect(() => {
     applyFilters();
   }, [usersWithStats, searchTerm, schoolFilter, classFilter, cityFilter, statusFilter, sortField, sortDirection]);
+
+  // Calculer les statuts d'objectif pour chaque utilisateur
+  useEffect(() => {
+    const fetchObjectiveStatuses = async () => {
+      if (objectives.length === 0 || usersWithStats.length === 0) return;
+      
+      const statuses: Record<string, UserObjectiveStatus> = {};
+      
+      for (const user of usersWithStats) {
+        if (user.user_id) {
+          const status = await getUserObjectiveStatus(
+            user.user_id,
+            user.school,
+            user.class_name,
+            user.city
+          );
+          statuses[user.user_id] = status;
+        }
+      }
+      
+      setUserObjectiveStatuses(statuses);
+    };
+
+    fetchObjectiveStatuses();
+  }, [objectives, usersWithStats, getUserObjectiveStatus]);
 
   // Écoute en temps réel des changements sur les tables liées
   useEffect(() => {
@@ -884,6 +913,12 @@ export const UserManagement = () => {
                       Temps
                     </div>
                   </TableHead>
+                  <TableHead className="text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <Goal className="h-4 w-4" />
+                      Objectif
+                    </div>
+                  </TableHead>
                   <TableHead>Statut</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -970,6 +1005,40 @@ export const UserManagement = () => {
                           <span className="text-muted-foreground">-</span>
                         )}
                       </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <TooltipProvider>
+                        {user.user_id && userObjectiveStatuses[user.user_id]?.hasObjective ? (
+                          <Tooltip>
+                            <TooltipTrigger>
+                              {userObjectiveStatuses[user.user_id].status === 'ahead' ? (
+                                <div className="flex items-center justify-center">
+                                  <Smile className="h-5 w-5 text-green-500" />
+                                </div>
+                              ) : userObjectiveStatuses[user.user_id].status === 'on-track' ? (
+                                <div className="w-4 h-4 rounded-full bg-green-500 mx-auto" />
+                              ) : (
+                                <div className="w-4 h-4 rounded-full bg-red-500 mx-auto" />
+                              )}
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <div className="text-sm">
+                                <p className="font-medium">
+                                  {userObjectiveStatuses[user.user_id].status === 'ahead' 
+                                    ? 'En avance' 
+                                    : userObjectiveStatuses[user.user_id].status === 'on-track'
+                                    ? 'Dans les temps'
+                                    : 'En retard'}
+                                </p>
+                                <p>Progression: {Math.round(userObjectiveStatuses[user.user_id].userProgress)}%</p>
+                                <p>Attendu: {Math.round(userObjectiveStatuses[user.user_id].expectedProgress)}%</p>
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TooltipProvider>
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1">
