@@ -24,6 +24,7 @@ import { TestSettingsManager } from '@/components/TestSettingsManager';
 import { HomepageManager } from '@/components/HomepageManager';
 import { PlanningManager } from '@/components/PlanningManager';
 import { useConnectionStats } from '@/hooks/useConnectionStats';
+import { PlanningObjectivesTimeline } from '@/components/PlanningObjectivesTimeline';
 
 interface AdminUser {
   id: number;
@@ -529,6 +530,9 @@ const Admin = () => {
                         </Card>
                       </div>
                     </div>
+
+                    {/* Timeline des objectifs */}
+                    <PlanningObjectivesTimeline />
                   </div>
                 ) : (
                   <div className="flex items-center justify-center h-32">
