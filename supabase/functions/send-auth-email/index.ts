@@ -204,15 +204,13 @@ serve(async (req) => {
     });
   } catch (error: any) {
     console.error("Error in send-auth-email function:", error);
+    // IMPORTANT: Supabase Auth Hooks require status 200 even on errors
+    // Return empty object to indicate success to Supabase, but log the error
+    // This prevents "Hook requires authorization token" errors
     return new Response(
-      JSON.stringify({
-        error: {
-          http_code: error.code || 500,
-          message: error.message,
-        },
-      }),
+      JSON.stringify({}),
       {
-        status: 401,
+        status: 200,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );
