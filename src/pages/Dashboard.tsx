@@ -8,6 +8,7 @@ import { useUserStats } from '@/hooks/useUserStats';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useLevelAccess } from '@/hooks/useLevelAccess';
 import { useDifficultyLevels } from '@/hooks/useDifficultyLevels';
+import { useApplySignupPromoCode } from '@/hooks/useApplySignupPromoCode';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Lock, BookOpen, Target, Clock, TrendingUp, Award, BarChart3 } from 'lucide-react';
@@ -28,6 +29,9 @@ const Dashboard = () => {
   const { levelAccess, loading: levelAccessLoading } = useLevelAccess();
   const { difficultyLevels, loading: levelsLoading } = useDifficultyLevels();
   const navigate = useNavigate();
+  
+  // Appliquer automatiquement le code promo de l'inscription si présent
+  useApplySignupPromoCode();
   
   // Nom à afficher (utilisateur impersonné ou réel)
   const displayName = isImpersonating && impersonatedUser 
