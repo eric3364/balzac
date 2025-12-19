@@ -1,13 +1,43 @@
+import { useState, useEffect } from 'react';
 import { usePlanningObjectives, PlanningObjective } from '@/hooks/usePlanningObjectives';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Calendar, Target, MapPin, School, Users, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Calendar, Target, MapPin, School, Users, Clock, CheckCircle2, AlertCircle, UserCheck } from 'lucide-react';
 import { format, formatDistanceToNow, isPast, differenceInDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
+interface Administrator {
+  user_id: string;
+  email: string;
+}
+
 export const PlanningObjectivesTimeline = () => {
   const { objectives, loading } = usePlanningObjectives();
+  const [administrators, setAdministrators] = useState<Administrator[]>([]);
+
+  // Charger les administrateurs
+  useEffect(() => {
+    const fetchAdministrators = async () => {
+      const { data, error } = await supabase
+        .from('administrators')
+        .select('user_id, email')
+        .not('user_id', 'is', null);
+      
+      if (!error && data) {
+        setAdministrators(data.filter((admin): admin is Administrator => admin.user_id !== null));
+      }
+    };
+
+    fetchAdministrators();
+  }, []);
+
+  const getAdminEmail = (adminId: string | null) => {
+    if (!adminId) return null;
+    const admin = administrators.find(a => a.user_id === adminId);
+    return admin?.email || null;
+  };
 
   if (loading) {
     return (
@@ -190,7 +220,15 @@ export const PlanningObjectivesTimeline = () => {
                           )}
                         </div>
                         
-                        <div className="text-right ml-4">
+                        <div className="text-right ml-4 flex-shrink-0">
+                          {objective.reference_admin_id && getAdminEmail(objective.reference_admin_id) && (
+                            <div className="flex items-center justify-end gap-1 text-xs text-muted-foreground mb-1">
+                              <UserCheck className="h-3 w-3" />
+                              <span className="truncate max-w-[150px]">
+                                {getAdminEmail(objective.reference_admin_id)}
+                              </span>
+                            </div>
+                          )}
                           <div className="text-sm font-medium">
                             {format(deadline, 'dd MMM yyyy', { locale: fr })}
                           </div>
