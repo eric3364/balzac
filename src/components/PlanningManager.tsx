@@ -277,6 +277,29 @@ export const PlanningManager = () => {
                 </DialogHeader>
                 
                 <div className="space-y-4 py-4">
+                  {/* Sélection ville */}
+                  <div className="space-y-2">
+                    <Label htmlFor="city">Ville *</Label>
+                    <Select
+                      value={formData.city}
+                      onValueChange={(value) => setFormData({ ...formData, city: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionnez une ville" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CITIES.map((city) => (
+                          <SelectItem key={city} value={city}>
+                            <div className="flex items-center gap-2">
+                              <MapPin className="h-4 w-4" />
+                              {city}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   {/* Sélection école */}
                   <div className="space-y-2">
                     <Label htmlFor="school">École *</Label>
