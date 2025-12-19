@@ -57,13 +57,18 @@ export const useUserPlanningObjectives = () => {
   const [userClass, setUserClass] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Utiliser l'ID et les infos de l'utilisateur impersonné si en mode impersonnation
+  // Utiliser l'ID de l'utilisateur impersonné si en mode impersonnation
   const effectiveUserId = isImpersonating && impersonatedUser ? impersonatedUser.user_id : user?.id;
-  const effectiveSchool = isImpersonating && impersonatedUser ? impersonatedUser.school : null;
-  const effectiveClass = isImpersonating && impersonatedUser ? impersonatedUser.class_name : null;
 
   const fetchUserAndObjectives = useCallback(async () => {
+    console.log('[useUserPlanningObjectives] Starting fetch', { 
+      effectiveUserId, 
+      isImpersonating, 
+      impersonatedUser
+    });
+    
     if (!effectiveUserId) {
+      console.log('[useUserPlanningObjectives] No effectiveUserId, returning');
       setLoading(false);
       return;
     }
@@ -71,17 +76,23 @@ export const useUserPlanningObjectives = () => {
     try {
       setLoading(true);
       
-      let school = effectiveSchool;
-      let className = effectiveClass;
+      let school: string | null = null;
+      let className: string | null = null;
       
-      // Si pas d'infos d'impersonnation, récupérer depuis la base
-      if (!isImpersonating) {
-        // Récupérer les infos de l'utilisateur (école et classe)
+      // En mode impersonnation, utiliser directement les données stockées
+      if (isImpersonating && impersonatedUser) {
+        school = impersonatedUser.school;
+        className = impersonatedUser.class_name;
+        console.log('[useUserPlanningObjectives] Using impersonated user data:', { school, className });
+      } else {
+        // Récupérer les infos depuis la base
         const { data: userData, error: userError } = await supabase
           .from('users')
           .select('school, class_name')
           .eq('user_id', effectiveUserId)
           .single();
+
+        console.log('[useUserPlanningObjectives] User data from DB:', userData, 'Error:', userError);
 
         if (userError) {
           console.error('Error fetching user data:', userError);
@@ -93,13 +104,17 @@ export const useUserPlanningObjectives = () => {
         className = userData?.class_name || null;
       }
 
+      console.log('[useUserPlanningObjectives] School and class for objectives:', { school, className });
       setUserSchool(school);
       setUserClass(className);
 
       if (!school) {
+        console.log('[useUserPlanningObjectives] No school, returning');
         setLoading(false);
         return;
       }
+
+      console.log('[useUserPlanningObjectives] Fetching objectives for school:', school);
 
       // Récupérer les objectifs pour cette école/classe
       let query = supabase
@@ -112,20 +127,25 @@ export const useUserPlanningObjectives = () => {
 
       const { data: objectivesData, error: objectivesError } = await query;
 
+      console.log('Objectives data:', objectivesData, 'Error:', objectivesError);
+
       if (objectivesError) throw objectivesError;
 
       // Filtrer les objectifs applicables (même classe ou pas de classe spécifiée)
       const applicableObjectives = (objectivesData || []).filter((obj: any) => {
-        return obj.class_name === null || obj.class_name === className;
+        const matches = obj.class_name === null || obj.class_name === className;
+        console.log('Objective', obj.id, 'class_name:', obj.class_name, 'user className:', className, 'matches:', matches);
+        return matches;
       });
 
+      console.log('Applicable objectives:', applicableObjectives);
       setObjectives(applicableObjectives as PlanningObjective[]);
     } catch (error) {
       console.error('Error fetching user planning objectives:', error);
     } finally {
       setLoading(false);
     }
-  }, [effectiveUserId, isImpersonating, effectiveSchool, effectiveClass]);
+  }, [effectiveUserId, isImpersonating, impersonatedUser]);
 
   useEffect(() => {
     fetchUserAndObjectives();
