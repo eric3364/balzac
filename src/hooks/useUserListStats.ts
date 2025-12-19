@@ -14,6 +14,7 @@ export interface UserListStats {
   last_name: string | null;
   school: string | null;
   class_name: string | null;
+  city: string | null;
   is_active: boolean;
   created_at: string | null;
   total_tests: number;
@@ -55,6 +56,7 @@ export const useUserListStats = () => {
             last_name: user.last_name,
             school: user.school,
             class_name: user.class_name,
+            city: user.city || null,
             is_active: user.is_active || false,
             created_at: user.created_at || '',
             total_tests: 0,
@@ -132,6 +134,7 @@ export const useUserListStats = () => {
           last_name: user.last_name,
           school: user.school,
           class_name: user.class_name,
+          city: user.city || null,
           is_active: user.is_active || false,
           created_at: user.created_at || '',
           total_tests: totalTests,

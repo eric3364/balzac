@@ -11,5 +11,13 @@ export const CLASS_LEVELS = [
   'N3'
 ] as const;
 
+export const CITIES = [
+  'Bordeaux',
+  'Paris',
+  'Lyon',
+  'Lille'
+] as const;
+
 export type School = typeof SCHOOLS[number];
 export type ClassLevel = typeof CLASS_LEVELS[number];
+export type City = typeof CITIES[number];

@@ -12,7 +12,7 @@ import { Trash2, Edit2, Plus, Download, Upload, Search, Filter, Award, Clock, Ta
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { SCHOOLS, CLASS_LEVELS, School, ClassLevel } from '@/constants/userData';
+import { SCHOOLS, CLASS_LEVELS, CITIES, School, ClassLevel, City } from '@/constants/userData';
 import { useUserListStats, UserListStats } from '@/hooks/useUserListStats';
 
 interface User {
@@ -23,11 +23,12 @@ interface User {
   last_name: string | null;
   school: string | null;
   class_name: string | null;
+  city: string | null;
   is_active: boolean;
   created_at: string;
 }
 
-type SortField = 'name' | 'email' | 'school' | 'class' | 'certifications' | 'level' | 'tests' | 'score' | 'activity';
+type SortField = 'name' | 'email' | 'school' | 'class' | 'city' | 'certifications' | 'level' | 'tests' | 'score' | 'activity';
 type SortDirection = 'asc' | 'desc';
 
 interface UserFormData {
@@ -36,6 +37,7 @@ interface UserFormData {
   last_name: string;
   school: School | '';
   class_name: ClassLevel | '';
+  city: City | '';
   is_active: boolean;
   password?: string;
 }
@@ -49,11 +51,13 @@ export const UserManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [schoolFilter, setSchoolFilter] = useState('all');
   const [classFilter, setClassFilter] = useState('all');
+  const [cityFilter, setCityFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortField, setSortField] = useState<SortField>('activity');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [schools] = useState<School[]>([...SCHOOLS]);
   const [classes] = useState<ClassLevel[]>([...CLASS_LEVELS]);
+  const [cities] = useState<City[]>([...CITIES]);
   const { toast } = useToast();
 
   // États pour la sélection multiple
@@ -68,11 +72,12 @@ export const UserManagement = () => {
     last_name: '',
     school: '',
     class_name: '',
+    city: '',
     is_active: true
   });
   useEffect(() => {
     applyFilters();
-  }, [usersWithStats, searchTerm, schoolFilter, classFilter, statusFilter, sortField, sortDirection]);
+  }, [usersWithStats, searchTerm, schoolFilter, classFilter, cityFilter, statusFilter, sortField, sortDirection]);
 
   // Écoute en temps réel des changements sur les tables liées
   useEffect(() => {
@@ -175,6 +180,11 @@ export const UserManagement = () => {
       filtered = filtered.filter(user => user.class_name === classFilter);
     }
 
+    // Filtrage par ville
+    if (cityFilter && cityFilter !== 'all') {
+      filtered = filtered.filter(user => user.city === cityFilter);
+    }
+
     // Filtrage par statut
     if (statusFilter && statusFilter !== 'all') {
       if (statusFilter === 'active') {
@@ -256,6 +266,7 @@ export const UserManagement = () => {
         last_name: user.last_name,
         school: user.school,
         class_name: user.class_name,
+        city: user.city,
         is_active: user.is_active,
         created_at: user.created_at || ''
       };
@@ -267,6 +278,7 @@ export const UserManagement = () => {
         last_name: user.last_name || '',
         school: (user.school && SCHOOLS.includes(user.school as School)) ? user.school as School : '',
         class_name: (user.class_name && CLASS_LEVELS.includes(user.class_name as ClassLevel)) ? user.class_name as ClassLevel : '',
+        city: (user.city && CITIES.includes(user.city as City)) ? user.city as City : '',
         is_active: user.is_active
       });
     } else {
@@ -277,6 +289,7 @@ export const UserManagement = () => {
         last_name: '',
         school: '',
         class_name: '',
+        city: '',
         is_active: true
       });
     }
@@ -295,6 +308,7 @@ export const UserManagement = () => {
             last_name: userForm.last_name,
             school: userForm.school || null,
             class_name: userForm.class_name || null,
+            city: userForm.city || null,
             is_active: userForm.is_active
           })
           .eq('id', editingUser.id);
@@ -314,6 +328,7 @@ export const UserManagement = () => {
             last_name: userForm.last_name,
             school: userForm.school || '',
             class_name: userForm.class_name || '',
+            city: userForm.city || '',
             password: userForm.password // Si pas de mot de passe, un temporaire sera généré
           }
         });
@@ -720,6 +735,18 @@ export const UserManagement = () => {
                 </SelectContent>
               </Select>
 
+              <Select value={cityFilter} onValueChange={setCityFilter}>
+                <SelectTrigger className="w-full lg:w-[150px]">
+                  <SelectValue placeholder="Ville" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes les villes</SelectItem>
+                  {cities.map(city => (
+                    <SelectItem key={city} value={city}>{city}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-full lg:w-[160px]">
                   <SelectValue placeholder="Statut" />
@@ -826,7 +853,7 @@ export const UserManagement = () => {
                     />
                   </TableHead>
                   <TableHead>Apprenant</TableHead>
-                  <TableHead>École / Classe</TableHead>
+                  <TableHead>École / Classe / Ville</TableHead>
                   <TableHead className="text-center">
                     <div className="flex items-center justify-center gap-1">
                       <Award className="h-4 w-4" />
@@ -892,6 +919,7 @@ export const UserManagement = () => {
                       <div className="text-sm">
                         <div>{user.school || '-'}</div>
                         <div className="text-muted-foreground">{user.class_name || '-'}</div>
+                        <div className="text-muted-foreground text-xs">{user.city || '-'}</div>
                       </div>
                     </TableCell>
                     <TableCell className="text-center">
@@ -1059,6 +1087,23 @@ export const UserManagement = () => {
                 <SelectContent>
                   {CLASS_LEVELS.map(className => (
                     <SelectItem key={className} value={className}>{className}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="city">Ville</Label>
+              <Select
+                value={userForm.city}
+                onValueChange={(value) => setUserForm(prev => ({ ...prev, city: value as City | '' }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une ville" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CITIES.map(city => (
+                    <SelectItem key={city} value={city}>{city}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
