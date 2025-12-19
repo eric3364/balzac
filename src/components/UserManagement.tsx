@@ -353,6 +353,22 @@ export const UserManagement = () => {
           description: "L'utilisateur a été mis à jour avec succès"
         });
       } else {
+        // Vérifier et rafraîchir la session avant l'appel
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError || !sessionData.session) {
+          // Tenter de rafraîchir la session
+          const { error: refreshError } = await supabase.auth.refreshSession();
+          if (refreshError) {
+            toast({
+              title: "Session expirée",
+              description: "Veuillez vous reconnecter pour continuer",
+              variant: "destructive"
+            });
+            return;
+          }
+        }
+
         // Création - toujours utiliser add-learner pour éviter les limites d'emails
         const { data, error } = await supabase.functions.invoke('add-learner', {
           body: {
@@ -368,6 +384,15 @@ export const UserManagement = () => {
 
         if (error) {
           console.error('Erreur add-learner:', error);
+          // Gérer spécifiquement l'erreur de session expirée
+          if (error.message?.includes('401') || error.message?.includes('Non authentifié')) {
+            toast({
+              title: "Session expirée",
+              description: "Veuillez vous reconnecter pour continuer",
+              variant: "destructive"
+            });
+            return;
+          }
           throw new Error(error.message || 'Erreur lors de la création de l\'utilisateur');
         }
 
