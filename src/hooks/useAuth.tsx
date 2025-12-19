@@ -7,7 +7,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string, firstName: string, lastName: string, school: string, className: string, city?: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, firstName: string, lastName: string, school: string, className: string, city?: string, promoCode?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: any }>;
@@ -111,7 +111,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  const signUp = async (email: string, password: string, firstName: string, lastName: string, school: string, className: string, city: string = '') => {
+  const signUp = async (email: string, password: string, firstName: string, lastName: string, school: string, className: string, city: string = '', promoCode?: string) => {
     try {
       // Validation basique de format email
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -175,7 +175,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             last_name: lastName,
             school: school,
             class_name: className,
-            city: city
+            city: city,
+            promo_code: promoCode || null
           }
         }
       });

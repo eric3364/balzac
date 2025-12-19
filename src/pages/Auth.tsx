@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ArrowLeft, CheckCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Tag } from 'lucide-react';
 import { SCHOOLS, CLASS_LEVELS, CITIES } from '@/constants/userData';
 import { BalzacWorksBackground } from '@/components/BalzacWorksBackground';
 
@@ -21,6 +21,7 @@ const Auth = () => {
   const [selectedSchool, setSelectedSchool] = useState('');
   const [selectedClass, setSelectedClass] = useState('');
   const [selectedCity, setSelectedCity] = useState('');
+  const [promoCode, setPromoCode] = useState('');
   const { user, signIn, signUp, resetPassword } = useAuth();
   const navigate = useNavigate();
   const { pendingPurchase } = usePendingPurchase();
@@ -62,7 +63,7 @@ const Auth = () => {
     const firstName = formData.get('firstName') as string;
     const lastName = formData.get('lastName') as string;
 
-    const { error } = await signUp(email, password, firstName, lastName, selectedSchool, selectedClass, selectedCity);
+    const { error } = await signUp(email, password, firstName, lastName, selectedSchool, selectedClass, selectedCity, promoCode.trim().toUpperCase() || undefined);
     
     if (!error) {
       setShowSignupSuccess(true);
@@ -290,6 +291,22 @@ const Auth = () => {
                         ))}
                       </SelectContent>
                     </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="promoCode" className="flex items-center gap-2">
+                      <Tag className="h-4 w-4" />
+                      Code promo (optionnel)
+                    </Label>
+                    <Input
+                      id="promoCode"
+                      value={promoCode}
+                      onChange={(e) => setPromoCode(e.target.value)}
+                      placeholder="Entrez votre code promo"
+                      className="uppercase"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Si vous avez un code promo, il sera automatiquement appliqué à votre compte
+                    </p>
                   </div>
                   <Button type="submit" className="w-full" disabled={isLoading || !selectedSchool || !selectedClass || !selectedCity}>
                     {isLoading ? 'Inscription...' : "S'inscrire"}
