@@ -56,11 +56,24 @@ export const TestSettingsManager = () => {
 
       if (questionsError) throw questionsError;
 
-      // Compter les questions par niveau
+      // Mapping des noms de niveau vers les numéros
+      const levelNameToNumber: Record<string, number> = {
+        'élémentaire': 1,
+        'elementaire': 1,
+        'intermédiaire': 2,
+        'intermediaire': 2,
+        'avancé': 3,
+        'avance': 3
+      };
+
+      // Compter les questions par niveau (en utilisant le mapping textuel)
       const questionCounts: Record<number, number> = {};
       (questionsData || []).forEach((q: any) => {
-        const level = q.level || 1;
-        questionCounts[level] = (questionCounts[level] || 0) + 1;
+        const levelText = (q.level || '').toLowerCase().trim();
+        const levelNumber = levelNameToNumber[levelText] || 0;
+        if (levelNumber > 0) {
+          questionCounts[levelNumber] = (questionCounts[levelNumber] || 0) + 1;
+        }
       });
 
       // Charger la configuration existante
