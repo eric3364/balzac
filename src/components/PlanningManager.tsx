@@ -329,35 +329,6 @@ export const PlanningManager = () => {
                     </Select>
                   </div>
 
-                  {/* Sélection ville (optionnel) */}
-                  <div className="space-y-2">
-                    <Label htmlFor="city">Ville (optionnel)</Label>
-                    <Select
-                      value={formData.city}
-                      onValueChange={(value) => setFormData({ ...formData, city: value === 'all' ? '' : value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Toutes les villes" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">
-                          <div className="flex items-center gap-2">
-                            <MapPin className="h-4 w-4" />
-                            Toutes les villes
-                          </div>
-                        </SelectItem>
-                        {CITIES.map((city) => (
-                          <SelectItem key={city} value={city}>
-                            <div className="flex items-center gap-2">
-                              <MapPin className="h-4 w-4" />
-                              {city}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
                   {/* Type d'objectif */}
                   <div className="space-y-2">
                     <Label>Type d'objectif *</Label>
@@ -467,15 +438,6 @@ export const PlanningManager = () => {
                     />
                   </div>
 
-                  {/* Actif */}
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="is_active">Objectif actif</Label>
-                    <Switch
-                      id="is_active"
-                      checked={formData.is_active}
-                      onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-                    />
-                  </div>
                 </div>
 
                 <DialogFooter>
