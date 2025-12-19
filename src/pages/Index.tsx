@@ -456,7 +456,7 @@ const Index = () => {
                 {certificationPricing.map((cert) => {
                   const isFree = cert.price_euros === 0;
                   return (
-                     <Card key={cert.id} className={`relative p-4 text-center border-2 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 w-48 flex-shrink-0 ${
+                     <Card key={cert.id} className={`relative p-4 text-center border-2 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 w-48 flex-shrink-0 flex flex-col ${
                        isFree 
                          ? 'border-green-200 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20' 
                          : 'border-primary/20 bg-gradient-to-br from-background to-background/50'
@@ -470,7 +470,7 @@ const Index = () => {
                          )}
                        </div>
 
-                      <CardContent className="pt-2 px-2 pb-3">
+                      <CardContent className="pt-2 px-2 pb-3 flex flex-col flex-grow">
                        {/* Level Icon or Custom Badge */}
                         <div className="w-36 h-36 mx-auto mb-4 rounded-full flex items-center justify-center overflow-hidden">
                           {cert.custom_badge_url ? (
@@ -510,7 +510,7 @@ const Index = () => {
                         </div>
 
                          {/* Features */}
-                         <div className="space-y-2 text-sm text-left">
+                         <div className="space-y-2 text-sm text-left flex-grow">
                            {cert.feature_1_text && (
                              <div className="flex items-center gap-2">
                                {isFree ? <CheckCircle className="h-4 w-4 text-green-600" /> : <Zap className="h-4 w-4 text-primary" />}
