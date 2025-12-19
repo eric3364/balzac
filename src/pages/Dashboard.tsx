@@ -93,6 +93,7 @@ const Dashboard = () => {
         {/* Objectifs avec compte à rebours */}
         <div className="animate-fade-in">
           <ObjectiveCountdown 
+            key={isImpersonating ? `impersonate-${impersonatedUser?.user_id}` : 'normal'}
             progressPercentage={userStats.progressPercentage}
             currentCertificationLevel={userStats.currentLevel}
           />
