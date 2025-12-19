@@ -25,7 +25,10 @@ const LEVEL_NAME_MAP: Record<number, string> = {
   3: 'avancé',
 };
 
-// Calculer l'effort requis en tests par semaine
+// Taux de réussite estimé (90% de réussite = certaines sessions devront être repassées)
+const SUCCESS_RATE = 0.90;
+
+// Calculer l'effort requis en sessions par semaine
 const calculateWorkload = (
   objective: PlanningObjective, 
   sessionsPerLevel: Record<number, number>
@@ -34,29 +37,33 @@ const calculateWorkload = (
   const deadline = new Date(objective.deadline);
   
   if (isPast(deadline)) {
-    return { testsPerWeek: 0, totalTests: 0, weeksRemaining: 0 };
+    return { sessionsPerWeek: 0, totalSessions: 0, weeksRemaining: 0 };
   }
   
   const weeksRemaining = Math.max(1, differenceInWeeks(deadline, now) || 1);
   
-  let totalTests = 0;
+  let baseSessions = 0;
   
   if (objective.objective_type === 'certification') {
     const level = objective.target_certification_level || 1;
-    totalTests = sessionsPerLevel[level] || 0;
+    baseSessions = sessionsPerLevel[level] || 0;
   } else {
     // Pour la progression, calculer basé sur le pourcentage des sessions totales
     const progressTarget = objective.target_progression_percentage || 100;
     const allSessions = Object.values(sessionsPerLevel).reduce((sum, count) => sum + count, 0);
-    totalTests = Math.round((progressTarget / 100) * allSessions);
+    baseSessions = Math.round((progressTarget / 100) * allSessions);
   }
   
-  const testsPerWeek = totalTests > 0 ? Math.ceil(totalTests / weeksRemaining) : 0;
+  // Appliquer le facteur de taux de réussite (90% de réussite = 10% de sessions à repasser)
+  // total = base / 0.90 pour anticiper les échecs
+  const totalSessions = Math.ceil(baseSessions / SUCCESS_RATE);
+  const sessionsPerWeek = totalSessions > 0 ? Math.ceil(totalSessions / weeksRemaining) : 0;
   
   return {
-    testsPerWeek,
-    totalTests,
-    weeksRemaining
+    sessionsPerWeek,
+    totalSessions,
+    weeksRemaining,
+    baseSessions // Nombre de sessions sans les reprises
   };
 };
 
@@ -145,50 +152,33 @@ export const PlanningManager = () => {
     fetchSchoolClasses();
   }, []);
 
-  // Charger le nombre de sessions par niveau
+  // Charger le nombre de sessions par niveau (depuis les configs par niveau)
   useEffect(() => {
     const fetchSessionsPerLevel = async () => {
-      // Récupérer le nombre de questions par niveau
-      const { data: questionsData, error: questionsError } = await supabase
-        .from('questions')
-        .select('level');
+      // Récupérer les pourcentages de questions par niveau depuis site_configuration
+      const { data: configData, error: configError } = await supabase
+        .from('site_configuration')
+        .select('config_key, config_value')
+        .in('config_key', [
+          'test_questions_percentage_level_1',
+          'test_questions_percentage_level_2',
+          'test_questions_percentage_level_3'
+        ]);
       
-      if (questionsError) {
-        console.error('Error fetching questions:', questionsError);
-        return;
+      if (configError) {
+        console.error('Error fetching config:', configError);
       }
 
-      // Compter les questions par niveau
-      const questionCounts: Record<string, number> = {};
-      (questionsData || []).forEach((q: any) => {
-        if (q.level) {
-          questionCounts[q.level] = (questionCounts[q.level] || 0) + 1;
-        }
-      });
-
-      // Récupérer le pourcentage de questions par session depuis site_configuration
-      const { data: configData } = await supabase
-        .from('site_configuration')
-        .select('config_value')
-        .eq('config_key', 'questions_percentage')
-        .maybeSingle();
-
-      const questionsPercentage = configData?.config_value ? Number(configData.config_value) : 20;
-      
       // Calculer le nombre de sessions par niveau
       const sessionsCount: Record<number, number> = {};
       
-      // Niveau 1 = élémentaire
-      const level1Questions = questionCounts['élémentaire'] || 0;
-      sessionsCount[1] = level1Questions > 0 ? Math.ceil(level1Questions / (level1Questions * questionsPercentage / 100)) : 5;
-      
-      // Niveau 2 = intermédiaire
-      const level2Questions = questionCounts['intermédiaire'] || 0;
-      sessionsCount[2] = level2Questions > 0 ? Math.ceil(level2Questions / (level2Questions * questionsPercentage / 100)) : 5;
-      
-      // Niveau 3 = avancé
-      const level3Questions = questionCounts['avancé'] || 0;
-      sessionsCount[3] = level3Questions > 0 ? Math.ceil(level3Questions / (level3Questions * questionsPercentage / 100)) : 5;
+      for (let level = 1; level <= 3; level++) {
+        const configKey = `test_questions_percentage_level_${level}`;
+        const config = (configData || []).find(c => c.config_key === configKey);
+        const percentage = config ? Number(config.config_value) : 20;
+        // Nombre de sessions = 100 / pourcentage
+        sessionsCount[level] = Math.ceil(100 / percentage);
+      }
 
       setSessionsPerLevel(sessionsCount);
     };
@@ -680,14 +670,14 @@ export const PlanningManager = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {!isExpired && workload.testsPerWeek > 0 ? (
+                        {!isExpired && workload.sessionsPerWeek > 0 ? (
                           <div className="space-y-1">
                             <div className="flex items-center gap-1 text-sm">
                               <Clock className="h-3 w-3 text-muted-foreground" />
-                              <span className="font-medium">{workload.testsPerWeek} test{workload.testsPerWeek > 1 ? 's' : ''}/semaine</span>
+                              <span className="font-medium">{workload.sessionsPerWeek} session{workload.sessionsPerWeek > 1 ? 's' : ''}/semaine</span>
                             </div>
                             <div className="text-xs text-muted-foreground">
-                              ({workload.totalTests} tests au total)
+                              ({workload.totalSessions} sessions au total, dont ~{Math.ceil(workload.totalSessions - (workload.baseSessions || 0))} reprises)
                             </div>
                           </div>
                         ) : (
