@@ -414,6 +414,7 @@ export type Database = {
           id: string
           is_active: boolean
           objective_type: string
+          reference_admin_id: string | null
           school: string
           target_certification_level: number | null
           target_progression_percentage: number | null
@@ -429,6 +430,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           objective_type?: string
+          reference_admin_id?: string | null
           school: string
           target_certification_level?: number | null
           target_progression_percentage?: number | null
@@ -444,12 +446,21 @@ export type Database = {
           id?: string
           is_active?: boolean
           objective_type?: string
+          reference_admin_id?: string | null
           school?: string
           target_certification_level?: number | null
           target_progression_percentage?: number | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "planning_objectives_reference_admin_id_fkey"
+            columns: ["reference_admin_id"]
+            isOneToOne: false
+            referencedRelation: "administrators"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       profiles: {
         Row: {
