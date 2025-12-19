@@ -2,10 +2,18 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Target, Clock, Calendar, TrendingUp } from 'lucide-react';
+import { Target, Clock, Calendar, TrendingUp, Zap } from 'lucide-react';
 import { useUserPlanningObjectives, PlanningObjective } from '@/hooks/usePlanningObjectives';
-import { format, differenceInDays, differenceInHours, differenceInMinutes, differenceInSeconds } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
+import { format, differenceInDays, differenceInHours, differenceInMinutes, differenceInSeconds, differenceInWeeks } from 'date-fns';
 import { fr } from 'date-fns/locale';
+
+// Mapping des niveaux numériques vers les noms de niveau en base
+const LEVEL_NAME_MAP: Record<number, string> = {
+  1: 'élémentaire',
+  2: 'intermédiaire',
+  3: 'avancé',
+};
 
 interface CountdownProps {
   deadline: Date;
@@ -72,6 +80,62 @@ export const ObjectiveCountdown = ({
   currentCertificationLevel = 0 
 }: ObjectiveCountdownProps) => {
   const { objectives, userSchool, userClass, loading } = useUserPlanningObjectives();
+  const [questionCounts, setQuestionCounts] = useState<Record<string, number>>({});
+
+  // Charger le nombre réel de questions par niveau
+  useEffect(() => {
+    const fetchQuestionCounts = async () => {
+      const { data, error } = await supabase
+        .from('questions')
+        .select('level');
+      
+      if (error) {
+        console.error('Error fetching question counts:', error);
+        return;
+      }
+
+      const counts: Record<string, number> = {};
+      (data || []).forEach((q: any) => {
+        if (q.level) {
+          counts[q.level] = (counts[q.level] || 0) + 1;
+        }
+      });
+
+      setQuestionCounts(counts);
+    };
+
+    fetchQuestionCounts();
+  }, []);
+
+  // Calculer l'effort recommandé pour un objectif
+  const calculateWorkload = (objective: PlanningObjective) => {
+    const now = new Date();
+    const deadline = new Date(objective.deadline);
+    
+    const daysRemaining = Math.max(1, differenceInDays(deadline, now));
+    const weeksRemaining = Math.max(1, differenceInWeeks(deadline, now) || 1);
+    
+    let totalQuestions = 0;
+    
+    if (objective.objective_type === 'certification') {
+      const level = objective.target_certification_level || 1;
+      const levelName = LEVEL_NAME_MAP[level] || 'élémentaire';
+      totalQuestions = questionCounts[levelName] || 0;
+    } else {
+      const progressTarget = objective.target_progression_percentage || 100;
+      const allQuestions = Object.values(questionCounts).reduce((sum, count) => sum + count, 0);
+      totalQuestions = Math.round((progressTarget / 100) * allQuestions);
+    }
+    
+    const questionsPerDay = totalQuestions > 0 ? Math.ceil(totalQuestions / daysRemaining) : 0;
+    const questionsPerWeek = totalQuestions > 0 ? Math.ceil(totalQuestions / weeksRemaining) : 0;
+    
+    return {
+      perDay: questionsPerDay,
+      perWeek: questionsPerWeek,
+      totalQuestions
+    };
+  };
 
   if (loading) {
     return (
@@ -145,6 +209,7 @@ export const ObjectiveCountdown = ({
           const deadline = new Date(objective.deadline);
           const daysLeft = differenceInDays(deadline, new Date());
           const isUrgent = daysLeft <= 7;
+          const workload = calculateWorkload(objective);
 
           return (
             <div 
@@ -154,7 +219,7 @@ export const ObjectiveCountdown = ({
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 {/* Info objectif */}
                 <div className="flex-1 space-y-2">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     {objective.objective_type === 'certification' ? (
                       <Badge variant="default">
                         <Target className="h-3 w-3 mr-1" />
@@ -183,6 +248,29 @@ export const ObjectiveCountdown = ({
                     </div>
                     <Progress value={progress.percentage} className="h-2" />
                   </div>
+
+                  {/* Effort recommandé */}
+                  {workload.totalQuestions > 0 && (
+                    <div className="flex flex-wrap items-center gap-3 p-2 bg-primary/5 rounded-lg border border-primary/10">
+                      <div className="flex items-center gap-1">
+                        <Zap className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-medium text-primary">Rythme recommandé:</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <Badge variant="outline" className="bg-background">
+                          <span className="font-bold text-primary">{workload.perDay}</span>
+                          <span className="ml-1 text-muted-foreground">Q/jour</span>
+                        </Badge>
+                        <Badge variant="outline" className="bg-background">
+                          <span className="font-bold text-primary">{workload.perWeek}</span>
+                          <span className="ml-1 text-muted-foreground">Q/semaine</span>
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          ({workload.totalQuestions} questions au total)
+                        </span>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Date limite */}
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
