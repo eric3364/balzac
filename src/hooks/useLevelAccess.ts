@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useUserPurchases } from './useUserPurchases';
+import { useImpersonation } from './useImpersonation';
 
 interface LevelAccess {
   level: number;
@@ -12,12 +13,16 @@ interface LevelAccess {
 
 export const useLevelAccess = () => {
   const { user } = useAuth();
+  const { impersonatedUser, isImpersonating } = useImpersonation();
   const { hasValidPurchase, loading: purchasesLoading } = useUserPurchases();
   const [levelAccess, setLevelAccess] = useState<LevelAccess[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Utiliser l'ID de l'utilisateur impersonné si en mode impersonnation
+  const effectiveUserId = isImpersonating && impersonatedUser ? impersonatedUser.user_id : user?.id;
+
   const loadLevelAccess = useCallback(async () => {
-    if (!user || purchasesLoading) return;
+    if (!effectiveUserId || purchasesLoading) return;
 
     try {
       setLoading(true);
@@ -26,14 +31,14 @@ export const useLevelAccess = () => {
       const { data: progressions } = await supabase
         .from('session_progress')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', effectiveUserId)
         .order('level', { ascending: true });
 
       // Récupérer les certifications obtenues
       const { data: certifications } = await supabase
         .from('user_certifications')
         .select('level')
-        .eq('user_id', user.id);
+        .eq('user_id', effectiveUserId);
 
       // Récupérer les prix des niveaux depuis les templates de certificats
       const { data: pricing } = await supabase
@@ -80,7 +85,7 @@ export const useLevelAccess = () => {
     } finally {
       setLoading(false);
     }
-  }, [user, hasValidPurchase, purchasesLoading]);
+  }, [effectiveUserId, hasValidPurchase, purchasesLoading]);
 
   useEffect(() => {
     loadLevelAccess();

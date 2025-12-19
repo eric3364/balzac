@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import { useImpersonation } from './useImpersonation';
 
 interface UserStats {
   totalTests: number;
@@ -17,6 +18,10 @@ interface UserStats {
 
 export const useUserStats = () => {
   const { user } = useAuth();
+  const { impersonatedUser, isImpersonating } = useImpersonation();
+  
+  // Utiliser l'ID de l'utilisateur impersonné si en mode impersonnation
+  const effectiveUserId = isImpersonating && impersonatedUser ? impersonatedUser.user_id : user?.id;
   const [stats, setStats] = useState<UserStats>({
     totalTests: 0,
     totalQuestions: 0,
@@ -32,7 +37,7 @@ export const useUserStats = () => {
 
   // Set up real-time subscription for updates
   useEffect(() => {
-    if (!user) return;
+    if (!effectiveUserId) return;
 
     const channel = supabase
       .channel('user-stats-changes')
@@ -42,7 +47,7 @@ export const useUserStats = () => {
           event: '*',
           schema: 'public',
           table: 'test_sessions',
-          filter: `user_id=eq.${user.id}`
+          filter: `user_id=eq.${effectiveUserId}`
         },
         () => {
           console.log('Test session updated, refreshing stats');
@@ -55,7 +60,7 @@ export const useUserStats = () => {
           event: '*',
           schema: 'public',
           table: 'question_attempts',
-          filter: `user_id=eq.${user.id}`
+          filter: `user_id=eq.${effectiveUserId}`
         },
         () => {
           console.log('Question attempt updated, refreshing stats');
@@ -68,7 +73,7 @@ export const useUserStats = () => {
           event: '*',
           schema: 'public',
           table: 'user_certifications',
-          filter: `user_id=eq.${user.id}`
+          filter: `user_id=eq.${effectiveUserId}`
         },
         () => {
           console.log('Certification updated, refreshing stats');
@@ -80,10 +85,10 @@ export const useUserStats = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [effectiveUserId]);
 
   const fetchUserStats = useCallback(async () => {
-    if (!user) return;
+    if (!effectiveUserId) return;
     
     try {
         setStats(prev => ({ ...prev, loading: true }));
@@ -92,23 +97,23 @@ export const useUserStats = () => {
         const { data: attempts } = await supabase
           .from('question_attempts')
           .select('*')
-          .eq('user_id', user.id);
+          .eq('user_id', effectiveUserId);
 
         // Récupérer les sessions de test
         const { data: sessions } = await supabase
           .from('test_sessions')
           .select('*')
-          .eq('user_id', user.id);
+          .eq('user_id', effectiveUserId);
 
         // Récupérer les certifications
         const { data: certifications } = await supabase
           .from('user_certifications')
           .select('*')
-          .eq('user_id', user.id);
+          .eq('user_id', effectiveUserId);
 
         // Récupérer le niveau maximum atteint
         const { data: maxLevelData } = await supabase
-          .rpc('get_user_max_level', { user_uuid: user.id });
+          .rpc('get_user_max_level', { user_uuid: effectiveUserId });
 
         // Calculer le temps total passé uniquement sur les tests complétés
         console.log('Sessions data:', sessions);
@@ -177,15 +182,15 @@ export const useUserStats = () => {
           loading: false,
         });
       } catch (error) {
-        console.error('Erreur lors de la récupération des statistiques:', error);
+      console.error('Erreur lors de la récupération des statistiques:', error);
         setStats(prev => ({ ...prev, loading: false }));
       }
-  }, [user]);
+  }, [effectiveUserId]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!effectiveUserId) return;
     fetchUserStats();
-  }, [user, fetchUserStats]);
+  }, [effectiveUserId, fetchUserStats]);
 
   return { ...stats, refetchStats: fetchUserStats };
 };

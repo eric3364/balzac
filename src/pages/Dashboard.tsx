@@ -1,7 +1,9 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useImpersonation } from '@/hooks/useImpersonation';
 import { AuthGuard } from '@/components/AuthGuard';
+import { ImpersonationBanner } from '@/components/ImpersonationBanner';
 import { useUserStats } from '@/hooks/useUserStats';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useLevelAccess } from '@/hooks/useLevelAccess';
@@ -20,11 +22,17 @@ import ObjectiveCountdown from '@/components/dashboard/ObjectiveCountdown';
 
 const Dashboard = () => {
   const { user, loading, signOut } = useAuth();
+  const { impersonatedUser, isImpersonating } = useImpersonation();
   const userStats = useUserStats();
   const { isAdmin } = useIsAdmin();
   const { levelAccess, loading: levelAccessLoading } = useLevelAccess();
   const { difficultyLevels, loading: levelsLoading } = useDifficultyLevels();
   const navigate = useNavigate();
+  
+  // Nom à afficher (utilisateur impersonné ou réel)
+  const displayName = isImpersonating && impersonatedUser 
+    ? impersonatedUser.first_name || impersonatedUser.email 
+    : user?.user_metadata?.first_name || user?.email;
 
   // Redirect to auth if not authenticated
   useEffect(() => {
@@ -50,7 +58,8 @@ const Dashboard = () => {
 
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-background">
+      <ImpersonationBanner />
+      <div className={`min-h-screen bg-background ${isImpersonating ? 'pt-12' : ''}`}>
         {/* Header */}
         <header className="border-b bg-card">
           <div className="container mx-auto px-4 py-4 flex justify-between items-center">
@@ -60,7 +69,7 @@ const Dashboard = () => {
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground">
-              Bonjour, {user.user_metadata?.first_name || user.email}
+              Bonjour, {displayName}
             </span>
             {isAdmin && (
               <Button variant="ghost" onClick={() => navigate('/admin')} title="Administration">
