@@ -267,6 +267,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (error) {
         console.error('Erreur lors de la déconnexion:', error);
+        
+        // Si la session n'existe pas, c'est que l'utilisateur est déjà déconnecté
+        // On nettoie l'état local et on redirige sans afficher d'erreur
+        if (error.message?.toLowerCase().includes('session') || 
+            error.code === 'session_not_found' ||
+            error.status === 403) {
+          console.log('Session déjà expirée, nettoyage de l\'état local');
+          setSession(null);
+          setUser(null);
+          toast({
+            title: "Déconnexion",
+            description: "À bientôt sur Balzac Certification !"
+          });
+          return;
+        }
+        
         toast({
           title: "Erreur de déconnexion",
           description: error.message,
@@ -282,10 +298,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
     } catch (error: any) {
       console.error('Erreur catch lors de la déconnexion:', error);
+      
+      // Même en cas d'erreur, nettoyer l'état local
+      setSession(null);
+      setUser(null);
+      
       toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive"
+        title: "Déconnexion",
+        description: "À bientôt sur Balzac Certification !"
       });
     }
   };
