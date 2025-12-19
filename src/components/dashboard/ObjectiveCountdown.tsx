@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Target, Clock, Calendar, TrendingUp, Zap } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Target, Clock, Calendar, TrendingUp, Zap, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useUserPlanningObjectives, PlanningObjective } from '@/hooks/usePlanningObjectives';
 import { supabase } from '@/integrations/supabase/client';
 import { format, differenceInDays, differenceInHours, differenceInMinutes, differenceInSeconds, differenceInWeeks, isPast } from 'date-fns';
@@ -237,6 +238,14 @@ export const ObjectiveCountdown = ({
           const isUrgent = daysLeft <= 7;
           const workload = calculateWorkload(objective);
           const timeProgress = getTimeProgress(objective);
+          
+          // Vérifier si l'étudiant est en retard
+          // On considère qu'il y a retard si la progression réelle est < 80% de la progression temporelle attendue
+          const expectedProgress = timeProgress; // On devrait être à ce % de progression
+          const actualProgress = progress.percentage;
+          const progressRatio = expectedProgress > 0 ? actualProgress / expectedProgress : 1;
+          const isOnTrack = progressRatio >= 0.8 || actualProgress >= 100;
+          const isBehind = !isOnTrack && timeProgress > 10; // Seulement après 10% du temps écoulé
 
           return (
             <div 
@@ -275,6 +284,29 @@ export const ObjectiveCountdown = ({
                     </div>
                     <Progress value={progress.percentage} className="h-2" />
                   </div>
+
+                  {/* Alerte de rythme insuffisant */}
+                  {isBehind && (
+                    <Alert variant="destructive" className="py-2">
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertDescription className="text-sm">
+                        <span className="font-semibold">Rythme insuffisant !</span> Vous êtes à {Math.round(actualProgress)}% de progression alors que {Math.round(timeProgress)}% du temps est écoulé.
+                        {workload.sessionsPerWeek > 0 && (
+                          <span className="block mt-1">
+                            Augmentez votre rythme à <strong>{Math.ceil(workload.sessionsPerWeek * 1.5)} sessions/semaine</strong> pour rattraper.
+                          </span>
+                        )}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  {/* Indicateur positif si en avance */}
+                  {isOnTrack && timeProgress > 20 && actualProgress < 100 && (
+                    <div className="flex items-center gap-2 p-2 bg-green-500/10 rounded-lg border border-green-500/20 text-green-700 dark:text-green-400">
+                      <CheckCircle className="h-4 w-4" />
+                      <span className="text-sm font-medium">Vous êtes dans les temps ! Continuez ainsi.</span>
+                    </div>
+                  )}
 
                   {/* Effort recommandé */}
                   {workload.totalSessions > 0 && (
