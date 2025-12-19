@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ArrowLeft, CheckCircle } from 'lucide-react';
 import { SCHOOLS, CLASS_LEVELS, CITIES } from '@/constants/userData';
+import { BalzacWorksBackground } from '@/components/BalzacWorksBackground';
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
@@ -83,8 +84,9 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
+      <BalzacWorksBackground />
+      <div className="w-full max-w-md relative z-10">
         <div className="mb-6">
           <Button
             variant="ghost"
