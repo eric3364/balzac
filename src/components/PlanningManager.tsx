@@ -15,7 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { usePlanningObjectives, PlanningObjective } from '@/hooks/usePlanningObjectives';
 import { useDifficultyLevels } from '@/hooks/useDifficultyLevels';
 import { CITIES } from '@/constants/userData';
-import { format, formatDistanceToNow, isPast, differenceInDays, differenceInWeeks } from 'date-fns';
+import { format, formatDistanceToNow, isPast, differenceInWeeks } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 // Mapping des niveaux numériques vers les noms de niveau en base
@@ -25,42 +25,38 @@ const LEVEL_NAME_MAP: Record<number, string> = {
   3: 'avancé',
 };
 
-// Calculer l'effort requis pour atteindre l'objectif
+// Calculer l'effort requis en tests par semaine
 const calculateWorkload = (
   objective: PlanningObjective, 
-  questionCounts: Record<string, number>
+  sessionsPerLevel: Record<number, number>
 ) => {
   const now = new Date();
   const deadline = new Date(objective.deadline);
   
   if (isPast(deadline)) {
-    return { perDay: 0, perWeek: 0, totalQuestions: 0, daysRemaining: 0 };
+    return { testsPerWeek: 0, totalTests: 0, weeksRemaining: 0 };
   }
   
-  const daysRemaining = Math.max(1, differenceInDays(deadline, now));
-  const weeksRemaining = Math.max(1, differenceInWeeks(deadline, now));
+  const weeksRemaining = Math.max(1, differenceInWeeks(deadline, now) || 1);
   
-  let totalQuestions = 0;
+  let totalTests = 0;
   
   if (objective.objective_type === 'certification') {
     const level = objective.target_certification_level || 1;
-    const levelName = LEVEL_NAME_MAP[level] || 'élémentaire';
-    totalQuestions = questionCounts[levelName] || 0;
+    totalTests = sessionsPerLevel[level] || 0;
   } else {
-    // Pour la progression, calculer basé sur le pourcentage des questions totales
+    // Pour la progression, calculer basé sur le pourcentage des sessions totales
     const progressTarget = objective.target_progression_percentage || 100;
-    const allQuestions = Object.values(questionCounts).reduce((sum, count) => sum + count, 0);
-    totalQuestions = Math.round((progressTarget / 100) * allQuestions);
+    const allSessions = Object.values(sessionsPerLevel).reduce((sum, count) => sum + count, 0);
+    totalTests = Math.round((progressTarget / 100) * allSessions);
   }
   
-  const questionsPerDay = totalQuestions > 0 ? Math.ceil(totalQuestions / daysRemaining) : 0;
-  const questionsPerWeek = totalQuestions > 0 ? Math.ceil(totalQuestions / weeksRemaining) : 0;
+  const testsPerWeek = totalTests > 0 ? Math.ceil(totalTests / weeksRemaining) : 0;
   
   return {
-    perDay: questionsPerDay,
-    perWeek: questionsPerWeek,
-    totalQuestions,
-    daysRemaining
+    testsPerWeek,
+    totalTests,
+    weeksRemaining
   };
 };
 
@@ -83,7 +79,7 @@ export const PlanningManager = () => {
   const [uniqueSchools, setUniqueSchools] = useState<string[]>([]);
   const [uniqueClasses, setUniqueClasses] = useState<string[]>([]);
   const [administrators, setAdministrators] = useState<Administrator[]>([]);
-  const [questionCounts, setQuestionCounts] = useState<Record<string, number>>({});
+  const [sessionsPerLevel, setSessionsPerLevel] = useState<Record<number, number>>({});
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingObjective, setEditingObjective] = useState<PlanningObjective | null>(null);
   
@@ -149,29 +145,55 @@ export const PlanningManager = () => {
     fetchSchoolClasses();
   }, []);
 
-  // Charger le nombre de questions par niveau
+  // Charger le nombre de sessions par niveau
   useEffect(() => {
-    const fetchQuestionCounts = async () => {
-      const { data, error } = await supabase
+    const fetchSessionsPerLevel = async () => {
+      // Récupérer le nombre de questions par niveau
+      const { data: questionsData, error: questionsError } = await supabase
         .from('questions')
         .select('level');
       
-      if (error) {
-        console.error('Error fetching question counts:', error);
+      if (questionsError) {
+        console.error('Error fetching questions:', questionsError);
         return;
       }
 
-      const counts: Record<string, number> = {};
-      (data || []).forEach((q: any) => {
+      // Compter les questions par niveau
+      const questionCounts: Record<string, number> = {};
+      (questionsData || []).forEach((q: any) => {
         if (q.level) {
-          counts[q.level] = (counts[q.level] || 0) + 1;
+          questionCounts[q.level] = (questionCounts[q.level] || 0) + 1;
         }
       });
 
-      setQuestionCounts(counts);
+      // Récupérer le pourcentage de questions par session depuis site_configuration
+      const { data: configData } = await supabase
+        .from('site_configuration')
+        .select('config_value')
+        .eq('config_key', 'questions_percentage')
+        .maybeSingle();
+
+      const questionsPercentage = configData?.config_value ? Number(configData.config_value) : 20;
+      
+      // Calculer le nombre de sessions par niveau
+      const sessionsCount: Record<number, number> = {};
+      
+      // Niveau 1 = élémentaire
+      const level1Questions = questionCounts['élémentaire'] || 0;
+      sessionsCount[1] = level1Questions > 0 ? Math.ceil(level1Questions / (level1Questions * questionsPercentage / 100)) : 5;
+      
+      // Niveau 2 = intermédiaire
+      const level2Questions = questionCounts['intermédiaire'] || 0;
+      sessionsCount[2] = level2Questions > 0 ? Math.ceil(level2Questions / (level2Questions * questionsPercentage / 100)) : 5;
+      
+      // Niveau 3 = avancé
+      const level3Questions = questionCounts['avancé'] || 0;
+      sessionsCount[3] = level3Questions > 0 ? Math.ceil(level3Questions / (level3Questions * questionsPercentage / 100)) : 5;
+
+      setSessionsPerLevel(sessionsCount);
     };
 
-    fetchQuestionCounts();
+    fetchSessionsPerLevel();
   }, []);
 
   // Charger les administrateurs
@@ -619,7 +641,7 @@ export const PlanningManager = () => {
               <TableBody>
                 {objectives.map((objective) => {
                   const isExpired = isPast(new Date(objective.deadline));
-                  const workload = calculateWorkload(objective, questionCounts);
+                  const workload = calculateWorkload(objective, sessionsPerLevel);
                   return (
                     <TableRow key={objective.id}>
                       <TableCell>
@@ -658,17 +680,14 @@ export const PlanningManager = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {!isExpired && workload.perDay > 0 ? (
+                        {!isExpired && workload.testsPerWeek > 0 ? (
                           <div className="space-y-1">
                             <div className="flex items-center gap-1 text-sm">
                               <Clock className="h-3 w-3 text-muted-foreground" />
-                              <span className="font-medium">{workload.perDay} Q/jour</span>
+                              <span className="font-medium">{workload.testsPerWeek} test{workload.testsPerWeek > 1 ? 's' : ''}/semaine</span>
                             </div>
                             <div className="text-xs text-muted-foreground">
-                              ~{workload.perWeek} Q/semaine
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              ({workload.totalQuestions} Q total)
+                              ({workload.totalTests} tests au total)
                             </div>
                           </div>
                         ) : (

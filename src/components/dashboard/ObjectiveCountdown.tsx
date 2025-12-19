@@ -80,60 +80,82 @@ export const ObjectiveCountdown = ({
   currentCertificationLevel = 0 
 }: ObjectiveCountdownProps) => {
   const { objectives, userSchool, userClass, loading } = useUserPlanningObjectives();
-  const [questionCounts, setQuestionCounts] = useState<Record<string, number>>({});
+  const [sessionsPerLevel, setSessionsPerLevel] = useState<Record<number, number>>({});
 
-  // Charger le nombre réel de questions par niveau
+  // Charger le nombre de sessions par niveau
   useEffect(() => {
-    const fetchQuestionCounts = async () => {
-      const { data, error } = await supabase
+    const fetchSessionsPerLevel = async () => {
+      // Récupérer le nombre de questions par niveau
+      const { data: questionsData, error: questionsError } = await supabase
         .from('questions')
         .select('level');
       
-      if (error) {
-        console.error('Error fetching question counts:', error);
+      if (questionsError) {
+        console.error('Error fetching questions:', questionsError);
         return;
       }
 
-      const counts: Record<string, number> = {};
-      (data || []).forEach((q: any) => {
+      // Compter les questions par niveau
+      const questionCounts: Record<string, number> = {};
+      (questionsData || []).forEach((q: any) => {
         if (q.level) {
-          counts[q.level] = (counts[q.level] || 0) + 1;
+          questionCounts[q.level] = (questionCounts[q.level] || 0) + 1;
         }
       });
 
-      setQuestionCounts(counts);
+      // Récupérer le pourcentage de questions par session depuis site_configuration
+      const { data: configData } = await supabase
+        .from('site_configuration')
+        .select('config_value')
+        .eq('config_key', 'questions_percentage')
+        .maybeSingle();
+
+      const questionsPercentage = configData?.config_value ? Number(configData.config_value) : 20;
+      
+      // Calculer le nombre de sessions par niveau
+      const sessionsCount: Record<number, number> = {};
+      
+      // Niveau 1 = élémentaire
+      const level1Questions = questionCounts['élémentaire'] || 0;
+      sessionsCount[1] = level1Questions > 0 ? Math.ceil(100 / questionsPercentage) : 5;
+      
+      // Niveau 2 = intermédiaire
+      const level2Questions = questionCounts['intermédiaire'] || 0;
+      sessionsCount[2] = level2Questions > 0 ? Math.ceil(100 / questionsPercentage) : 5;
+      
+      // Niveau 3 = avancé
+      const level3Questions = questionCounts['avancé'] || 0;
+      sessionsCount[3] = level3Questions > 0 ? Math.ceil(100 / questionsPercentage) : 5;
+
+      setSessionsPerLevel(sessionsCount);
     };
 
-    fetchQuestionCounts();
+    fetchSessionsPerLevel();
   }, []);
 
-  // Calculer l'effort recommandé pour un objectif
+  // Calculer l'effort recommandé en tests par semaine
   const calculateWorkload = (objective: PlanningObjective) => {
     const now = new Date();
     const deadline = new Date(objective.deadline);
     
-    const daysRemaining = Math.max(1, differenceInDays(deadline, now));
     const weeksRemaining = Math.max(1, differenceInWeeks(deadline, now) || 1);
     
-    let totalQuestions = 0;
+    let totalTests = 0;
     
     if (objective.objective_type === 'certification') {
       const level = objective.target_certification_level || 1;
-      const levelName = LEVEL_NAME_MAP[level] || 'élémentaire';
-      totalQuestions = questionCounts[levelName] || 0;
+      totalTests = sessionsPerLevel[level] || 0;
     } else {
       const progressTarget = objective.target_progression_percentage || 100;
-      const allQuestions = Object.values(questionCounts).reduce((sum, count) => sum + count, 0);
-      totalQuestions = Math.round((progressTarget / 100) * allQuestions);
+      const allSessions = Object.values(sessionsPerLevel).reduce((sum, count) => sum + count, 0);
+      totalTests = Math.round((progressTarget / 100) * allSessions);
     }
     
-    const questionsPerDay = totalQuestions > 0 ? Math.ceil(totalQuestions / daysRemaining) : 0;
-    const questionsPerWeek = totalQuestions > 0 ? Math.ceil(totalQuestions / weeksRemaining) : 0;
+    const testsPerWeek = totalTests > 0 ? Math.ceil(totalTests / weeksRemaining) : 0;
     
     return {
-      perDay: questionsPerDay,
-      perWeek: questionsPerWeek,
-      totalQuestions
+      testsPerWeek,
+      totalTests
     };
   };
 
@@ -250,7 +272,7 @@ export const ObjectiveCountdown = ({
                   </div>
 
                   {/* Effort recommandé */}
-                  {workload.totalQuestions > 0 && (
+                  {workload.totalTests > 0 && (
                     <div className="flex flex-wrap items-center gap-3 p-2 bg-primary/5 rounded-lg border border-primary/10">
                       <div className="flex items-center gap-1">
                         <Zap className="h-4 w-4 text-primary" />
@@ -258,15 +280,11 @@ export const ObjectiveCountdown = ({
                       </div>
                       <div className="flex flex-wrap gap-2">
                         <Badge variant="outline" className="bg-background">
-                          <span className="font-bold text-primary">{workload.perDay}</span>
-                          <span className="ml-1 text-muted-foreground">Q/jour</span>
-                        </Badge>
-                        <Badge variant="outline" className="bg-background">
-                          <span className="font-bold text-primary">{workload.perWeek}</span>
-                          <span className="ml-1 text-muted-foreground">Q/semaine</span>
+                          <span className="font-bold text-primary">{workload.testsPerWeek}</span>
+                          <span className="ml-1 text-muted-foreground">test{workload.testsPerWeek > 1 ? 's' : ''}/semaine</span>
                         </Badge>
                         <span className="text-xs text-muted-foreground">
-                          ({workload.totalQuestions} questions au total)
+                          ({workload.totalTests} tests au total)
                         </span>
                       </div>
                     </div>
