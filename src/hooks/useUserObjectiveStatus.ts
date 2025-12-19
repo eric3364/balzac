@@ -16,9 +16,10 @@ interface PlanningObjective {
 
 export interface UserObjectiveStatus {
   hasObjective: boolean;
-  status: 'ahead' | 'on-track' | 'behind' | null;
+  status: 'ok' | 'warning' | 'critical' | null;
   userProgress: number;
   expectedProgress: number;
+  difference: number;
 }
 
 export const useUserObjectiveStatus = () => {
@@ -61,7 +62,7 @@ export const useUserObjectiveStatus = () => {
     });
 
     if (!applicableObjective) {
-      return { hasObjective: false, status: null, userProgress: 0, expectedProgress: 0 };
+      return { hasObjective: false, status: null, userProgress: 0, expectedProgress: 0, difference: 0 };
     }
 
     // Calculer la progression temporelle attendue
@@ -122,19 +123,22 @@ export const useUserObjectiveStatus = () => {
       console.error('Error calculating user progress:', error);
     }
 
-    // Déterminer le statut
+    // Déterminer le statut basé sur la différence
     const difference = userProgress - expectedProgress;
-    let status: 'ahead' | 'on-track' | 'behind';
+    let status: 'ok' | 'warning' | 'critical';
     
-    if (difference > 10) {
-      status = 'ahead';
-    } else if (difference < -10) {
-      status = 'behind';
+    if (difference >= -10) {
+      // En avance ou dans les temps (moins de 10% de retard)
+      status = 'ok';
+    } else if (difference >= -20) {
+      // Retard entre 10% et 20%
+      status = 'warning';
     } else {
-      status = 'on-track';
+      // Retard supérieur à 20%
+      status = 'critical';
     }
 
-    return { hasObjective: true, status, userProgress, expectedProgress };
+    return { hasObjective: true, status, userProgress, expectedProgress, difference };
   }, [objectives]);
 
   return { objectives, loading, getUserObjectiveStatus };

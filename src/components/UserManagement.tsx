@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Trash2, Edit2, Plus, Download, Upload, Search, Filter, Award, Clock, Target, Activity, TrendingUp, Users, Smile, Goal } from 'lucide-react';
+import { Trash2, Edit2, Plus, Download, Upload, Search, Filter, Award, Clock, Target, Activity, TrendingUp, Users, Smile, Frown, Goal } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -1011,24 +1011,28 @@ export const UserManagement = () => {
                         {user.user_id && userObjectiveStatuses[user.user_id]?.hasObjective ? (
                           <Tooltip>
                             <TooltipTrigger>
-                              {userObjectiveStatuses[user.user_id].status === 'ahead' ? (
+                              {userObjectiveStatuses[user.user_id].status === 'ok' ? (
                                 <div className="flex items-center justify-center">
                                   <Smile className="h-5 w-5 text-green-500" />
                                 </div>
-                              ) : userObjectiveStatuses[user.user_id].status === 'on-track' ? (
-                                <div className="w-4 h-4 rounded-full bg-green-500 mx-auto" />
+                              ) : userObjectiveStatuses[user.user_id].status === 'warning' ? (
+                                <div className="flex items-center justify-center">
+                                  <Frown className="h-5 w-5 text-orange-500" />
+                                </div>
                               ) : (
-                                <div className="w-4 h-4 rounded-full bg-red-500 mx-auto" />
+                                <div className="flex items-center justify-center">
+                                  <Frown className="h-5 w-5 text-red-500" />
+                                </div>
                               )}
                             </TooltipTrigger>
                             <TooltipContent>
                               <div className="text-sm">
                                 <p className="font-medium">
-                                  {userObjectiveStatuses[user.user_id].status === 'ahead' 
-                                    ? 'En avance' 
-                                    : userObjectiveStatuses[user.user_id].status === 'on-track'
-                                    ? 'Dans les temps'
-                                    : 'En retard'}
+                                  {userObjectiveStatuses[user.user_id].status === 'ok' 
+                                    ? 'Dans les temps' 
+                                    : userObjectiveStatuses[user.user_id].status === 'warning'
+                                    ? 'Léger retard'
+                                    : 'Retard important'}
                                 </p>
                                 <p>Progression: {Math.round(userObjectiveStatuses[user.user_id].userProgress)}%</p>
                                 <p>Attendu: {Math.round(userObjectiveStatuses[user.user_id].expectedProgress)}%</p>
