@@ -4,9 +4,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Calendar, Target, MapPin, School, Users, Clock, AlertCircle, UserCheck } from 'lucide-react';
-import { format, isPast, differenceInDays } from 'date-fns';
+import { Calendar, Target, MapPin, School, Users, Clock, AlertCircle, UserCheck, Zap } from 'lucide-react';
+import { format, isPast, differenceInDays, differenceInWeeks } from 'date-fns';
 import { fr } from 'date-fns/locale';
+
+// Taux de réussite estimé (90%)
+const SUCCESS_RATE = 0.90;
 
 interface Administrator {
   user_id: string;
@@ -45,6 +48,60 @@ export const PlanningObjectivesTimeline = () => {
   const [administrators, setAdministrators] = useState<Administrator[]>([]);
   const [studentsData, setStudentsData] = useState<ObjectiveStudentsData>({});
   const [loadingStudents, setLoadingStudents] = useState(true);
+  const [sessionsPerLevel, setSessionsPerLevel] = useState<Record<number, number>>({});
+
+  // Charger le nombre de sessions par niveau
+  useEffect(() => {
+    const fetchSessionsPerLevel = async () => {
+      const { data: configData } = await supabase
+        .from('site_configuration')
+        .select('config_key, config_value')
+        .in('config_key', [
+          'test_questions_percentage_level_1',
+          'test_questions_percentage_level_2',
+          'test_questions_percentage_level_3'
+        ]);
+
+      const sessionsCount: Record<number, number> = {};
+      for (let level = 1; level <= 3; level++) {
+        const configKey = `test_questions_percentage_level_${level}`;
+        const config = (configData || []).find(c => c.config_key === configKey);
+        const percentage = config ? Number(config.config_value) : 20;
+        sessionsCount[level] = Math.ceil(100 / percentage);
+      }
+      setSessionsPerLevel(sessionsCount);
+    };
+
+    fetchSessionsPerLevel();
+  }, []);
+
+  // Calculer l'effort estimé pour un objectif
+  const calculateWorkload = (objective: PlanningObjective) => {
+    const now = new Date();
+    const deadline = new Date(objective.deadline);
+    
+    if (isPast(deadline)) {
+      return { sessionsPerWeek: 0, totalSessions: 0, weeksRemaining: 0, baseSessions: 0 };
+    }
+    
+    const weeksRemaining = Math.max(1, differenceInWeeks(deadline, now) || 1);
+    
+    let baseSessions = 0;
+    
+    if (objective.objective_type === 'certification') {
+      const level = objective.target_certification_level || 1;
+      baseSessions = sessionsPerLevel[level] || 5;
+    } else {
+      const progressTarget = objective.target_progression_percentage || 100;
+      const allSessions = Object.values(sessionsPerLevel).reduce((sum, count) => sum + count, 0);
+      baseSessions = Math.round((progressTarget / 100) * allSessions);
+    }
+    
+    const totalSessions = Math.ceil(baseSessions / SUCCESS_RATE);
+    const sessionsPerWeek = totalSessions > 0 ? Math.ceil(totalSessions / weeksRemaining) : 0;
+    
+    return { sessionsPerWeek, totalSessions, weeksRemaining, baseSessions };
+  };
 
   // Charger les administrateurs
   useEffect(() => {
@@ -308,6 +365,8 @@ export const PlanningObjectivesTimeline = () => {
                 const students = studentsData[objective.id] || [];
                 const startedStudents = students.filter(s => s.hasStarted);
                 const averageProgress = getAverageProgress(objective.id);
+                const workload = calculateWorkload(objective);
+                const weeksRemaining = workload.weeksRemaining;
                 
                 return (
                   <div key={objective.id} className="relative pl-10">
@@ -469,18 +528,59 @@ export const PlanningObjectivesTimeline = () => {
                           </div>
                         )}
                         
-                        {/* Barre de progression temporelle */}
+                        {/* Effort estimé */}
+                        {workload.totalSessions > 0 && !isPast(deadline) && (
+                          <div className="flex items-center gap-2 p-2 bg-primary/5 rounded-lg border border-primary/10 mb-3">
+                            <Zap className="h-4 w-4 text-primary" />
+                            <span className="text-xs font-medium text-primary">Effort estimé:</span>
+                            <Badge variant="outline" className="text-xs">
+                              {workload.sessionsPerWeek} session{workload.sessionsPerWeek > 1 ? 's' : ''}/semaine
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">
+                              ({workload.totalSessions} sessions sur {weeksRemaining} semaine{weeksRemaining > 1 ? 's' : ''})
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Barre de progression temporelle avec marqueurs de semaines */}
                         <div className="space-y-1">
                           <div className="flex justify-between text-xs text-muted-foreground">
                             <span>Progression temporelle</span>
                             <span>{Math.round(timeProgress)}%</span>
                           </div>
-                          <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                          <div className="relative h-4 bg-secondary rounded-full overflow-hidden">
+                            {/* Traits verticaux pour les semaines */}
+                            {weeksRemaining > 1 && weeksRemaining <= 20 && Array.from({ length: weeksRemaining - 1 }).map((_, index) => {
+                              const position = ((index + 1) / weeksRemaining) * 100;
+                              return (
+                                <div 
+                                  key={index}
+                                  className="absolute top-0 h-full w-px bg-border/50 z-10"
+                                  style={{ left: `${position}%` }}
+                                />
+                              );
+                            })}
+                            {/* Barre de progression */}
                             <div 
-                              className={`h-full transition-all duration-500 ${statusInfo.progressColor}`}
+                              className={`absolute top-0 left-0 h-full transition-all duration-500 ${statusInfo.progressColor}`}
                               style={{ width: `${timeProgress}%` }}
                             />
+                            {/* Labels des semaines (affichés si <= 12 semaines) */}
+                            {weeksRemaining > 1 && weeksRemaining <= 12 && (
+                              <div className="absolute inset-0 flex items-center justify-around text-[8px] text-muted-foreground/70 font-medium pointer-events-none">
+                                {Array.from({ length: weeksRemaining }).map((_, index) => (
+                                  <span key={index} className="z-20">S{index + 1}</span>
+                                ))}
+                              </div>
+                            )}
                           </div>
+                          {/* Légende des semaines */}
+                          {weeksRemaining > 1 && (
+                            <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                              <span>Aujourd'hui</span>
+                              <span>{weeksRemaining} semaine{weeksRemaining > 1 ? 's' : ''} restante{weeksRemaining > 1 ? 's' : ''}</span>
+                            </div>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
