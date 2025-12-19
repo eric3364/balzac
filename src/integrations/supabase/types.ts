@@ -415,7 +415,7 @@ export type Database = {
           is_active: boolean
           objective_type: string
           reference_admin_id: string | null
-          school: string
+          school: string | null
           target_certification_level: number | null
           target_progression_percentage: number | null
           updated_at: string
@@ -431,7 +431,7 @@ export type Database = {
           is_active?: boolean
           objective_type?: string
           reference_admin_id?: string | null
-          school: string
+          school?: string | null
           target_certification_level?: number | null
           target_progression_percentage?: number | null
           updated_at?: string
@@ -447,7 +447,7 @@ export type Database = {
           is_active?: boolean
           objective_type?: string
           reference_admin_id?: string | null
-          school?: string
+          school?: string | null
           target_certification_level?: number | null
           target_progression_percentage?: number | null
           updated_at?: string
