@@ -3,9 +3,9 @@ import { usePlanningObjectives, PlanningObjective } from '@/hooks/usePlanningObj
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Calendar, Target, MapPin, School, Users, Clock, CheckCircle2, AlertCircle, UserCheck } from 'lucide-react';
-import { format, formatDistanceToNow, isPast, differenceInDays } from 'date-fns';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Calendar, Target, MapPin, School, Users, Clock, AlertCircle, UserCheck } from 'lucide-react';
+import { format, isPast, differenceInDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 interface Administrator {
@@ -13,9 +13,38 @@ interface Administrator {
   email: string;
 }
 
+interface StudentProgress {
+  user_id: string;
+  first_name: string | null;
+  last_name: string | null;
+  email: string;
+  progress: number; // 0-100
+  hasStarted: boolean;
+}
+
+interface ObjectiveStudentsData {
+  [objectiveId: string]: StudentProgress[];
+}
+
+// Couleurs pour les pastilles d'étudiants
+const STUDENT_COLORS = [
+  'bg-blue-500',
+  'bg-green-500',
+  'bg-purple-500',
+  'bg-pink-500',
+  'bg-indigo-500',
+  'bg-teal-500',
+  'bg-orange-500',
+  'bg-cyan-500',
+  'bg-rose-500',
+  'bg-emerald-500',
+];
+
 export const PlanningObjectivesTimeline = () => {
   const { objectives, loading } = usePlanningObjectives();
   const [administrators, setAdministrators] = useState<Administrator[]>([]);
+  const [studentsData, setStudentsData] = useState<ObjectiveStudentsData>({});
+  const [loadingStudents, setLoadingStudents] = useState(true);
 
   // Charger les administrateurs
   useEffect(() => {
@@ -33,10 +62,131 @@ export const PlanningObjectivesTimeline = () => {
     fetchAdministrators();
   }, []);
 
+  // Charger les étudiants et leur progression pour chaque objectif
+  useEffect(() => {
+    const fetchStudentsProgress = async () => {
+      if (objectives.length === 0) {
+        setLoadingStudents(false);
+        return;
+      }
+
+      setLoadingStudents(true);
+      const newStudentsData: ObjectiveStudentsData = {};
+
+      for (const objective of objectives) {
+        if (!objective.is_active) continue;
+
+        // Construire la requête pour trouver les étudiants correspondants
+        let query = supabase
+          .from('users')
+          .select('user_id, first_name, last_name, email, school, class_name, city');
+
+        if (objective.city) {
+          query = query.eq('city', objective.city);
+        }
+        if (objective.school) {
+          query = query.eq('school', objective.school);
+        }
+        if (objective.class_name) {
+          query = query.eq('class_name', objective.class_name);
+        }
+
+        const { data: students, error: studentsError } = await query;
+
+        if (studentsError || !students) {
+          console.error('Error fetching students:', studentsError);
+          continue;
+        }
+
+        const studentProgressList: StudentProgress[] = [];
+
+        for (const student of students) {
+          if (!student.user_id) continue;
+
+          let progress = 0;
+          let hasStarted = false;
+
+          if (objective.objective_type === 'certification') {
+            // Vérifier si l'étudiant a obtenu la certification
+            const { data: certData } = await supabase
+              .from('user_certifications')
+              .select('level')
+              .eq('user_id', student.user_id)
+              .gte('level', objective.target_certification_level || 1)
+              .limit(1);
+
+            if (certData && certData.length > 0) {
+              progress = 100;
+              hasStarted = true;
+            } else {
+              // Vérifier la progression dans les sessions
+              const { data: sessionData } = await supabase
+                .from('session_progress')
+                .select('completed_sessions, total_sessions_for_level, level')
+                .eq('user_id', student.user_id)
+                .eq('level', objective.target_certification_level || 1)
+                .limit(1);
+
+              if (sessionData && sessionData.length > 0) {
+                const sp = sessionData[0];
+                const completed = sp.completed_sessions || 0;
+                const total = sp.total_sessions_for_level || 5;
+                progress = Math.min(100, (completed / total) * 100);
+                hasStarted = completed > 0;
+              }
+            }
+          } else {
+            // Objectif de progression
+            const { data: sessionData } = await supabase
+              .from('session_progress')
+              .select('completed_sessions, total_sessions_for_level')
+              .eq('user_id', student.user_id);
+
+            if (sessionData && sessionData.length > 0) {
+              const totalCompleted = sessionData.reduce((acc, s) => acc + (s.completed_sessions || 0), 0);
+              const totalSessions = sessionData.reduce((acc, s) => acc + (s.total_sessions_for_level || 5), 0);
+              progress = totalSessions > 0 ? Math.min(100, (totalCompleted / totalSessions) * 100) : 0;
+              hasStarted = totalCompleted > 0;
+            }
+          }
+
+          studentProgressList.push({
+            user_id: student.user_id,
+            first_name: student.first_name,
+            last_name: student.last_name,
+            email: student.email,
+            progress,
+            hasStarted
+          });
+        }
+
+        newStudentsData[objective.id] = studentProgressList;
+      }
+
+      setStudentsData(newStudentsData);
+      setLoadingStudents(false);
+    };
+
+    if (!loading) {
+      fetchStudentsProgress();
+    }
+  }, [objectives, loading]);
+
   const getAdminEmail = (adminId: string | null) => {
     if (!adminId) return null;
     const admin = administrators.find(a => a.user_id === adminId);
     return admin?.email || null;
+  };
+
+  const getAverageProgress = (objectiveId: string) => {
+    const students = studentsData[objectiveId] || [];
+    const startedStudents = students.filter(s => s.hasStarted);
+    if (startedStudents.length === 0) return 0;
+    return startedStudents.reduce((acc, s) => acc + s.progress, 0) / startedStudents.length;
+  };
+
+  const getStudentColor = (index: number) => {
+    return STUDENT_COLORS[index % STUDENT_COLORS.length];
   };
 
   if (loading) {
@@ -57,7 +207,6 @@ export const PlanningObjectivesTimeline = () => {
     );
   }
 
-  // Trier les objectifs par date limite
   const sortedObjectives = [...objectives]
     .filter(obj => obj.is_active)
     .sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime());
@@ -84,7 +233,6 @@ export const PlanningObjectivesTimeline = () => {
     );
   }
 
-  // Calculer la progression temporelle pour chaque objectif
   const getTimeProgress = (objective: PlanningObjective) => {
     const now = new Date();
     const deadline = new Date(objective.deadline);
@@ -136,134 +284,213 @@ export const PlanningObjectivesTimeline = () => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Calendar className="h-5 w-5" />
-          Objectifs de planification
-        </CardTitle>
-        <CardDescription>
-          Timeline des {sortedObjectives.length} objectif{sortedObjectives.length > 1 ? 's' : ''} en cours
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="relative">
-          {/* Ligne verticale de la timeline */}
-          <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border" />
-          
-          <div className="space-y-6">
-            {sortedObjectives.map((objective, index) => {
-              const statusInfo = getStatusInfo(objective);
-              const timeProgress = getTimeProgress(objective);
-              const deadline = new Date(objective.deadline);
-              const daysRemaining = differenceInDays(deadline, new Date());
-              
-              return (
-                <div key={objective.id} className="relative pl-10">
-                  {/* Point sur la timeline */}
-                  <div className={`absolute left-2 w-5 h-5 rounded-full border-2 border-background ${statusInfo.progressColor} flex items-center justify-center`}>
-                    {statusInfo.status === 'expired' ? (
-                      <AlertCircle className="h-3 w-3 text-white" />
-                    ) : statusInfo.status === 'active' ? (
-                      <div className="w-2 h-2 rounded-full bg-white" />
-                    ) : (
-                      <Clock className="h-3 w-3 text-white" />
-                    )}
-                  </div>
-                  
-                  <Card className={`border-l-4 ${
-                    statusInfo.status === 'expired' ? 'border-l-destructive' :
-                    statusInfo.status === 'urgent' ? 'border-l-orange-500' :
-                    statusInfo.status === 'soon' ? 'border-l-yellow-500' :
-                    'border-l-primary'
-                  }`}>
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Badge className={statusInfo.color}>
-                              {statusInfo.label}
-                            </Badge>
-                            <Badge variant="outline">
-                              {objective.objective_type === 'certification' 
-                                ? `Certification Niv.${objective.target_certification_level}` 
-                                : `Progression ${objective.target_progression_percentage}%`
+    <TooltipProvider>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            Objectifs de planification
+          </CardTitle>
+          <CardDescription>
+            Timeline des {sortedObjectives.length} objectif{sortedObjectives.length > 1 ? 's' : ''} en cours
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="relative">
+            <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border" />
+            
+            <div className="space-y-6">
+              {sortedObjectives.map((objective) => {
+                const statusInfo = getStatusInfo(objective);
+                const timeProgress = getTimeProgress(objective);
+                const deadline = new Date(objective.deadline);
+                const daysRemaining = differenceInDays(deadline, new Date());
+                const students = studentsData[objective.id] || [];
+                const startedStudents = students.filter(s => s.hasStarted);
+                const averageProgress = getAverageProgress(objective.id);
+                
+                return (
+                  <div key={objective.id} className="relative pl-10">
+                    <div className={`absolute left-2 w-5 h-5 rounded-full border-2 border-background ${statusInfo.progressColor} flex items-center justify-center`}>
+                      {statusInfo.status === 'expired' ? (
+                        <AlertCircle className="h-3 w-3 text-white" />
+                      ) : statusInfo.status === 'active' ? (
+                        <div className="w-2 h-2 rounded-full bg-white" />
+                      ) : (
+                        <Clock className="h-3 w-3 text-white" />
+                      )}
+                    </div>
+                    
+                    <Card className={`border-l-4 ${
+                      statusInfo.status === 'expired' ? 'border-l-destructive' :
+                      statusInfo.status === 'urgent' ? 'border-l-orange-500' :
+                      statusInfo.status === 'soon' ? 'border-l-yellow-500' :
+                      'border-l-primary'
+                    }`}>
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge className={statusInfo.color}>
+                                {statusInfo.label}
+                              </Badge>
+                              <Badge variant="outline">
+                                {objective.objective_type === 'certification' 
+                                  ? `Certification Niv.${objective.target_certification_level}` 
+                                  : `Progression ${objective.target_progression_percentage}%`
+                                }
+                              </Badge>
+                              <Badge variant="secondary" className="text-xs">
+                                {students.length} étudiant{students.length > 1 ? 's' : ''}
+                              </Badge>
+                            </div>
+                            
+                            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                              {objective.city && (
+                                <span className="flex items-center gap-1">
+                                  <MapPin className="h-4 w-4" />
+                                  {objective.city}
+                                </span>
+                              )}
+                              {objective.school && (
+                                <span className="flex items-center gap-1">
+                                  <School className="h-4 w-4" />
+                                  {objective.school}
+                                </span>
+                              )}
+                              {objective.class_name && (
+                                <span className="flex items-center gap-1">
+                                  <Users className="h-4 w-4" />
+                                  {objective.class_name}
+                                </span>
+                              )}
+                            </div>
+                            
+                            {objective.description && (
+                              <p className="text-sm mt-2 text-muted-foreground">
+                                {objective.description}
+                              </p>
+                            )}
+                          </div>
+                          
+                          <div className="text-right ml-4 flex-shrink-0">
+                            {objective.reference_admin_id && getAdminEmail(objective.reference_admin_id) && (
+                              <div className="flex items-center justify-end gap-1 text-xs text-muted-foreground mb-1">
+                                <UserCheck className="h-3 w-3" />
+                                <span className="truncate max-w-[150px]">
+                                  {getAdminEmail(objective.reference_admin_id)}
+                                </span>
+                              </div>
+                            )}
+                            <div className="text-sm font-medium">
+                              {format(deadline, 'dd MMM yyyy', { locale: fr })}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {isPast(deadline) 
+                                ? 'Délai dépassé' 
+                                : daysRemaining === 0 
+                                  ? "Aujourd'hui" 
+                                  : `Dans ${daysRemaining} jour${daysRemaining > 1 ? 's' : ''}`
                               }
-                            </Badge>
+                            </div>
                           </div>
-                          
-                          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                            {objective.city && (
-                              <span className="flex items-center gap-1">
-                                <MapPin className="h-4 w-4" />
-                                {objective.city}
-                              </span>
-                            )}
-                            {objective.school && (
-                              <span className="flex items-center gap-1">
-                                <School className="h-4 w-4" />
-                                {objective.school}
-                              </span>
-                            )}
-                            {objective.class_name && (
-                              <span className="flex items-center gap-1">
-                                <Users className="h-4 w-4" />
-                                {objective.class_name}
-                              </span>
-                            )}
-                          </div>
-                          
-                          {objective.description && (
-                            <p className="text-sm mt-2 text-muted-foreground">
-                              {objective.description}
-                            </p>
-                          )}
                         </div>
-                        
-                        <div className="text-right ml-4 flex-shrink-0">
-                          {objective.reference_admin_id && getAdminEmail(objective.reference_admin_id) && (
-                            <div className="flex items-center justify-end gap-1 text-xs text-muted-foreground mb-1">
-                              <UserCheck className="h-3 w-3" />
-                              <span className="truncate max-w-[150px]">
-                                {getAdminEmail(objective.reference_admin_id)}
+
+                        {/* Pastilles des étudiants ayant démarré */}
+                        {startedStudents.length > 0 && (
+                          <div className="mb-3">
+                            <div className="flex items-center gap-1 mb-2">
+                              <span className="text-xs text-muted-foreground">
+                                Étudiants actifs ({startedStudents.length})
                               </span>
                             </div>
-                          )}
-                          <div className="text-sm font-medium">
-                            {format(deadline, 'dd MMM yyyy', { locale: fr })}
+                            <div className="flex flex-wrap gap-1">
+                              {startedStudents.map((student, index) => {
+                                const studentName = student.first_name && student.last_name 
+                                  ? `${student.first_name} ${student.last_name}` 
+                                  : student.email;
+                                const isAhead = student.progress > averageProgress;
+                                const isBehind = student.progress < averageProgress;
+                                
+                                return (
+                                  <Tooltip key={student.user_id}>
+                                    <TooltipTrigger asChild>
+                                      <div 
+                                        className={`w-6 h-6 rounded-full ${getStudentColor(index)} cursor-pointer flex items-center justify-center text-white text-xs font-bold transition-transform hover:scale-125 ring-2 ${
+                                          isAhead ? 'ring-green-400' : isBehind ? 'ring-red-400' : 'ring-transparent'
+                                        }`}
+                                      >
+                                        {(student.first_name?.[0] || student.email[0]).toUpperCase()}
+                                      </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" className="max-w-xs">
+                                      <div className="space-y-1">
+                                        <p className="font-medium">{studentName}</p>
+                                        <div className="flex items-center gap-2">
+                                          <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
+                                            <div 
+                                              className={`h-full ${getStudentColor(index)}`}
+                                              style={{ width: `${student.progress}%` }}
+                                            />
+                                          </div>
+                                          <span className="text-xs font-medium">{Math.round(student.progress)}%</span>
+                                        </div>
+                                        <p className="text-xs text-muted-foreground">
+                                          {isAhead ? '✓ En avance sur la moyenne' : isBehind ? '⚠ En retard sur la moyenne' : '= Dans la moyenne'}
+                                        </p>
+                                      </div>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                );
+                              })}
+                            </div>
                           </div>
-                          <div className="text-xs text-muted-foreground">
-                            {isPast(deadline) 
-                              ? 'Délai dépassé' 
-                              : daysRemaining === 0 
-                                ? "Aujourd'hui" 
-                                : `Dans ${daysRemaining} jour${daysRemaining > 1 ? 's' : ''}`
-                            }
+                        )}
+
+                        {/* Barre de progression moyenne du groupe */}
+                        {students.length > 0 && (
+                          <div className="space-y-1 mb-3">
+                            <div className="flex justify-between text-xs text-muted-foreground">
+                              <span>Progression moyenne du groupe</span>
+                              <span>{Math.round(averageProgress)}%</span>
+                            </div>
+                            <div className="relative h-3 bg-secondary rounded-full overflow-hidden">
+                              {/* Barre de progression moyenne */}
+                              <div 
+                                className="absolute top-0 left-0 h-full bg-emerald-500 transition-all duration-500"
+                                style={{ width: `${averageProgress}%` }}
+                              />
+                              {/* Indicateur de position moyenne */}
+                              <div 
+                                className="absolute top-0 h-full w-1 bg-white shadow-lg transition-all duration-500"
+                                style={{ left: `${Math.max(0, averageProgress - 0.5)}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Barre de progression temporelle */}
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-xs text-muted-foreground">
+                            <span>Progression temporelle</span>
+                            <span>{Math.round(timeProgress)}%</span>
+                          </div>
+                          <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full transition-all duration-500 ${statusInfo.progressColor}`}
+                              style={{ width: `${timeProgress}%` }}
+                            />
                           </div>
                         </div>
-                      </div>
-                      
-                      {/* Barre de progression temporelle */}
-                      <div className="space-y-1">
-                        <div className="flex justify-between text-xs text-muted-foreground">
-                          <span>Progression temporelle</span>
-                          <span>{Math.round(timeProgress)}%</span>
-                        </div>
-                        <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                          <div 
-                            className={`h-full transition-all duration-500 ${statusInfo.progressColor}`}
-                            style={{ width: `${timeProgress}%` }}
-                          />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              );
-            })}
+                      </CardContent>
+                    </Card>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </TooltipProvider>
   );
 };
