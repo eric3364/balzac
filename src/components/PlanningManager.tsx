@@ -155,26 +155,36 @@ export const PlanningManager = () => {
   };
 
   const handleSubmit = async () => {
-    if (!formData.school || !formData.deadline) {
+    // Validation: au moins une ville OU une école, et toujours une date limite
+    if (!formData.deadline) {
       toast({
         title: "Erreur",
-        description: "Veuillez remplir tous les champs obligatoires (école et deadline)",
+        description: "Veuillez renseigner une date limite",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!formData.city && !formData.school) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner au moins une ville ou une école",
         variant: "destructive"
       });
       return;
     }
 
     const objectiveData = {
-      school: formData.school,
-      class_name: formData.class_name || null,
-      city: formData.city || null,
+      school: formData.school || undefined,
+      class_name: formData.class_name || undefined,
+      city: formData.city || undefined,
       objective_type: formData.objective_type,
-      target_certification_level: formData.objective_type === 'certification' ? formData.target_certification_level : null,
-      target_progression_percentage: formData.objective_type === 'progression' ? formData.target_progression_percentage : null,
+      target_certification_level: formData.objective_type === 'certification' ? formData.target_certification_level : undefined,
+      target_progression_percentage: formData.objective_type === 'progression' ? formData.target_progression_percentage : undefined,
       deadline: new Date(formData.deadline).toISOString(),
-      description: formData.description || null,
-      is_active: formData.is_active,
-      reference_admin_id: formData.reference_admin_id || null
+      description: formData.description || undefined,
+      is_active: true,
+      reference_admin_id: formData.reference_admin_id || undefined
     };
 
     try {
