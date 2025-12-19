@@ -318,11 +318,11 @@ export const TestSettingsManager = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TestTube className="h-5 w-5" />
-            Paramètres des tests par niveau
+            Paramètres des sessions par niveau
           </CardTitle>
           <CardDescription>
-            Configurez le pourcentage de questions utilisées pour chaque test par niveau. 
-            Ce pourcentage détermine combien de questions seront sélectionnées de la base de données pour créer chaque test.
+            Configurez le pourcentage de questions utilisées pour chaque session par niveau. 
+            Ce pourcentage détermine combien de questions seront sélectionnées de la base de données pour créer chaque session.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -337,9 +337,9 @@ export const TestSettingsManager = () => {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium">{config.estimated_tests} tests estimés</p>
+                    <p className="font-medium">{config.estimated_tests} sessions estimées</p>
                     <p className="text-sm text-muted-foreground">
-                      {Math.ceil((config.total_questions * config.questions_percentage) / 100)} questions par test
+                      {Math.ceil((config.total_questions * config.questions_percentage) / 100)} questions par session
                     </p>
                   </div>
                 </div>
@@ -347,7 +347,7 @@ export const TestSettingsManager = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
                   <div className="space-y-2">
                     <Label htmlFor={`percentage-${config.level_number}`}>
-                      Pourcentage de questions par test (%)
+                      Pourcentage de questions par session (%)
                     </Label>
                     <Input
                       id={`percentage-${config.level_number}`}
@@ -361,8 +361,8 @@ export const TestSettingsManager = () => {
                   </div>
                   
                   <div className="text-sm text-muted-foreground">
-                    <p>• Questions par test: {Math.ceil((config.total_questions * config.questions_percentage) / 100)}</p>
-                    <p>• Nombre de tests possibles: {config.estimated_tests}</p>
+                    <p>• Questions par session: {Math.ceil((config.total_questions * config.questions_percentage) / 100)}</p>
+                    <p>• Nombre de sessions possibles: {config.estimated_tests}</p>
                     <p>• Total questions utilisées: {Math.min(config.total_questions, Math.ceil((config.total_questions * config.questions_percentage) / 100) * config.estimated_tests)}</p>
                   </div>
                 </div>
@@ -386,16 +386,16 @@ export const TestSettingsManager = () => {
         <CardContent className="space-y-3 text-sm">
           <p>
             <strong>Pourcentage de questions :</strong> Détermine combien de questions sont sélectionnées 
-            de la base de données pour créer chaque test. Par exemple, avec 100 questions et 20%, 
-            chaque test contiendra 20 questions.
+            de la base de données pour créer chaque session. Par exemple, avec 100 questions et 20%, 
+            chaque session contiendra 20 questions.
           </p>
           <p>
-            <strong>Nombre de tests estimés :</strong> Indique combien de tests différents peuvent être 
-            générés avec ce pourcentage. Plus le pourcentage est élevé, moins il y aura de tests différents possibles.
+            <strong>Nombre de sessions estimées :</strong> Indique combien de sessions différentes peuvent être 
+            générées avec ce pourcentage. Plus le pourcentage est élevé, moins il y aura de sessions différentes possibles.
           </p>
           <p>
             <strong>Recommandation :</strong> Un pourcentage entre 15% et 25% offre un bon équilibre 
-            entre la diversité des tests et la couverture du contenu.
+            entre la diversité des sessions et la couverture du contenu.
           </p>
         </CardContent>
       </Card>
