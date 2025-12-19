@@ -5,7 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { Target, Clock, Calendar, TrendingUp, Zap } from 'lucide-react';
 import { useUserPlanningObjectives, PlanningObjective } from '@/hooks/usePlanningObjectives';
 import { supabase } from '@/integrations/supabase/client';
-import { format, differenceInDays, differenceInHours, differenceInMinutes, differenceInSeconds, differenceInWeeks } from 'date-fns';
+import { format, differenceInDays, differenceInHours, differenceInMinutes, differenceInSeconds, differenceInWeeks, isPast } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 // Mapping des niveaux numériques vers les noms de niveau en base
@@ -148,6 +148,21 @@ export const ObjectiveCountdown = ({
     };
   };
 
+  // Calculer la progression temporelle
+  const getTimeProgress = (objective: PlanningObjective) => {
+    const now = new Date();
+    const deadline = new Date(objective.deadline);
+    const created = new Date(objective.created_at);
+    
+    const totalDuration = deadline.getTime() - created.getTime();
+    const elapsed = now.getTime() - created.getTime();
+    
+    if (isPast(deadline)) return 100;
+    if (elapsed <= 0) return 0;
+    
+    return Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
+  };
+
   if (loading) {
     return (
       <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
@@ -221,15 +236,16 @@ export const ObjectiveCountdown = ({
           const daysLeft = differenceInDays(deadline, new Date());
           const isUrgent = daysLeft <= 7;
           const workload = calculateWorkload(objective);
+          const timeProgress = getTimeProgress(objective);
 
           return (
             <div 
               key={objective.id} 
               className={`p-4 rounded-lg border ${isUrgent ? 'border-destructive/50 bg-destructive/5' : 'border-border bg-background'}`}
             >
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                 {/* Info objectif */}
-                <div className="flex-1 space-y-2">
+                <div className="flex-1 space-y-3">
                   <div className="flex items-center gap-2 flex-wrap">
                     {objective.objective_type === 'certification' ? (
                       <Badge variant="default">
@@ -273,11 +289,107 @@ export const ObjectiveCountdown = ({
                           <span className="ml-1 text-muted-foreground">session{workload.sessionsPerWeek > 1 ? 's' : ''}/semaine</span>
                         </Badge>
                         <span className="text-xs text-muted-foreground">
-                          ({workload.totalSessions} sessions, dont ~{workload.totalSessions - workload.baseSessions} reprises à 90% réussite)
+                          ({workload.totalSessions} sessions, dont ~{workload.totalSessions - workload.baseSessions} reprises)
                         </span>
                       </div>
                     </div>
                   )}
+
+                  {/* Timeline temporelle avec semaines */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Progression temporelle</span>
+                      <span>{Math.round(timeProgress)}%</span>
+                    </div>
+                    {(() => {
+                      const created = new Date(objective.created_at);
+                      const totalWeeks = Math.max(1, Math.ceil(differenceInDays(deadline, created) / 7));
+                      const elapsedWeeks = Math.floor((timeProgress / 100) * totalWeeks);
+                      const remainingWeeks = totalWeeks - elapsedWeeks;
+                      
+                      return (
+                        <>
+                          <div className="relative h-5 bg-secondary rounded-full overflow-hidden">
+                            {/* Segments de semaines avec couleurs différentes */}
+                            {totalWeeks > 1 && totalWeeks <= 20 && Array.from({ length: totalWeeks }).map((_, index) => {
+                              const segmentStart = (index / totalWeeks) * 100;
+                              const segmentWidth = (1 / totalWeeks) * 100;
+                              const isElapsed = index < elapsedWeeks;
+                              const isCurrent = index === elapsedWeeks;
+                              
+                              return (
+                                <div
+                                  key={index}
+                                  className={`absolute top-0 h-full transition-colors duration-300 ${
+                                    isElapsed 
+                                      ? 'bg-primary/80' 
+                                      : isCurrent 
+                                        ? 'bg-primary/40' 
+                                        : 'bg-secondary'
+                                  } ${index > 0 ? 'border-l border-background/50' : ''}`}
+                                  style={{ 
+                                    left: `${segmentStart}%`, 
+                                    width: `${segmentWidth}%` 
+                                  }}
+                                />
+                              );
+                            })}
+                            
+                            {/* Traits verticaux entre les semaines */}
+                            {totalWeeks > 1 && totalWeeks <= 20 && Array.from({ length: totalWeeks - 1 }).map((_, index) => {
+                              const position = ((index + 1) / totalWeeks) * 100;
+                              return (
+                                <div 
+                                  key={`line-${index}`}
+                                  className="absolute top-0 h-full w-0.5 bg-background/70 z-10"
+                                  style={{ left: `${position}%` }}
+                                />
+                              );
+                            })}
+                            
+                            {/* Labels des semaines (affichés si <= 12 semaines) */}
+                            {totalWeeks > 1 && totalWeeks <= 12 && (
+                              <div className="absolute inset-0 flex items-center pointer-events-none">
+                                {Array.from({ length: totalWeeks }).map((_, index) => {
+                                  const isElapsed = index < elapsedWeeks;
+                                  return (
+                                    <span 
+                                      key={index} 
+                                      className={`flex-1 text-center text-[9px] font-medium z-20 ${
+                                        isElapsed ? 'text-primary-foreground' : 'text-muted-foreground/70'
+                                      }`}
+                                    >
+                                      S{index + 1}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            )}
+                            
+                            {/* Indicateur de position actuelle */}
+                            <div 
+                              className="absolute top-0 h-full w-1 bg-white shadow-lg z-20 transition-all duration-500"
+                              style={{ left: `calc(${timeProgress}% - 2px)` }}
+                            />
+                          </div>
+                          
+                          {/* Légende des semaines */}
+                          {totalWeeks > 1 && (
+                            <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                              <span className="flex items-center gap-1">
+                                <span className="w-2 h-2 rounded-full bg-primary/80"></span>
+                                {elapsedWeeks} sem. écoulée{elapsedWeeks > 1 ? 's' : ''}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <span className="w-2 h-2 rounded-full bg-secondary border border-border"></span>
+                                {remainingWeeks} sem. restante{remainingWeeks > 1 ? 's' : ''}
+                              </span>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
 
                   {/* Date limite */}
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
