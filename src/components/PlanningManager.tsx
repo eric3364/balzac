@@ -10,10 +10,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Calendar, Plus, Edit2, Trash2, Target, Users, School, GraduationCap } from 'lucide-react';
+import { Calendar, Plus, Edit2, Trash2, Target, Users, School, GraduationCap, MapPin } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { usePlanningObjectives, PlanningObjective } from '@/hooks/usePlanningObjectives';
 import { useDifficultyLevels } from '@/hooks/useDifficultyLevels';
+import { CITIES } from '@/constants/userData';
 import { format, formatDistanceToNow, isPast } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -37,6 +38,7 @@ export const PlanningManager = () => {
   const [formData, setFormData] = useState({
     school: '',
     class_name: '',
+    city: '',
     objective_type: 'certification' as 'certification' | 'progression',
     target_certification_level: 1,
     target_progression_percentage: 80,
@@ -97,6 +99,7 @@ export const PlanningManager = () => {
     setFormData({
       school: '',
       class_name: '',
+      city: '',
       objective_type: 'certification',
       target_certification_level: 1,
       target_progression_percentage: 80,
@@ -112,6 +115,7 @@ export const PlanningManager = () => {
     setFormData({
       school: objective.school,
       class_name: objective.class_name || '',
+      city: objective.city || '',
       objective_type: objective.objective_type,
       target_certification_level: objective.target_certification_level || 1,
       target_progression_percentage: objective.target_progression_percentage || 80,
@@ -135,6 +139,7 @@ export const PlanningManager = () => {
     const objectiveData = {
       school: formData.school,
       class_name: formData.class_name || null,
+      city: formData.city || null,
       objective_type: formData.objective_type,
       target_certification_level: formData.objective_type === 'certification' ? formData.target_certification_level : null,
       target_progression_percentage: formData.objective_type === 'progression' ? formData.target_progression_percentage : null,
@@ -295,6 +300,35 @@ export const PlanningManager = () => {
                     </Select>
                   </div>
 
+                  {/* Sélection ville (optionnel) */}
+                  <div className="space-y-2">
+                    <Label htmlFor="city">Ville (optionnel)</Label>
+                    <Select
+                      value={formData.city}
+                      onValueChange={(value) => setFormData({ ...formData, city: value === 'all' ? '' : value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Toutes les villes" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4" />
+                            Toutes les villes
+                          </div>
+                        </SelectItem>
+                        {CITIES.map((city) => (
+                          <SelectItem key={city} value={city}>
+                            <div className="flex items-center gap-2">
+                              <MapPin className="h-4 w-4" />
+                              {city}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   {/* Type d'objectif */}
                   <div className="space-y-2">
                     <Label>Type d'objectif *</Label>
@@ -448,7 +482,7 @@ export const PlanningManager = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>École / Classe</TableHead>
+                  <TableHead>École / Classe / Ville</TableHead>
                   <TableHead>Objectif</TableHead>
                   <TableHead>Deadline</TableHead>
                   <TableHead>Étudiants</TableHead>
@@ -466,6 +500,12 @@ export const PlanningManager = () => {
                         <div className="text-sm text-muted-foreground">
                           {objective.class_name || 'Toutes les classes'}
                         </div>
+                        {objective.city && (
+                          <div className="text-sm text-muted-foreground flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            {objective.city}
+                          </div>
+                        )}
                       </TableCell>
                       <TableCell>
                         {objective.objective_type === 'certification' ? (

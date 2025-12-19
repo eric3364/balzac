@@ -405,6 +405,7 @@ export type Database = {
       }
       planning_objectives: {
         Row: {
+          city: string | null
           class_name: string | null
           created_at: string
           created_by: string | null
@@ -419,6 +420,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          city?: string | null
           class_name?: string | null
           created_at?: string
           created_by?: string | null
@@ -433,6 +435,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          city?: string | null
           class_name?: string | null
           created_at?: string
           created_by?: string | null
