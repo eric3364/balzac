@@ -88,8 +88,8 @@ export const BalzacWorksBackground = () => {
         title: shuffled[i],
         x: (col * 12.5) + (Math.random() * 6 - 3) + 2,
         y: (row * 18) + (Math.random() * 8 - 4) + 5,
-        fontSize: 0.7 + Math.random() * 0.9,
-        opacity: 0.04 + Math.random() * 0.06,
+        fontSize: 1.1 + Math.random() * 1.2,
+        opacity: 0.12 + Math.random() * 0.10,
         rotation: Math.random() * 16 - 8,
         isItalic: Math.random() > 0.5,
       });
