@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.delete_user_admin]
 verify_jwt = false
+
+[functions.admin-reset-password]
+verify_jwt = false
