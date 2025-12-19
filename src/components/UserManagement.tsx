@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Trash2, Edit2, Plus, Download, Upload, Search, Filter, Award, Clock, Target, Activity, TrendingUp, Users, Smile, Frown, Goal, UserCheck } from 'lucide-react';
+import { Trash2, Edit2, Plus, Download, Upload, Search, Filter, Award, Clock, Target, Activity, TrendingUp, Users, Smile, Frown, Goal, UserCheck, KeyRound } from 'lucide-react';
 import { useImpersonation } from '@/hooks/useImpersonation';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -459,6 +459,53 @@ export const UserManagement = () => {
       toast({
         title: "Erreur",
         description: "Impossible de supprimer l'utilisateur",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Fonction pour envoyer un email de réinitialisation de mot de passe
+  const sendPasswordReset = async (email: string) => {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+
+      if (!token) {
+        toast({
+          title: "Session expirée",
+          description: "Veuillez vous reconnecter",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const response = await fetch(
+        'https://rglaszkaqbagpbtursjf.supabase.co/functions/v1/admin-reset-password',
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email })
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Erreur lors de l\'envoi');
+      }
+
+      toast({
+        title: "Email envoyé",
+        description: `Un email de réinitialisation a été envoyé à ${email}`
+      });
+    } catch (error: any) {
+      console.error('Erreur lors de l\'envoi de l\'email:', error);
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible d'envoyer l'email de réinitialisation",
         variant: "destructive"
       });
     }
@@ -1092,6 +1139,23 @@ export const UserManagement = () => {
                             </Tooltip>
                           </TooltipProvider>
                         )}
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => sendPasswordReset(user.email)}
+                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                              >
+                                <KeyRound className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Renvoyer mot de passe</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                         <Button
                           variant="outline"
                           size="sm"
