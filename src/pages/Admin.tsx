@@ -358,7 +358,7 @@ const Admin = () => {
             <TabsTrigger value="levels">Certification</TabsTrigger>
             <TabsTrigger value="planning">Planification</TabsTrigger>
             <TabsTrigger value="questions">Questions</TabsTrigger>
-            <TabsTrigger value="test-settings">Paramètres des tests</TabsTrigger>
+            <TabsTrigger value="test-settings">Paramètres des sessions</TabsTrigger>
             {isSuperAdmin && (
               <TabsTrigger value="finance">Finance/admin</TabsTrigger>
             )}
