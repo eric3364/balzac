@@ -10,13 +10,54 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Calendar, Plus, Edit2, Trash2, Target, Users, School, GraduationCap, MapPin, UserCheck } from 'lucide-react';
+import { Calendar, Plus, Edit2, Trash2, Target, Users, School, GraduationCap, MapPin, UserCheck, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { usePlanningObjectives, PlanningObjective } from '@/hooks/usePlanningObjectives';
 import { useDifficultyLevels } from '@/hooks/useDifficultyLevels';
 import { CITIES } from '@/constants/userData';
-import { format, formatDistanceToNow, isPast } from 'date-fns';
+import { format, formatDistanceToNow, isPast, differenceInDays, differenceInWeeks } from 'date-fns';
 import { fr } from 'date-fns/locale';
+
+// Nombre estimé de questions par niveau de certification
+const QUESTIONS_PER_LEVEL: Record<number, number> = {
+  1: 150,
+  2: 200,
+  3: 250,
+};
+
+// Calculer l'effort requis pour atteindre l'objectif
+const calculateWorkload = (objective: PlanningObjective) => {
+  const now = new Date();
+  const deadline = new Date(objective.deadline);
+  
+  if (isPast(deadline)) {
+    return { perDay: 0, perWeek: 0, totalQuestions: 0, daysRemaining: 0 };
+  }
+  
+  const daysRemaining = Math.max(1, differenceInDays(deadline, now));
+  const weeksRemaining = Math.max(1, differenceInWeeks(deadline, now));
+  
+  let totalQuestions = 0;
+  
+  if (objective.objective_type === 'certification') {
+    const level = objective.target_certification_level || 1;
+    totalQuestions = QUESTIONS_PER_LEVEL[level] || 150;
+  } else {
+    // Pour la progression, estimer basé sur un pourcentage de questions
+    const progressTarget = objective.target_progression_percentage || 100;
+    totalQuestions = Math.round((progressTarget / 100) * 200); // Estimation moyenne
+  }
+  
+  const questionsPerDay = Math.ceil(totalQuestions / daysRemaining);
+  const questionsPerWeek = Math.ceil(totalQuestions / weeksRemaining);
+  
+  return {
+    perDay: questionsPerDay,
+    perWeek: questionsPerWeek,
+    totalQuestions,
+    daysRemaining
+  };
+};
 
 interface SchoolClass {
   school: string;
@@ -538,6 +579,7 @@ export const PlanningManager = () => {
                   <TableHead>École / Classe / Ville</TableHead>
                   <TableHead>Objectif</TableHead>
                   <TableHead>Deadline</TableHead>
+                  <TableHead>Effort estimé</TableHead>
                   <TableHead>Étudiants</TableHead>
                   <TableHead>Statut</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -546,6 +588,7 @@ export const PlanningManager = () => {
               <TableBody>
                 {objectives.map((objective) => {
                   const isExpired = isPast(new Date(objective.deadline));
+                  const workload = calculateWorkload(objective);
                   return (
                     <TableRow key={objective.id}>
                       <TableCell>
@@ -582,6 +625,24 @@ export const PlanningManager = () => {
                             locale: fr 
                           })}
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        {!isExpired && workload.perDay > 0 ? (
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1 text-sm">
+                              <Clock className="h-3 w-3 text-muted-foreground" />
+                              <span className="font-medium">{workload.perDay} Q/jour</span>
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              ~{workload.perWeek} Q/semaine
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              ({workload.totalQuestions} Q total)
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">-</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline">
