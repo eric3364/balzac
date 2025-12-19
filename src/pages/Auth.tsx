@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ArrowLeft, CheckCircle } from 'lucide-react';
-import { SCHOOLS, CLASS_LEVELS } from '@/constants/userData';
+import { SCHOOLS, CLASS_LEVELS, CITIES } from '@/constants/userData';
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
@@ -19,6 +19,7 @@ const Auth = () => {
   const [showSignupSuccess, setShowSignupSuccess] = useState(false);
   const [selectedSchool, setSelectedSchool] = useState('');
   const [selectedClass, setSelectedClass] = useState('');
+  const [selectedCity, setSelectedCity] = useState('');
   const { user, signIn, signUp, resetPassword } = useAuth();
   const navigate = useNavigate();
   const { pendingPurchase } = usePendingPurchase();
@@ -60,7 +61,7 @@ const Auth = () => {
     const firstName = formData.get('firstName') as string;
     const lastName = formData.get('lastName') as string;
 
-    const { error } = await signUp(email, password, firstName, lastName, selectedSchool, selectedClass);
+    const { error } = await signUp(email, password, firstName, lastName, selectedSchool, selectedClass, selectedCity);
     
     if (!error) {
       setShowSignupSuccess(true);
@@ -273,7 +274,22 @@ const Auth = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <Button type="submit" className="w-full" disabled={isLoading || !selectedSchool || !selectedClass}>
+                  <div className="space-y-2">
+                    <Label htmlFor="city">Ville</Label>
+                    <Select value={selectedCity} onValueChange={setSelectedCity} required>
+                      <SelectTrigger id="city">
+                        <SelectValue placeholder="Sélectionnez votre ville" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CITIES.map((city) => (
+                          <SelectItem key={city} value={city}>
+                            {city}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isLoading || !selectedSchool || !selectedClass || !selectedCity}>
                     {isLoading ? 'Inscription...' : "S'inscrire"}
                   </Button>
                 </form>

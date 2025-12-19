@@ -923,6 +923,7 @@ export type Database = {
       }
       users: {
         Row: {
+          city: string | null
           class_name: string | null
           created_at: string | null
           email: string
@@ -934,6 +935,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          city?: string | null
           class_name?: string | null
           created_at?: string | null
           email: string
@@ -945,6 +947,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          city?: string | null
           class_name?: string | null
           created_at?: string | null
           email?: string

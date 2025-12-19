@@ -25,7 +25,7 @@ serve(async (req) => {
 
   try {
     const requestBody = await req.json();
-    const { email, first_name, last_name, school, class_name, password } = requestBody;
+    const { email, first_name, last_name, school, class_name, city, password } = requestBody;
 
     // Input validation
     if (!email) {
@@ -47,6 +47,7 @@ serve(async (req) => {
     const sanitizedLastName = sanitizeString(last_name, 100);
     const sanitizedSchool = sanitizeString(school, 200);
     const sanitizedClassName = sanitizeString(class_name, 100);
+    const sanitizedCity = sanitizeString(city, 100);
 
     // Validate password if provided
     if (password !== undefined && password !== null) {
@@ -148,7 +149,8 @@ serve(async (req) => {
         first_name: sanitizedFirstName, 
         last_name: sanitizedLastName, 
         school: sanitizedSchool, 
-        class_name: sanitizedClassName 
+        class_name: sanitizedClassName,
+        city: sanitizedCity
       },
     };
 
@@ -186,6 +188,7 @@ serve(async (req) => {
         last_name: sanitizedLastName,
         school: sanitizedSchool,
         class_name: sanitizedClassName,
+        city: sanitizedCity,
         is_active: password ? true : false
       });
 
