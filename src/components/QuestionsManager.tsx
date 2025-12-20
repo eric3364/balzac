@@ -109,10 +109,16 @@ export const QuestionsManager: React.FC<QuestionsManagerProps> = ({ difficultyLe
     let filtered = questions;
 
     if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase().trim();
+      const searchAsNumber = parseInt(searchTerm.trim(), 10);
+      
       filtered = filtered.filter(q => 
-        (q.content || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (q.answer || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        q.rule?.toLowerCase().includes(searchTerm.toLowerCase())
+        // Recherche par ID (exact ou partiel)
+        (!isNaN(searchAsNumber) && q.id.toString().includes(searchTerm.trim())) ||
+        // Recherche dans le contenu, réponse ou règle
+        (q.content || '').toLowerCase().includes(searchLower) ||
+        (q.answer || '').toLowerCase().includes(searchLower) ||
+        q.rule?.toLowerCase().includes(searchLower)
       );
     }
 
@@ -250,7 +256,7 @@ export const QuestionsManager: React.FC<QuestionsManagerProps> = ({ difficultyLe
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Rechercher dans le contenu, réponse ou règle..."
+                placeholder="Rechercher par ID, contenu, réponse ou règle..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
