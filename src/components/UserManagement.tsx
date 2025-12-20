@@ -18,6 +18,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { SCHOOLS, CLASS_LEVELS, CITIES, School, ClassLevel, City } from '@/constants/userData';
 import { useUserListStats, UserListStats } from '@/hooks/useUserListStats';
 import { useUserObjectiveStatus, UserObjectiveStatus } from '@/hooks/useUserObjectiveStatus';
+import { useReferenceValues } from '@/hooks/useReferenceValues';
 
 interface User {
   id: string;
@@ -50,6 +51,7 @@ export const UserManagement = () => {
   const { user: currentUser } = useAuth();
   const { users: usersWithStats, loading, refetch } = useUserListStats();
   const { objectives, getUserObjectiveStatus } = useUserObjectiveStatus();
+  const { getAllSchools, getAllClasses, getAllCities, addReferenceValue } = useReferenceValues();
   const { startImpersonation } = useImpersonation();
   const navigate = useNavigate();
   const [userObjectiveStatuses, setUserObjectiveStatuses] = useState<Record<string, UserObjectiveStatus>>({});
@@ -63,10 +65,12 @@ export const UserManagement = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortField, setSortField] = useState<SortField>('activity');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
-  const [schools] = useState<School[]>([...SCHOOLS]);
-  const [classes] = useState<ClassLevel[]>([...CLASS_LEVELS]);
-  const [cities] = useState<City[]>([...CITIES]);
   const { toast } = useToast();
+
+  // Valeurs de référence dynamiques (statiques + personnalisées)
+  const schools = getAllSchools();
+  const classes = getAllClasses();
+  const cities = getAllCities();
 
   // États pour la sélection multiple
   const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
@@ -867,49 +871,49 @@ export const UserManagement = () => {
       return;
     }
 
-    // Normaliser les valeurs (école, classe, ville)
+    // Normaliser les valeurs (école, classe, ville) - utiliser les valeurs dynamiques
     const unmatchedList: {field: string, value: string, suggestions: string[]}[] = [];
     const normalizedUsers = usersToImport.map(user => {
       const normalizedUser = { ...user };
       
       // Normaliser l'école
       if (user.school) {
-        const { normalized, exact } = normalizeValue(user.school, SCHOOLS);
+        const { normalized, exact } = normalizeValue(user.school, schools);
         if (exact) {
           normalizedUser.school = normalized;
         } else {
-          const suggestions = findSuggestions(user.school, SCHOOLS);
+          const suggestions = findSuggestions(user.school, schools);
           const key = `school:${user.school.toLowerCase()}`;
           if (!unmatchedList.find(u => `${u.field}:${u.value.toLowerCase()}` === key)) {
-            unmatchedList.push({ field: 'school', value: user.school, suggestions: suggestions.length > 0 ? suggestions : [...SCHOOLS] });
+            unmatchedList.push({ field: 'school', value: user.school, suggestions: suggestions.length > 0 ? suggestions : [...schools] });
           }
         }
       }
       
       // Normaliser la classe
       if (user.class_name) {
-        const { normalized, exact } = normalizeValue(user.class_name, CLASS_LEVELS);
+        const { normalized, exact } = normalizeValue(user.class_name, classes);
         if (exact) {
           normalizedUser.class_name = normalized;
         } else {
-          const suggestions = findSuggestions(user.class_name, CLASS_LEVELS);
+          const suggestions = findSuggestions(user.class_name, classes);
           const key = `class_name:${user.class_name.toLowerCase()}`;
           if (!unmatchedList.find(u => `${u.field}:${u.value.toLowerCase()}` === key)) {
-            unmatchedList.push({ field: 'class_name', value: user.class_name, suggestions: suggestions.length > 0 ? suggestions : [...CLASS_LEVELS] });
+            unmatchedList.push({ field: 'class_name', value: user.class_name, suggestions: suggestions.length > 0 ? suggestions : [...classes] });
           }
         }
       }
       
       // Normaliser la ville
       if (user.city) {
-        const { normalized, exact } = normalizeValue(user.city, CITIES);
+        const { normalized, exact } = normalizeValue(user.city, cities);
         if (exact) {
           normalizedUser.city = normalized;
         } else {
-          const suggestions = findSuggestions(user.city, CITIES);
+          const suggestions = findSuggestions(user.city, cities);
           const key = `city:${user.city.toLowerCase()}`;
           if (!unmatchedList.find(u => `${u.field}:${u.value.toLowerCase()}` === key)) {
-            unmatchedList.push({ field: 'city', value: user.city, suggestions: suggestions.length > 0 ? suggestions : [...CITIES] });
+            unmatchedList.push({ field: 'city', value: user.city, suggestions: suggestions.length > 0 ? suggestions : [...cities] });
           }
         }
       }
@@ -983,6 +987,27 @@ export const UserManagement = () => {
   // Fonction pour appliquer les choix de normalisation et continuer l'import
   const handleApplyNormalization = async () => {
     setIsNormalizationDialogOpen(false);
+    
+    // Sauvegarder les nouvelles valeurs personnalisées en base de données
+    const customValuesToSave: { field: string; value: string }[] = [];
+    unmatchedValues.forEach(({ field, value }) => {
+      const choiceKey = `${field}:${value}`;
+      const chosenValue = normalizationChoices[choiceKey];
+      
+      if (chosenValue === '__custom__') {
+        const customValue = customInputValues[choiceKey]?.trim();
+        if (customValue) {
+          customValuesToSave.push({ field, value: customValue });
+        }
+      }
+    });
+    
+    // Sauvegarder les nouvelles valeurs en parallèle
+    await Promise.all(
+      customValuesToSave.map(({ field, value }) => 
+        addReferenceValue(field as 'school' | 'class_name' | 'city', value)
+      )
+    );
     
     // Appliquer les choix de normalisation aux utilisateurs
     const normalizedUsers = pendingNormalizationUsers.map(user => {
