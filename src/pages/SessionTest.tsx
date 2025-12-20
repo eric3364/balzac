@@ -219,11 +219,16 @@ const SessionTest = () => {
       } else {
         // Afficher l'explication retournée par le serveur
         setShowExplanation(true);
-        // Mettre à jour la question avec l'explication serveur si nécessaire
-        if (validationResult.explanation) {
+        // Mettre à jour la question avec l'explication et la réponse correcte du serveur
+        if (validationResult.explanation || validationResult.correct_answer) {
           setQuestions(prev => prev.map((q, idx) => 
             idx === currentQuestionIndex 
-              ? { ...q, explanation: validationResult.explanation, rule: validationResult.rule }
+              ? { 
+                  ...q, 
+                  explanation: validationResult.explanation || q.explanation,
+                  rule: validationResult.rule || q.rule,
+                  answer: validationResult.correct_answer || q.answer
+                }
               : q
           ));
         }
