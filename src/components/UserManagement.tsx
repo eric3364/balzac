@@ -747,6 +747,36 @@ export const UserManagement = () => {
       return;
     }
 
+    // Vérifier si des emails existent déjà dans la base de données
+    const emailsToCheck = usersToImport.map(u => u.email.toLowerCase().trim());
+    
+    const { data: existingUsers, error: checkError } = await supabase
+      .from('users')
+      .select('email')
+      .in('email', emailsToCheck);
+
+    if (checkError) {
+      console.error('Erreur lors de la vérification des doublons:', checkError);
+      toast({
+        title: "Erreur",
+        description: "Impossible de vérifier les doublons dans la base de données",
+        variant: "destructive"
+      });
+      event.target.value = '';
+      return;
+    }
+
+    if (existingUsers && existingUsers.length > 0) {
+      const existingEmails = existingUsers.map(u => u.email).join(', ');
+      toast({
+        title: "Attention, les étudiants dans cette liste existent déjà. Merci de vérifier.",
+        description: `Impossible d'importer des listes d'apprenants qui existent déjà dans la base de données. Emails concernés : ${existingEmails}`,
+        variant: "destructive"
+      });
+      event.target.value = '';
+      return;
+    }
+
     try {
       // Utiliser la fonction edge pour créer les utilisateurs avec mots de passe générés
       const { data, error } = await supabase.functions.invoke('invite-users', {
