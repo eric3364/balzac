@@ -7,7 +7,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Trash2, Edit2, Shield, UserCog, Mail, Download, Upload, FileText } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Trash2, Edit2, Shield, UserCog, Mail, Download, Upload, FileText, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -35,6 +36,12 @@ export const AdminManager = () => {
     is_super_admin: false
   });
   const [isImporting, setIsImporting] = useState(false);
+  const [selectedAdmins, setSelectedAdmins] = useState<Set<number>>(new Set());
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+  const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
+  const [showBulkTypeDialog, setShowBulkTypeDialog] = useState(false);
+  const [bulkNewType, setBulkNewType] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadAdministrators = async () => {
@@ -413,6 +420,104 @@ export const AdminManager = () => {
     }
   };
 
+  // Fonctions de sélection multiple
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedAdmins(new Set(administrators.map(a => a.id)));
+    } else {
+      setSelectedAdmins(new Set());
+    }
+  };
+
+  const handleSelectAdmin = (adminId: number, checked: boolean) => {
+    const newSelected = new Set(selectedAdmins);
+    if (checked) {
+      newSelected.add(adminId);
+    } else {
+      newSelected.delete(adminId);
+    }
+    setSelectedAdmins(newSelected);
+  };
+
+  const isAllSelected = administrators.length > 0 && selectedAdmins.size === administrators.length;
+  const isSomeSelected = selectedAdmins.size > 0 && selectedAdmins.size < administrators.length;
+
+  // Suppression en masse
+  const handleBulkDelete = async () => {
+    setIsBulkDeleting(true);
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const adminId of selectedAdmins) {
+      try {
+        const { error } = await supabase
+          .from('administrators')
+          .delete()
+          .eq('id', adminId);
+
+        if (error) {
+          console.error(`Erreur suppression admin ${adminId}:`, error);
+          errorCount++;
+        } else {
+          successCount++;
+        }
+      } catch (err) {
+        console.error(`Erreur suppression admin ${adminId}:`, err);
+        errorCount++;
+      }
+    }
+
+    if (successCount > 0) {
+      toast.success(`${successCount} administrateur(s) supprimé(s)`);
+    }
+    if (errorCount > 0) {
+      toast.error(`${errorCount} erreur(s) lors de la suppression`);
+    }
+
+    setSelectedAdmins(new Set());
+    setShowBulkDeleteDialog(false);
+    setIsBulkDeleting(false);
+    loadAdministrators();
+  };
+
+  // Modification en masse du type
+  const handleBulkChangeType = async () => {
+    setIsBulkUpdating(true);
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const adminId of selectedAdmins) {
+      try {
+        const { error } = await supabase
+          .from('administrators')
+          .update({ is_super_admin: bulkNewType })
+          .eq('id', adminId);
+
+        if (error) {
+          console.error(`Erreur modification admin ${adminId}:`, error);
+          errorCount++;
+        } else {
+          successCount++;
+        }
+      } catch (err) {
+        console.error(`Erreur modification admin ${adminId}:`, err);
+        errorCount++;
+      }
+    }
+
+    if (successCount > 0) {
+      toast.success(`${successCount} administrateur(s) modifié(s) en ${bulkNewType ? 'Super Admin' : 'Admin'}`);
+    }
+    if (errorCount > 0) {
+      toast.error(`${errorCount} erreur(s) lors de la modification`);
+    }
+
+    setSelectedAdmins(new Set());
+    setShowBulkTypeDialog(false);
+    setIsBulkUpdating(false);
+    loadAdministrators();
+  };
+
   const openAddDialog = () => {
     setEditingAdmin(null);
     setFormData({ email: '', is_super_admin: false });
@@ -516,6 +621,83 @@ export const AdminManager = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {/* Barre d'actions pour la sélection multiple */}
+        {selectedAdmins.size > 0 && (
+          <div className="flex items-center gap-4 mb-4 p-3 bg-muted rounded-lg">
+            <span className="text-sm font-medium">
+              {selectedAdmins.size} administrateur(s) sélectionné(s)
+            </span>
+            <div className="flex gap-2 ml-auto">
+              {/* Bouton modifier le type */}
+              <Dialog open={showBulkTypeDialog} onOpenChange={setShowBulkTypeDialog}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Users className="h-4 w-4 mr-2" />
+                    Modifier le type
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Modifier le type des administrateurs</DialogTitle>
+                    <DialogDescription>
+                      Choisissez le nouveau type pour les {selectedAdmins.size} administrateur(s) sélectionné(s).
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="bulk_is_super_admin"
+                        checked={bulkNewType}
+                        onCheckedChange={setBulkNewType}
+                      />
+                      <Label htmlFor="bulk_is_super_admin">
+                        {bulkNewType ? 'Super Administrateur' : 'Administrateur'}
+                      </Label>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setShowBulkTypeDialog(false)}>
+                      Annuler
+                    </Button>
+                    <Button onClick={handleBulkChangeType} disabled={isBulkUpdating}>
+                      {isBulkUpdating ? 'Modification...' : 'Appliquer'}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
+              {/* Bouton supprimer */}
+              <AlertDialog open={showBulkDeleteDialog} onOpenChange={setShowBulkDeleteDialog}>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm">
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Supprimer
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Supprimer les administrateurs</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Êtes-vous sûr de vouloir supprimer {selectedAdmins.size} administrateur(s) ?
+                      Cette action ne peut pas être annulée.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Annuler</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleBulkDelete}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      disabled={isBulkDeleting}
+                    >
+                      {isBulkDeleting ? 'Suppression...' : 'Supprimer'}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </div>
+        )}
+
         {loading ? (
           <div className="flex justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -524,6 +706,14 @@ export const AdminManager = () => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={isAllSelected}
+                    onCheckedChange={handleSelectAll}
+                    aria-label="Sélectionner tout"
+                    className={isSomeSelected ? 'data-[state=checked]:bg-primary/50' : ''}
+                  />
+                </TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Date de création</TableHead>
@@ -532,7 +722,14 @@ export const AdminManager = () => {
             </TableHeader>
             <TableBody>
               {administrators.map((admin) => (
-                <TableRow key={admin.id}>
+                <TableRow key={admin.id} className={selectedAdmins.has(admin.id) ? 'bg-muted/50' : ''}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedAdmins.has(admin.id)}
+                      onCheckedChange={(checked) => handleSelectAdmin(admin.id, checked as boolean)}
+                      aria-label={`Sélectionner ${admin.email}`}
+                    />
+                  </TableCell>
                   <TableCell className="font-medium">{admin.email}</TableCell>
                   <TableCell>
                     <Badge variant={admin.is_super_admin ? "default" : "secondary"}>
@@ -586,7 +783,7 @@ export const AdminManager = () => {
               ))}
               {administrators.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                     Aucun administrateur trouvé
                   </TableCell>
                 </TableRow>
