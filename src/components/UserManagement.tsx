@@ -748,7 +748,7 @@ export const UserManagement = () => {
     }
 
     try {
-      // Utiliser la fonction edge pour inviter les utilisateurs
+      // Utiliser la fonction edge pour créer les utilisateurs avec mots de passe générés
       const { data, error } = await supabase.functions.invoke('invite-users', {
         body: { users: usersToImport }
       });
@@ -769,10 +769,21 @@ export const UserManagement = () => {
           variant: "destructive"
         });
       } else {
+        // Afficher les mots de passe générés
+        const passwordList = results
+          .filter((r: any) => r.success && r.generated_password)
+          .map((r: any) => `${r.email}: ${r.generated_password}`)
+          .join('\n');
+        
         toast({
           title: "Import réussi",
-          description: `${summary.success} invitation(s) envoyée(s). Les utilisateurs recevront un email pour créer leur mot de passe.`
+          description: `${summary.success} apprenant(s) créé(s). Mots de passe temporaires générés (prénom.nom). Les utilisateurs devront changer leur mot de passe à la première connexion.`
         });
+        
+        // Log les mots de passe pour que l'admin puisse les voir dans la console
+        if (passwordList) {
+          console.log('Mots de passe générés:\n' + passwordList);
+        }
       }
 
       refetch();
@@ -782,7 +793,7 @@ export const UserManagement = () => {
       console.error('Erreur lors de l\'import:', error);
       toast({
         title: "Erreur d'import",
-        description: "Erreur lors de l'envoi des invitations",
+        description: "Erreur lors de la création des utilisateurs",
         variant: "destructive"
       });
     }
