@@ -25,6 +25,7 @@ import { HomepageManager } from '@/components/HomepageManager';
 import { PlanningManager } from '@/components/PlanningManager';
 import { useConnectionStats } from '@/hooks/useConnectionStats';
 import { PlanningObjectivesTimeline } from '@/components/PlanningObjectivesTimeline';
+import { ReferenceValuesManager } from '@/components/ReferenceValuesManager';
 
 interface AdminUser {
   id: number;
@@ -366,6 +367,7 @@ const Admin = () => {
 
           <TabsContent value="students" className="space-y-6">
             <UserManagement />
+            <ReferenceValuesManager />
           </TabsContent>
 
           <TabsContent value="stats" className="space-y-6">
