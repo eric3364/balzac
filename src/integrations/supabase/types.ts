@@ -611,6 +611,30 @@ export type Database = {
         }
         Relationships: []
       }
+      reference_values: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          type: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          type: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          type?: string
+          value?: string
+        }
+        Relationships: []
+      }
       resend_email_log: {
         Row: {
           created_at: string
