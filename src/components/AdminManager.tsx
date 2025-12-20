@@ -109,17 +109,17 @@ export const AdminManager = () => {
     toast.success(`${administrators.length} administrateurs exportés`);
   };
 
-  // Fonction pour télécharger le modèle CSV
+  // Fonction pour télécharger le modèle CSV (format identique aux apprenants + is_super_admin)
   const downloadTemplate = () => {
-    const headers = ['email', 'is_super_admin'];
+    const headers = ['email', 'first_name', 'last_name', 'school', 'class_name', 'city', 'is_super_admin'];
     const exampleRows = [
-      ['admin@exemple.com', 'false'],
-      ['superadmin@exemple.com', 'true']
+      ['admin@exemple.com', 'Jean', 'Dupont', 'École A', 'Classe 1', 'Paris', 'false'],
+      ['superadmin@exemple.com', 'Marie', 'Martin', 'École B', 'Classe 2', 'Lyon', 'true']
     ];
     
     const csvContent = [
       headers.join(','),
-      ...exampleRows.map(row => row.map(field => `"${field}"`).join(','))
+      ...exampleRows.map(row => row.join(','))
     ].join('\n');
 
     const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
