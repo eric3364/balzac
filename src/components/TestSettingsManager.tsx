@@ -267,6 +267,7 @@ export const TestSettingsManager = () => {
               <li>Blocage des raccourcis clavier (F12, Ctrl+Shift+I, etc.)</li>
               <li>Désactivation du clic droit</li>
               <li>Prévention de la navigation avec les boutons du navigateur</li>
+              <li>Désactivation de l'autocomplétion et des suggestions du navigateur</li>
               <li>Avertissements et interruption automatique après plusieurs tentatives</li>
             </ul>
           </div>
