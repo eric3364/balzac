@@ -135,6 +135,22 @@ export const AdminManager = () => {
     toast.success('Modèle CSV téléchargé');
   };
 
+  // Génère un mot de passe basé sur nom.prénom (3 dernières lettres du nom + "." + 3 premières lettres du prénom)
+  const generateAdminPassword = (firstName: string, lastName: string): string => {
+    const cleanFirstName = (firstName || 'abc').trim().toLowerCase().replace(/[^a-zA-Z]/g, '');
+    const cleanLastName = (lastName || 'xyz').trim().toLowerCase().replace(/[^a-zA-Z]/g, '');
+    
+    // 3 dernières lettres du nom de famille
+    const lastPart = cleanLastName.length >= 3 
+      ? cleanLastName.slice(-3) 
+      : cleanLastName.padStart(3, 'a');
+    
+    // 3 premières lettres du prénom
+    const firstPart = cleanFirstName.substring(0, 3).padEnd(3, 'a');
+    
+    return `${lastPart}.${firstPart}`;
+  };
+
   // Fonction pour importer des administrateurs depuis un CSV
   const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -156,6 +172,11 @@ export const AdminManager = () => {
       const headers = headerLine.split(',').map(h => h.trim().replace(/^"|"$/g, '').toLowerCase());
       
       const emailIndex = headers.findIndex(h => h === 'email');
+      const firstNameIndex = headers.findIndex(h => h === 'first_name' || h === 'firstname' || h === 'prenom' || h === 'prénom');
+      const lastNameIndex = headers.findIndex(h => h === 'last_name' || h === 'lastname' || h === 'nom');
+      const schoolIndex = headers.findIndex(h => h === 'school' || h === 'école' || h === 'ecole');
+      const classNameIndex = headers.findIndex(h => h === 'class_name' || h === 'classname' || h === 'classe');
+      const cityIndex = headers.findIndex(h => h === 'city' || h === 'ville');
       const isSuperAdminIndex = headers.findIndex(h => h === 'is_super_admin' || h === 'super_admin' || h === 'superadmin');
 
       if (emailIndex === -1) {
@@ -164,7 +185,17 @@ export const AdminManager = () => {
       }
 
       // Parser les données
-      const adminsToImport: { email: string; is_super_admin: boolean }[] = [];
+      interface AdminToImport {
+        email: string;
+        first_name: string;
+        last_name: string;
+        school: string;
+        class_name: string;
+        city: string;
+        is_super_admin: boolean;
+      }
+      
+      const adminsToImport: AdminToImport[] = [];
       const existingEmails = new Set(administrators.map(a => a.email.toLowerCase()));
       const duplicates: string[] = [];
       const errors: string[] = [];
@@ -187,11 +218,24 @@ export const AdminManager = () => {
           continue;
         }
 
+        const firstName = firstNameIndex !== -1 ? values[firstNameIndex] || '' : '';
+        const lastName = lastNameIndex !== -1 ? values[lastNameIndex] || '' : '';
+        const school = schoolIndex !== -1 ? values[schoolIndex] || '' : '';
+        const className = classNameIndex !== -1 ? values[classNameIndex] || '' : '';
+        const city = cityIndex !== -1 ? values[cityIndex] || '' : '';
         const isSuperAdmin = isSuperAdminIndex !== -1 
           ? ['true', '1', 'oui', 'yes'].includes(values[isSuperAdminIndex]?.toLowerCase() || '')
           : false;
 
-        adminsToImport.push({ email, is_super_admin: isSuperAdmin });
+        adminsToImport.push({ 
+          email, 
+          first_name: firstName,
+          last_name: lastName,
+          school,
+          class_name: className,
+          city,
+          is_super_admin: isSuperAdmin 
+        });
         existingEmails.add(email);
       }
 
@@ -214,13 +258,19 @@ export const AdminManager = () => {
 
       for (const admin of adminsToImport) {
         try {
-          const tempPassword = generateTemporaryPassword();
+          // Générer le mot de passe basé sur nom.prénom (3 dernières lettres du nom + "." + 3 premières lettres du prénom)
+          const generatedPassword = generateAdminPassword(admin.first_name, admin.last_name);
           
           const { data, error } = await supabase.functions.invoke('send-admin-invitation', {
             body: {
               email: admin.email,
+              first_name: admin.first_name,
+              last_name: admin.last_name,
+              school: admin.school,
+              class_name: admin.class_name,
+              city: admin.city,
               is_super_admin: admin.is_super_admin,
-              temporary_password: tempPassword
+              temporary_password: generatedPassword
             }
           });
 
