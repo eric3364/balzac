@@ -652,7 +652,7 @@ export const UserManagement = () => {
   const exportToCSV = () => {
     const csvContent = [
       [
-        'Email', 'Prénom', 'Nom', 'École', 'Ville', 'Classe', 'Actif', 'Date de création',
+        'Email', 'Prénom', 'Nom', 'École', 'Classe', 'Ville', 'Actif', 'Date de création',
         'Total Tests', 'Total Questions', 'Réponses Correctes', 'Score Moyen (%)',
         'Niveau Maximum', 'Nombre Certifications', 'Détails Certifications',
         'Temps Total (minutes)', 'Dernière Activité'
@@ -662,8 +662,8 @@ export const UserManagement = () => {
         user.first_name || '',
         user.last_name || '',
         user.school || '',
-        user.city || '',
         user.class_name || '',
+        user.city || '',
         user.is_active ? 'Oui' : 'Non',
         user.created_at ? new Date(user.created_at).toLocaleDateString('fr-FR') : '-',
         user.total_tests.toString(),
