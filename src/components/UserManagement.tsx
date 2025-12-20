@@ -74,6 +74,12 @@ export const UserManagement = () => {
   const [bulkDeleteConfirmText, setBulkDeleteConfirmText] = useState('');
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
+  // États pour l'import avec doublons
+  const [isDuplicateDialogOpen, setIsDuplicateDialogOpen] = useState(false);
+  const [pendingImportUsers, setPendingImportUsers] = useState<any[]>([]);
+  const [duplicateEmails, setDuplicateEmails] = useState<string[]>([]);
+  const [importFileInputRef, setImportFileInputRef] = useState<HTMLInputElement | null>(null);
+
   const [userForm, setUserForm] = useState<UserFormData>({
     email: '',
     first_name: '',
@@ -767,16 +773,34 @@ export const UserManagement = () => {
     }
 
     if (existingUsers && existingUsers.length > 0) {
-      const existingEmails = existingUsers.map(u => u.email).join(', ');
-      toast({
-        title: "Attention, les étudiants dans cette liste existent déjà. Merci de vérifier.",
-        description: `Impossible d'importer des listes d'apprenants qui existent déjà dans la base de données. Emails concernés : ${existingEmails}`,
-        variant: "destructive"
-      });
-      event.target.value = '';
+      const existingEmailsList = existingUsers.map(u => u.email.toLowerCase());
+      const newUsersOnly = usersToImport.filter(
+        u => !existingEmailsList.includes(u.email.toLowerCase().trim())
+      );
+
+      if (newUsersOnly.length === 0) {
+        toast({
+          title: "Attention, les étudiants dans cette liste existent déjà. Merci de vérifier.",
+          description: "Impossible d'importer des listes d'apprenants qui existent déjà dans la base de données.",
+          variant: "destructive"
+        });
+        event.target.value = '';
+        return;
+      }
+
+      // Stocker les données pour la confirmation
+      setPendingImportUsers(newUsersOnly);
+      setDuplicateEmails(existingEmailsList);
+      setImportFileInputRef(event.target);
+      setIsDuplicateDialogOpen(true);
       return;
     }
 
+    // Pas de doublons, procéder à l'import
+    await executeImport(usersToImport, event.target);
+  };
+
+  const executeImport = async (usersToImport: any[], fileInput: HTMLInputElement | null) => {
     try {
       // Utiliser la fonction edge pour créer les utilisateurs avec mots de passe générés
       const { data, error } = await supabase.functions.invoke('invite-users', {
@@ -818,7 +842,9 @@ export const UserManagement = () => {
 
       refetch();
       // Reset file input
-      event.target.value = '';
+      if (fileInput) {
+        fileInput.value = '';
+      }
     } catch (error) {
       console.error('Erreur lors de l\'import:', error);
       toast({
@@ -827,6 +853,24 @@ export const UserManagement = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const handleImportWithoutDuplicates = async () => {
+    setIsDuplicateDialogOpen(false);
+    await executeImport(pendingImportUsers, importFileInputRef);
+    setPendingImportUsers([]);
+    setDuplicateEmails([]);
+    setImportFileInputRef(null);
+  };
+
+  const handleCancelImport = () => {
+    setIsDuplicateDialogOpen(false);
+    setPendingImportUsers([]);
+    setDuplicateEmails([]);
+    if (importFileInputRef) {
+      importFileInputRef.value = '';
+    }
+    setImportFileInputRef(null);
   };
 
   if (loading) {
@@ -1418,6 +1462,56 @@ export const UserManagement = () => {
               disabled={isBulkDeleting || bulkDeleteConfirmText !== 'oui je confirme la suppression !'}
             >
               {isBulkDeleting ? 'Suppression...' : 'Supprimer définitivement'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de confirmation d'import avec doublons */}
+      <Dialog open={isDuplicateDialogOpen} onOpenChange={setIsDuplicateDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="text-amber-600">
+              Attention : Doublons détectés
+            </DialogTitle>
+            <DialogDescription>
+              Certains étudiants de cette liste existent déjà dans la base de données.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+              <p className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-2">
+                {duplicateEmails.length} email(s) déjà existant(s) :
+              </p>
+              <div className="max-h-32 overflow-y-auto">
+                <ul className="text-sm text-amber-700 dark:text-amber-300 space-y-1">
+                  {duplicateEmails.slice(0, 10).map((email, index) => (
+                    <li key={index}>• {email}</li>
+                  ))}
+                  {duplicateEmails.length > 10 && (
+                    <li className="italic">... et {duplicateEmails.length - 10} autre(s)</li>
+                  )}
+                </ul>
+              </div>
+            </div>
+            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+              <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                {pendingImportUsers.length} nouvel(aux) apprenant(s) prêt(s) à être importé(s)
+              </p>
+            </div>
+          </div>
+          <DialogFooter className="flex gap-2 sm:gap-0">
+            <Button 
+              variant="outline" 
+              onClick={handleCancelImport}
+            >
+              Annuler
+            </Button>
+            <Button 
+              onClick={handleImportWithoutDuplicates}
+              disabled={pendingImportUsers.length === 0}
+            >
+              Importer uniquement les nouveaux ({pendingImportUsers.length})
             </Button>
           </DialogFooter>
         </DialogContent>
