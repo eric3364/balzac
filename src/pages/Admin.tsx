@@ -26,6 +26,7 @@ import { PlanningManager } from '@/components/PlanningManager';
 import { useConnectionStats } from '@/hooks/useConnectionStats';
 import { PlanningObjectivesTimeline } from '@/components/PlanningObjectivesTimeline';
 import { ReferenceValuesManager } from '@/components/ReferenceValuesManager';
+import { AdminPrivilegesManager } from '@/components/AdminPrivilegesManager';
 
 interface AdminUser {
   id: number;
@@ -371,6 +372,9 @@ const Admin = () => {
           </TabsContent>
 
           <TabsContent value="stats" className="space-y-6">
+            {/* Carte de gestion des privilèges - visible uniquement pour les super admins */}
+            {isSuperAdmin && <AdminPrivilegesManager />}
+            
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">

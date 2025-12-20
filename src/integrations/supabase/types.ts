@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_privileges: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_enabled: boolean
+          privilege_key: string
+          privilege_label: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_enabled?: boolean
+          privilege_key: string
+          privilege_label: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_enabled?: boolean
+          privilege_key?: string
+          privilege_label?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       administrators: {
         Row: {
           created_at: string | null
