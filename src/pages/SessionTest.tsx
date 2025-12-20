@@ -706,6 +706,11 @@ const SessionTest = () => {
                       onChange={(e) => handleAnswerChange(e.target.value)}
                       placeholder="Tapez votre réponse ici..."
                       className="text-lg"
+                      autoComplete="off"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck={false}
+                      data-form-type="other"
                     />
                   </div>
                 )}
