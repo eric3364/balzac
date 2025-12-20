@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Trash2, Edit2, Shield, UserCog, Mail, Download, Upload, FileText, Users } from 'lucide-react';
+import { Trash2, Edit2, Shield, UserCog, Mail, Download, Upload, FileText, Users, KeyRound } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -39,9 +39,12 @@ export const AdminManager = () => {
   const [selectedAdmins, setSelectedAdmins] = useState<Set<number>>(new Set());
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+  const [isBulkResending, setIsBulkResending] = useState(false);
   const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
   const [showBulkTypeDialog, setShowBulkTypeDialog] = useState(false);
+  const [showBulkResendDialog, setShowBulkResendDialog] = useState(false);
   const [bulkNewType, setBulkNewType] = useState<boolean>(false);
+  const [isResendingPassword, setIsResendingPassword] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadAdministrators = async () => {
@@ -518,6 +521,113 @@ export const AdminManager = () => {
     loadAdministrators();
   };
 
+  // Renvoyer le mot de passe pour un administrateur individuel
+  const handleResendPassword = async (admin: AdminUser) => {
+    setIsResendingPassword(admin.id);
+    try {
+      // Récupérer les informations de l'utilisateur depuis la table users si disponible
+      let firstName = '';
+      let lastName = '';
+      
+      if (admin.user_id) {
+        const { data: userData } = await supabase
+          .from('users')
+          .select('first_name, last_name')
+          .eq('user_id', admin.user_id)
+          .single();
+        
+        if (userData) {
+          firstName = userData.first_name || '';
+          lastName = userData.last_name || '';
+        }
+      }
+      
+      // Générer le nouveau mot de passe
+      const newPassword = generateAdminPassword(firstName, lastName);
+      
+      const { data, error } = await supabase.functions.invoke('admin-reset-password', {
+        body: {
+          email: admin.email,
+          new_password: newPassword
+        }
+      });
+
+      if (error || data?.error) {
+        console.error('Erreur:', error || data?.error);
+        toast.error('Erreur lors du renvoi du mot de passe');
+        return;
+      }
+
+      toast.success(`Mot de passe renvoyé à ${admin.email}`);
+    } catch (err) {
+      console.error('Erreur:', err);
+      toast.error('Erreur lors du renvoi du mot de passe');
+    } finally {
+      setIsResendingPassword(null);
+    }
+  };
+
+  // Renvoyer les mots de passe en masse
+  const handleBulkResendPassword = async () => {
+    setIsBulkResending(true);
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const adminId of selectedAdmins) {
+      const admin = administrators.find(a => a.id === adminId);
+      if (!admin) continue;
+
+      try {
+        // Récupérer les informations de l'utilisateur
+        let firstName = '';
+        let lastName = '';
+        
+        if (admin.user_id) {
+          const { data: userData } = await supabase
+            .from('users')
+            .select('first_name, last_name')
+            .eq('user_id', admin.user_id)
+            .single();
+          
+          if (userData) {
+            firstName = userData.first_name || '';
+            lastName = userData.last_name || '';
+          }
+        }
+        
+        const newPassword = generateAdminPassword(firstName, lastName);
+        
+        const { data, error } = await supabase.functions.invoke('admin-reset-password', {
+          body: {
+            email: admin.email,
+            new_password: newPassword
+          }
+        });
+
+        if (error || data?.error) {
+          console.error(`Erreur pour ${admin.email}:`, error || data?.error);
+          errorCount++;
+        } else {
+          successCount++;
+        }
+      } catch (err) {
+        console.error(`Erreur pour ${admin.email}:`, err);
+        errorCount++;
+      }
+    }
+
+    if (successCount > 0) {
+      toast.success(`Mot de passe renvoyé à ${successCount} administrateur(s)`);
+    }
+    if (errorCount > 0) {
+      toast.error(`${errorCount} erreur(s) lors du renvoi`);
+    }
+
+    setSelectedAdmins(new Set());
+    setShowBulkResendDialog(false);
+    setIsBulkResending(false);
+  };
+
   const openAddDialog = () => {
     setEditingAdmin(null);
     setFormData({ email: '', is_super_admin: false });
@@ -666,6 +776,34 @@ export const AdminManager = () => {
                 </DialogContent>
               </Dialog>
 
+              {/* Bouton renvoyer mot de passe */}
+              <AlertDialog open={showBulkResendDialog} onOpenChange={setShowBulkResendDialog}>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <KeyRound className="h-4 w-4 mr-2" />
+                    Renvoyer mot de passe
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Renvoyer les mots de passe</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Êtes-vous sûr de vouloir renvoyer le mot de passe à {selectedAdmins.size} administrateur(s) ?
+                      Un email avec le nouveau mot de passe sera envoyé à chaque administrateur.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Annuler</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleBulkResendPassword}
+                      disabled={isBulkResending}
+                    >
+                      {isBulkResending ? 'Envoi...' : 'Renvoyer'}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+
               {/* Bouton supprimer */}
               <AlertDialog open={showBulkDeleteDialog} onOpenChange={setShowBulkDeleteDialog}>
                 <AlertDialogTrigger asChild>
@@ -749,12 +887,22 @@ export const AdminManager = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => handleEdit(admin)}
+                        title="Modifier"
                       >
                         <Edit2 className="h-4 w-4" />
                       </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleResendPassword(admin)}
+                        disabled={isResendingPassword === admin.id}
+                        title="Renvoyer le mot de passe"
+                      >
+                        <KeyRound className={`h-4 w-4 ${isResendingPassword === admin.id ? 'animate-spin' : ''}`} />
+                      </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm" title="Supprimer">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </AlertDialogTrigger>
