@@ -76,15 +76,16 @@ Deno.serve(async (req) => {
 
     } else {
       // For regular sessions, calculate offset based on session number
-      const { data: totalQuestionsData, error: countError } = await supabaseClient
+      const { count, error: countError } = await supabaseClient
         .from('questions')
-        .select('id', { count: 'exact', head: true })
+        .select('*', { count: 'exact', head: true })
         .eq('level', levelName)
 
       if (countError) throw countError
 
-      const totalQuestions = totalQuestionsData || 0
-      const questionsPerSession = Math.floor((totalQuestions as any) * questions_percentage / 100)
+      const totalQuestions = count || 0
+      console.log(`Level ${levelName}: ${totalQuestions} total questions, ${questions_percentage}% per session`)
+      const questionsPerSession = Math.floor(totalQuestions * questions_percentage / 100)
       const sessionIndex = session_number - 1
       const offset = sessionIndex * questionsPerSession
 
