@@ -554,8 +554,6 @@ const Admin = () => {
                       </div>
                     </div>
 
-                    {/* Carte de gestion des privilèges - visible uniquement pour les super admins */}
-                    {isSuperAdmin && <AdminPrivilegesManager />}
 
                     {/* Timeline des objectifs */}
                     <PlanningObjectivesTimeline />

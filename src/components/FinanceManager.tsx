@@ -11,6 +11,7 @@ import { Plus, Euro, Users, ShoppingCart, Gift, TrendingUp, Trash2, Edit, Settin
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AdminManager } from '@/components/AdminManager';
+import { AdminPrivilegesManager } from '@/components/AdminPrivilegesManager';
 
 interface Purchase {
   id: string;
@@ -961,6 +962,7 @@ export const FinanceManager: React.FC = () => {
 
         <TabsContent value="administration" className="space-y-4">
           <AdminManager />
+          <AdminPrivilegesManager />
         </TabsContent>
       </Tabs>
     </div>
