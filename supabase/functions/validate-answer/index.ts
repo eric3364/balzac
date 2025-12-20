@@ -53,10 +53,11 @@ Deno.serve(async (req) => {
     const isCorrect = user_answer.toLowerCase().trim() === question.answer.toLowerCase().trim()
 
     // Return validation result
-    // NEVER send the correct answer to the client, only whether it's correct or not
+    // Include the correct answer only when the answer is incorrect (for learning purposes)
     return new Response(
       JSON.stringify({
         is_correct: isCorrect,
+        correct_answer: !isCorrect ? question.answer : null,
         explanation: !isCorrect ? question.explanation : null,
         rule: !isCorrect ? question.rule : null
       }),
