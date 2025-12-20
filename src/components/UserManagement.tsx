@@ -652,16 +652,17 @@ export const UserManagement = () => {
   const exportToCSV = () => {
     const csvContent = [
       [
-        'Email', 'Prénom', 'Nom', 'École', 'Classe', 'Actif', 'Date de création',
+        'Email', 'Prénom', 'Nom', 'École', 'Ville', 'Classe', 'Actif', 'Date de création',
         'Total Tests', 'Total Questions', 'Réponses Correctes', 'Score Moyen (%)',
         'Niveau Maximum', 'Nombre Certifications', 'Détails Certifications',
-        'Temps Total (minutes)', 'Dernière Activité', 'Ville'
+        'Temps Total (minutes)', 'Dernière Activité'
       ],
       ...filteredUsers.map(user => [
         user.email,
         user.first_name || '',
         user.last_name || '',
         user.school || '',
+        user.city || '',
         user.class_name || '',
         user.is_active ? 'Oui' : 'Non',
         user.created_at ? new Date(user.created_at).toLocaleDateString('fr-FR') : '-',
@@ -675,8 +676,7 @@ export const UserManagement = () => {
           `N${cert.level} (${cert.score}% - ${cert.certified_at ? new Date(cert.certified_at).toLocaleDateString('fr-FR') : '-'})`
         ).join('; '),
         user.time_spent_minutes.toString(),
-        user.last_activity ? new Date(user.last_activity).toLocaleDateString('fr-FR') : '',
-        user.city || ''
+        user.last_activity ? new Date(user.last_activity).toLocaleDateString('fr-FR') : ''
       ])
     ].map(row => row.join(',')).join('\n');
 
