@@ -11,6 +11,11 @@ const corsHeaders = {
 
 interface AdminInviteRequest {
   email: string;
+  first_name?: string;
+  last_name?: string;
+  school?: string;
+  class_name?: string;
+  city?: string;
   is_super_admin: boolean;
   temporary_password: string;
 }
@@ -99,9 +104,9 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Super admin verified, proceeding with invitation');
 
-    const { email, is_super_admin, temporary_password }: AdminInviteRequest = await req.json();
+    const { email, first_name, last_name, school, class_name, city, is_super_admin, temporary_password }: AdminInviteRequest = await req.json();
 
-    console.log('Creating admin account for:', email);
+    console.log('Creating admin account for:', email, 'with name:', first_name, last_name);
 
     // Check if user already exists in auth.users
     const { data: existingUsers, error: listError } = await supabaseClient.auth.admin.listUsers();
@@ -149,8 +154,14 @@ const handler = async (req: Request): Promise<Response> => {
         password: temporary_password,
         email_confirm: true,
         user_metadata: {
+          first_name: first_name || '',
+          last_name: last_name || '',
+          school: school || '',
+          class_name: class_name || '',
+          city: city || '',
           force_password_change: true,
-          is_admin: true
+          is_admin: true,
+          generated_password: true
         }
       });
 
