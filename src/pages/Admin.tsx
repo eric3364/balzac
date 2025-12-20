@@ -27,6 +27,7 @@ import { useConnectionStats } from '@/hooks/useConnectionStats';
 import { PlanningObjectivesTimeline } from '@/components/PlanningObjectivesTimeline';
 import { ReferenceValuesManager } from '@/components/ReferenceValuesManager';
 import { AdminPrivilegesManager } from '@/components/AdminPrivilegesManager';
+import { useAdminPrivileges } from '@/hooks/useAdminPrivileges';
 
 interface AdminUser {
   id: number;
@@ -97,6 +98,15 @@ const Admin = () => {
   const [loadingData, setLoadingData] = useState(true);
   const [refreshingStats, setRefreshingStats] = useState(false);
   const connectionStats = useConnectionStats();
+  const { 
+    canManageQuestions, 
+    canManageHomepage, 
+    canManageLevels, 
+    canManagePlanning, 
+    canManageTestSettings, 
+    canViewFinance,
+    loading: privilegesLoading 
+  } = useAdminPrivileges();
 
   // --- Vérifie si l'utilisateur est admin (RPC is_super_admin + fallback table administrators)
   const checkAdminStatus = async () => {
@@ -353,15 +363,25 @@ const Admin = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className={`grid w-full ${isSuperAdmin ? 'grid-cols-8' : 'grid-cols-7'}`}>
+          <TabsList className="flex flex-wrap gap-1">
             <TabsTrigger value="stats">Statistiques</TabsTrigger>
             <TabsTrigger value="students">Apprenants</TabsTrigger>
-            <TabsTrigger value="homepage">Page d'accueil</TabsTrigger>
-            <TabsTrigger value="levels">Certification</TabsTrigger>
-            <TabsTrigger value="planning">Planification</TabsTrigger>
-            <TabsTrigger value="questions">Questions</TabsTrigger>
-            <TabsTrigger value="test-settings">Paramètres des sessions</TabsTrigger>
-            {isSuperAdmin && (
+            {canManageHomepage(isSuperAdmin) && (
+              <TabsTrigger value="homepage">Page d'accueil</TabsTrigger>
+            )}
+            {canManageLevels(isSuperAdmin) && (
+              <TabsTrigger value="levels">Certification</TabsTrigger>
+            )}
+            {canManagePlanning(isSuperAdmin) && (
+              <TabsTrigger value="planning">Planification</TabsTrigger>
+            )}
+            {canManageQuestions(isSuperAdmin) && (
+              <TabsTrigger value="questions">Questions</TabsTrigger>
+            )}
+            {canManageTestSettings(isSuperAdmin) && (
+              <TabsTrigger value="test-settings">Paramètres des sessions</TabsTrigger>
+            )}
+            {canViewFinance(isSuperAdmin) && (
               <TabsTrigger value="finance">Finance/admin</TabsTrigger>
             )}
           </TabsList>
@@ -549,29 +569,37 @@ const Admin = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="homepage" className="space-y-6">
-            <HomepageManager />
-          </TabsContent>
+          {canManageHomepage(isSuperAdmin) && (
+            <TabsContent value="homepage" className="space-y-6">
+              <HomepageManager />
+            </TabsContent>
+          )}
 
-          <TabsContent value="levels" className="space-y-6">
-            <LevelsAndCertificatesManager />
-          </TabsContent>
+          {canManageLevels(isSuperAdmin) && (
+            <TabsContent value="levels" className="space-y-6">
+              <LevelsAndCertificatesManager />
+            </TabsContent>
+          )}
 
-          <TabsContent value="planning" className="space-y-6">
-            <PlanningManager />
-          </TabsContent>
+          {canManagePlanning(isSuperAdmin) && (
+            <TabsContent value="planning" className="space-y-6">
+              <PlanningManager />
+            </TabsContent>
+          )}
 
-          <TabsContent value="questions" className="space-y-6">
-            <QuestionsManager />
-          </TabsContent>
+          {canManageQuestions(isSuperAdmin) && (
+            <TabsContent value="questions" className="space-y-6">
+              <QuestionsManager />
+            </TabsContent>
+          )}
 
-          {/* Paramètres des tests */}
-          <TabsContent value="test-settings" className="space-y-6">
-            <TestSettingsManager />
-          </TabsContent>
+          {canManageTestSettings(isSuperAdmin) && (
+            <TabsContent value="test-settings" className="space-y-6">
+              <TestSettingsManager />
+            </TabsContent>
+          )}
 
-          {/* Finance - Accessible uniquement aux super administrateurs */}
-          {isSuperAdmin && (
+          {canViewFinance(isSuperAdmin) && (
             <TabsContent value="finance" className="space-y-6">
               <FinanceManager />
             </TabsContent>
