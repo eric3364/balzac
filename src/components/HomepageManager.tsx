@@ -7,7 +7,6 @@ import { useHomepageConfig } from '@/hooks/useHomepageConfig';
 import { HomepageAssetUploader } from './HomepageAssetUploader';
 import { FooterManager } from './FooterManager';
 import { LegalPageManager } from './LegalPageManager';
-import { AdminManager } from './AdminManager';
 import { Separator } from '@/components/ui/separator';
 import { Home, Type, Image, BarChart, MessageCircle, FileText, Save } from 'lucide-react';
 import { toast } from 'sonner';
@@ -31,9 +30,6 @@ export const HomepageManager = () => {
 
   return (
     <div className="space-y-6">
-      {/* Gestion des administrateurs */}
-      <AdminManager />
-
       {/* Logo et Banner */}
       <Card>
         <CardHeader>
