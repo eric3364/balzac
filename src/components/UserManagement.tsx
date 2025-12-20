@@ -655,7 +655,7 @@ export const UserManagement = () => {
         'Email', 'Prénom', 'Nom', 'École', 'Classe', 'Actif', 'Date de création',
         'Total Tests', 'Total Questions', 'Réponses Correctes', 'Score Moyen (%)',
         'Niveau Maximum', 'Nombre Certifications', 'Détails Certifications',
-        'Temps Total (minutes)', 'Dernière Activité'
+        'Temps Total (minutes)', 'Dernière Activité', 'Ville'
       ],
       ...filteredUsers.map(user => [
         user.email,
@@ -675,7 +675,8 @@ export const UserManagement = () => {
           `N${cert.level} (${cert.score}% - ${cert.certified_at ? new Date(cert.certified_at).toLocaleDateString('fr-FR') : '-'})`
         ).join('; '),
         user.time_spent_minutes.toString(),
-        user.last_activity ? new Date(user.last_activity).toLocaleDateString('fr-FR') : ''
+        user.last_activity ? new Date(user.last_activity).toLocaleDateString('fr-FR') : '',
+        user.city || ''
       ])
     ].map(row => row.join(',')).join('\n');
 
@@ -692,9 +693,9 @@ export const UserManagement = () => {
 
   const downloadTemplate = () => {
     const template = [
-      ['email', 'first_name', 'last_name', 'school', 'class_name'],
-      ['exemple@email.com', 'Jean', 'Dupont', 'ESCEN', 'N1'],
-      ['autre@email.com', 'Marie', 'Martin', 'Bachelor Institute', 'N2']
+      ['email', 'first_name', 'last_name', 'school', 'class_name', 'city'],
+      ['exemple@email.com', 'Jean', 'Dupont', 'ESCEN', 'N1', 'Paris'],
+      ['autre@email.com', 'Marie', 'Martin', 'Bachelor Institute', 'N2', 'Lyon']
     ].map(row => row.join(',')).join('\n');
 
     const blob = new Blob([template], { type: 'text/csv;charset=utf-8;' });
