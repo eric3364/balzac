@@ -840,7 +840,9 @@ export const UserManagement = () => {
         }
       }
 
-      refetch();
+      // Rafraîchir immédiatement la liste des apprenants
+      await refetch();
+      
       // Reset file input
       if (fileInput) {
         fileInput.value = '';
