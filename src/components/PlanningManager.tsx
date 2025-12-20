@@ -14,7 +14,7 @@ import { Calendar, Plus, Edit2, Trash2, Target, Users, School, GraduationCap, Ma
 import { useToast } from '@/hooks/use-toast';
 import { usePlanningObjectives, PlanningObjective } from '@/hooks/usePlanningObjectives';
 import { useDifficultyLevels } from '@/hooks/useDifficultyLevels';
-import { CITIES } from '@/constants/userData';
+import { useReferenceValues } from '@/hooks/useReferenceValues';
 import { format, formatDistanceToNow, isPast, differenceInWeeks } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -82,10 +82,14 @@ export const PlanningManager = () => {
   const { toast } = useToast();
   const { objectives, loading, refetch } = usePlanningObjectives();
   const { difficultyLevels } = useDifficultyLevels();
+  const { getAllSchools, getAllClasses, getAllCities } = useReferenceValues();
   const [schoolClasses, setSchoolClasses] = useState<SchoolClass[]>([]);
   const [uniqueSchools, setUniqueSchools] = useState<string[]>([]);
   const [uniqueClasses, setUniqueClasses] = useState<string[]>([]);
   const [administrators, setAdministrators] = useState<Administrator[]>([]);
+  
+  // Valeurs de référence dynamiques
+  const cities = getAllCities();
   const [sessionsPerLevel, setSessionsPerLevel] = useState<Record<number, number>>({});
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingObjective, setEditingObjective] = useState<PlanningObjective | null>(null);
@@ -382,7 +386,7 @@ export const PlanningManager = () => {
                         <SelectValue placeholder="Sélectionnez une ville" />
                       </SelectTrigger>
                       <SelectContent>
-                        {CITIES.map((city) => (
+                        {cities.map((city) => (
                           <SelectItem key={city} value={city}>
                             <div className="flex items-center gap-2">
                               <MapPin className="h-4 w-4" />
