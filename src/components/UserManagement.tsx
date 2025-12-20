@@ -80,6 +80,12 @@ export const UserManagement = () => {
   const [duplicateEmails, setDuplicateEmails] = useState<string[]>([]);
   const [importFileInputRef, setImportFileInputRef] = useState<HTMLInputElement | null>(null);
 
+  // États pour la normalisation des valeurs non reconnues
+  const [isNormalizationDialogOpen, setIsNormalizationDialogOpen] = useState(false);
+  const [unmatchedValues, setUnmatchedValues] = useState<{field: string, value: string, suggestions: string[]}[]>([]);
+  const [normalizationChoices, setNormalizationChoices] = useState<Record<string, string>>({});
+  const [pendingNormalizationUsers, setPendingNormalizationUsers] = useState<any[]>([]);
+
   const [userForm, setUserForm] = useState<UserFormData>({
     email: '',
     first_name: '',
@@ -89,6 +95,39 @@ export const UserManagement = () => {
     city: '',
     is_active: true
   });
+
+  // Fonction pour normaliser une valeur en la comparant aux références
+  const normalizeValue = (value: string, referenceValues: readonly string[]): { normalized: string | null, exact: boolean } => {
+    if (!value || value.trim() === '') return { normalized: '', exact: true };
+    
+    const trimmedValue = value.trim();
+    
+    // Vérifier correspondance exacte
+    const exactMatch = referenceValues.find(ref => ref === trimmedValue);
+    if (exactMatch) return { normalized: exactMatch, exact: true };
+    
+    // Vérifier correspondance insensible à la casse
+    const caseInsensitiveMatch = referenceValues.find(
+      ref => ref.toLowerCase() === trimmedValue.toLowerCase()
+    );
+    if (caseInsensitiveMatch) return { normalized: caseInsensitiveMatch, exact: true };
+    
+    // Pas de correspondance trouvée
+    return { normalized: null, exact: false };
+  };
+
+  // Fonction pour trouver les suggestions les plus proches
+  const findSuggestions = (value: string, referenceValues: readonly string[]): string[] => {
+    const trimmedValue = value.trim().toLowerCase();
+    return referenceValues.filter(ref => {
+      const refLower = ref.toLowerCase();
+      // Vérifier si la valeur contient ou est contenue dans la référence
+      return refLower.includes(trimmedValue) || trimmedValue.includes(refLower) ||
+        // Ou si les premières lettres correspondent
+        refLower.startsWith(trimmedValue.substring(0, 3)) ||
+        trimmedValue.startsWith(refLower.substring(0, 3));
+    });
+  };
   useEffect(() => {
     applyFilters();
   }, [usersWithStats, searchTerm, schoolFilter, classFilter, cityFilter, statusFilter, sortField, sortDirection]);
@@ -827,6 +866,72 @@ export const UserManagement = () => {
       return;
     }
 
+    // Normaliser les valeurs (école, classe, ville)
+    const unmatchedList: {field: string, value: string, suggestions: string[]}[] = [];
+    const normalizedUsers = usersToImport.map(user => {
+      const normalizedUser = { ...user };
+      
+      // Normaliser l'école
+      if (user.school) {
+        const { normalized, exact } = normalizeValue(user.school, SCHOOLS);
+        if (exact) {
+          normalizedUser.school = normalized;
+        } else {
+          const suggestions = findSuggestions(user.school, SCHOOLS);
+          const key = `school:${user.school.toLowerCase()}`;
+          if (!unmatchedList.find(u => `${u.field}:${u.value.toLowerCase()}` === key)) {
+            unmatchedList.push({ field: 'school', value: user.school, suggestions: suggestions.length > 0 ? suggestions : [...SCHOOLS] });
+          }
+        }
+      }
+      
+      // Normaliser la classe
+      if (user.class_name) {
+        const { normalized, exact } = normalizeValue(user.class_name, CLASS_LEVELS);
+        if (exact) {
+          normalizedUser.class_name = normalized;
+        } else {
+          const suggestions = findSuggestions(user.class_name, CLASS_LEVELS);
+          const key = `class_name:${user.class_name.toLowerCase()}`;
+          if (!unmatchedList.find(u => `${u.field}:${u.value.toLowerCase()}` === key)) {
+            unmatchedList.push({ field: 'class_name', value: user.class_name, suggestions: suggestions.length > 0 ? suggestions : [...CLASS_LEVELS] });
+          }
+        }
+      }
+      
+      // Normaliser la ville
+      if (user.city) {
+        const { normalized, exact } = normalizeValue(user.city, CITIES);
+        if (exact) {
+          normalizedUser.city = normalized;
+        } else {
+          const suggestions = findSuggestions(user.city, CITIES);
+          const key = `city:${user.city.toLowerCase()}`;
+          if (!unmatchedList.find(u => `${u.field}:${u.value.toLowerCase()}` === key)) {
+            unmatchedList.push({ field: 'city', value: user.city, suggestions: suggestions.length > 0 ? suggestions : [...CITIES] });
+          }
+        }
+      }
+      
+      return normalizedUser;
+    });
+
+    // S'il y a des valeurs non reconnues, demander à l'admin de choisir
+    if (unmatchedList.length > 0) {
+      setUnmatchedValues(unmatchedList);
+      setNormalizationChoices({});
+      setPendingNormalizationUsers(normalizedUsers);
+      setImportFileInputRef(event.target);
+      setIsNormalizationDialogOpen(true);
+      return;
+    }
+
+    // Continuer avec les utilisateurs normalisés
+    await continueImportAfterNormalization(normalizedUsers, event.target);
+  };
+
+  // Fonction pour continuer l'import après la normalisation
+  const continueImportAfterNormalization = async (usersToImport: any[], fileInput: HTMLInputElement | null) => {
     // Vérifier si des emails existent déjà dans la base de données
     const emailsToCheck = usersToImport.map(u => u.email.toLowerCase().trim());
     
@@ -842,7 +947,7 @@ export const UserManagement = () => {
         description: "Impossible de vérifier les doublons dans la base de données",
         variant: "destructive"
       });
-      event.target.value = '';
+      if (fileInput) fileInput.value = '';
       return;
     }
 
@@ -858,20 +963,59 @@ export const UserManagement = () => {
           description: "Impossible d'importer des listes d'apprenants qui existent déjà dans la base de données.",
           variant: "destructive"
         });
-        event.target.value = '';
+        if (fileInput) fileInput.value = '';
         return;
       }
 
       // Stocker les données pour la confirmation
       setPendingImportUsers(newUsersOnly);
       setDuplicateEmails(existingEmailsList);
-      setImportFileInputRef(event.target);
+      setImportFileInputRef(fileInput);
       setIsDuplicateDialogOpen(true);
       return;
     }
 
     // Pas de doublons, procéder à l'import
-    await executeImport(usersToImport, event.target);
+    await executeImport(usersToImport, fileInput);
+  };
+
+  // Fonction pour appliquer les choix de normalisation et continuer l'import
+  const handleApplyNormalization = async () => {
+    setIsNormalizationDialogOpen(false);
+    
+    // Appliquer les choix de normalisation aux utilisateurs
+    const normalizedUsers = pendingNormalizationUsers.map(user => {
+      const normalizedUser = { ...user };
+      
+      unmatchedValues.forEach(({ field, value }) => {
+        const choiceKey = `${field}:${value}`;
+        const chosenValue = normalizationChoices[choiceKey];
+        
+        if (chosenValue && user[field]?.toLowerCase() === value.toLowerCase()) {
+          normalizedUser[field] = chosenValue;
+        }
+      });
+      
+      return normalizedUser;
+    });
+    
+    await continueImportAfterNormalization(normalizedUsers, importFileInputRef);
+    
+    // Réinitialiser les états
+    setUnmatchedValues([]);
+    setNormalizationChoices({});
+    setPendingNormalizationUsers([]);
+  };
+
+  const handleCancelNormalization = () => {
+    setIsNormalizationDialogOpen(false);
+    setUnmatchedValues([]);
+    setNormalizationChoices({});
+    setPendingNormalizationUsers([]);
+    if (importFileInputRef) {
+      importFileInputRef.value = '';
+    }
+    setImportFileInputRef(null);
   };
 
   const executeImport = async (usersToImport: any[], fileInput: HTMLInputElement | null) => {
@@ -1588,6 +1732,73 @@ export const UserManagement = () => {
               disabled={pendingImportUsers.length === 0}
             >
               Importer uniquement les nouveaux ({pendingImportUsers.length})
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de normalisation des valeurs non reconnues */}
+      <Dialog open={isNormalizationDialogOpen} onOpenChange={setIsNormalizationDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle className="text-amber-600">
+              Valeurs non reconnues
+            </DialogTitle>
+            <DialogDescription>
+              Certaines valeurs du fichier d'importation ne correspondent pas aux données de référence. 
+              Veuillez sélectionner la correspondance appropriée pour chaque valeur.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 max-h-[400px] overflow-y-auto">
+            {unmatchedValues.map((item, index) => {
+              const fieldLabels: Record<string, string> = {
+                'school': 'École',
+                'class_name': 'Classe',
+                'city': 'Ville'
+              };
+              const choiceKey = `${item.field}:${item.value}`;
+              
+              return (
+                <div key={index} className="bg-muted/50 border rounded-lg p-4">
+                  <p className="text-sm font-medium mb-2">
+                    {fieldLabels[item.field] || item.field} : <span className="text-amber-600">"{item.value}"</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Sélectionnez la valeur correspondante :
+                  </p>
+                  <Select 
+                    value={normalizationChoices[choiceKey] || ''} 
+                    onValueChange={(value) => {
+                      setNormalizationChoices(prev => ({ ...prev, [choiceKey]: value }));
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choisir une valeur..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {item.suggestions.map((suggestion, sIndex) => (
+                        <SelectItem key={sIndex} value={suggestion}>
+                          {suggestion}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              );
+            })}
+          </div>
+          <DialogFooter className="flex gap-2 sm:gap-0">
+            <Button 
+              variant="outline" 
+              onClick={handleCancelNormalization}
+            >
+              Annuler
+            </Button>
+            <Button 
+              onClick={handleApplyNormalization}
+              disabled={unmatchedValues.some(item => !normalizationChoices[`${item.field}:${item.value}`])}
+            >
+              Appliquer et continuer
             </Button>
           </DialogFooter>
         </DialogContent>
