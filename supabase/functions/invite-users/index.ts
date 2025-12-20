@@ -11,6 +11,18 @@ interface UserInvite {
   last_name?: string
   school?: string
   class_name?: string
+  city?: string
+}
+
+// Génère un mot de passe basé sur prénom.nom (3 premières lettres de chaque)
+function generatePassword(firstName: string, lastName: string): string {
+  const cleanFirstName = (firstName || 'abc').trim().toLowerCase().replace(/[^a-zA-Z]/g, '');
+  const cleanLastName = (lastName || 'xyz').trim().toLowerCase().replace(/[^a-zA-Z]/g, '');
+  
+  const firstPart = cleanFirstName.substring(0, 3).padEnd(3, 'a');
+  const lastPart = cleanLastName.substring(0, 3).padEnd(3, 'a');
+  
+  return `${firstPart}.${lastPart}`;
 }
 
 Deno.serve(async (req) => {
@@ -91,19 +103,25 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Créer l'utilisateur avec invitation
-        const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
-          userData.email,
-          {
-            data: {
-              first_name: userData.first_name || '',
-              last_name: userData.last_name || '',
-              school: userData.school || '',
-              class_name: userData.class_name || ''
-            },
-            redirectTo: `${req.headers.get('origin') || 'http://localhost:5173'}/auth`
+        // Générer le mot de passe basé sur prénom.nom
+        const generatedPassword = generatePassword(userData.first_name || '', userData.last_name || '');
+        console.log(`Génération mot de passe pour ${userData.email}: ${generatedPassword}`);
+
+        // Créer l'utilisateur avec mot de passe généré (sans invitation par email)
+        const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
+          email: userData.email,
+          password: generatedPassword,
+          email_confirm: true, // Confirmer l'email automatiquement
+          user_metadata: {
+            first_name: userData.first_name || '',
+            last_name: userData.last_name || '',
+            school: userData.school || '',
+            class_name: userData.class_name || '',
+            city: userData.city || '',
+            force_password_change: true, // Flag pour forcer le changement de mot de passe
+            generated_password: true
           }
-        )
+        })
 
         if (authError) {
           console.error('Erreur auth pour', userData.email, ':', authError)
@@ -127,7 +145,8 @@ Deno.serve(async (req) => {
                     first_name: userData.first_name || '',
                     last_name: userData.last_name || '',
                     school: userData.school || '',
-                    class_name: userData.class_name || ''
+                    class_name: userData.class_name || '',
+                    city: userData.city || ''
                   });
 
                 if (!insertError) {
@@ -151,11 +170,6 @@ Deno.serve(async (req) => {
             }
           }
           
-          // Gestion spéciale pour la limite de taux d'emails
-          if (authError.message.includes('email rate limit exceeded')) {
-            errorMessage = 'Limite d\'envoi d\'emails atteinte. Veuillez attendre quelques minutes avant de réessayer.'
-          }
-          
           results.push({
             email: userData.email,
             success: false,
@@ -170,7 +184,9 @@ Deno.serve(async (req) => {
         results.push({
           email: userData.email,
           success: true,
-          user_id: authUser.user?.id
+          user_id: authUser.user?.id,
+          generated_password: generatedPassword,
+          message: 'Utilisateur créé avec mot de passe temporaire'
         })
 
       } catch (error: unknown) {
