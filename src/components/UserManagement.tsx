@@ -922,7 +922,7 @@ export const UserManagement = () => {
             
             <Button variant="outline" onClick={exportToCSV}>
               <Download className="mr-2 h-4 w-4" />
-              Exporter CSV
+              Exporter les apprenants
             </Button>
             
             <Button variant="outline" onClick={downloadTemplate}>
@@ -934,7 +934,7 @@ export const UserManagement = () => {
               <Button variant="outline" asChild>
                 <span>
                   <Upload className="mr-2 h-4 w-4" />
-                  Importer CSV
+                  Importer des apprenants
                 </span>
               </Button>
               <Input
