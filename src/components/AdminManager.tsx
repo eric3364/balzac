@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Trash2, Edit2, Plus, Shield, UserCog, Mail } from 'lucide-react';
+import { Trash2, Edit2, Shield, UserCog, Mail, Download, Upload, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -34,6 +34,8 @@ export const AdminManager = () => {
     email: '',
     is_super_admin: false
   });
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadAdministrators = async () => {
     try {
@@ -72,7 +74,7 @@ export const AdminManager = () => {
         },
         (payload) => {
           console.log('Changement détecté dans la table administrators:', payload);
-          loadAdministrators(); // Rafraîchir les données
+          loadAdministrators();
         }
       )
       .subscribe();
@@ -81,6 +83,177 @@ export const AdminManager = () => {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  // Fonction pour exporter les administrateurs en CSV
+  const exportAdministrators = () => {
+    const headers = ['email', 'is_super_admin', 'created_at'];
+    const csvContent = [
+      headers.join(','),
+      ...administrators.map(admin => [
+        admin.email,
+        admin.is_super_admin ? 'true' : 'false',
+        admin.created_at || ''
+      ].map(field => `"${String(field).replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `administrateurs_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast.success(`${administrators.length} administrateurs exportés`);
+  };
+
+  // Fonction pour télécharger le modèle CSV
+  const downloadTemplate = () => {
+    const headers = ['email', 'is_super_admin'];
+    const exampleRows = [
+      ['admin@exemple.com', 'false'],
+      ['superadmin@exemple.com', 'true']
+    ];
+    
+    const csvContent = [
+      headers.join(','),
+      ...exampleRows.map(row => row.map(field => `"${field}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'modele_administrateurs.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast.success('Modèle CSV téléchargé');
+  };
+
+  // Fonction pour importer des administrateurs depuis un CSV
+  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsImporting(true);
+
+    try {
+      const text = await file.text();
+      const lines = text.split('\n').filter(line => line.trim());
+      
+      if (lines.length < 2) {
+        toast.error('Le fichier CSV doit contenir au moins une ligne d\'en-tête et une ligne de données');
+        return;
+      }
+
+      // Parser l'en-tête
+      const headerLine = lines[0];
+      const headers = headerLine.split(',').map(h => h.trim().replace(/^"|"$/g, '').toLowerCase());
+      
+      const emailIndex = headers.findIndex(h => h === 'email');
+      const isSuperAdminIndex = headers.findIndex(h => h === 'is_super_admin' || h === 'super_admin' || h === 'superadmin');
+
+      if (emailIndex === -1) {
+        toast.error('Colonne "email" requise dans le fichier CSV');
+        return;
+      }
+
+      // Parser les données
+      const adminsToImport: { email: string; is_super_admin: boolean }[] = [];
+      const existingEmails = new Set(administrators.map(a => a.email.toLowerCase()));
+      const duplicates: string[] = [];
+      const errors: string[] = [];
+
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+
+        // Parser la ligne CSV (gérer les guillemets)
+        const values = line.match(/("([^"]*)"|[^,]+)/g)?.map(v => v.replace(/^"|"$/g, '').trim()) || [];
+        
+        const email = values[emailIndex]?.toLowerCase();
+        if (!email || !email.includes('@')) {
+          errors.push(`Ligne ${i + 1}: Email invalide`);
+          continue;
+        }
+
+        if (existingEmails.has(email)) {
+          duplicates.push(email);
+          continue;
+        }
+
+        const isSuperAdmin = isSuperAdminIndex !== -1 
+          ? ['true', '1', 'oui', 'yes'].includes(values[isSuperAdminIndex]?.toLowerCase() || '')
+          : false;
+
+        adminsToImport.push({ email, is_super_admin: isSuperAdmin });
+        existingEmails.add(email);
+      }
+
+      if (errors.length > 0) {
+        toast.error(`Erreurs trouvées: ${errors.slice(0, 3).join(', ')}${errors.length > 3 ? '...' : ''}`);
+      }
+
+      if (duplicates.length > 0) {
+        toast.warning(`${duplicates.length} email(s) déjà existant(s) ignoré(s)`);
+      }
+
+      if (adminsToImport.length === 0) {
+        toast.info('Aucun nouvel administrateur à importer');
+        return;
+      }
+
+      // Importer les administrateurs un par un via l'edge function
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const admin of adminsToImport) {
+        try {
+          const tempPassword = generateTemporaryPassword();
+          
+          const { data, error } = await supabase.functions.invoke('send-admin-invitation', {
+            body: {
+              email: admin.email,
+              is_super_admin: admin.is_super_admin,
+              temporary_password: tempPassword
+            }
+          });
+
+          if (error || data?.error) {
+            console.error(`Erreur pour ${admin.email}:`, error || data?.error);
+            errorCount++;
+          } else {
+            successCount++;
+          }
+        } catch (err) {
+          console.error(`Erreur pour ${admin.email}:`, err);
+          errorCount++;
+        }
+      }
+
+      if (successCount > 0) {
+        toast.success(`${successCount} administrateur(s) importé(s) avec succès`);
+      }
+      if (errorCount > 0) {
+        toast.error(`${errorCount} erreur(s) lors de l'import`);
+      }
+
+      loadAdministrators();
+    } catch (error) {
+      console.error('Erreur lors de l\'import:', error);
+      toast.error('Erreur lors de la lecture du fichier CSV');
+    } finally {
+      setIsImporting(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,11 +278,8 @@ export const AdminManager = () => {
         toast.success('Administrateur modifié avec succès');
       } else {
         // Ajouter un nouvel administrateur via edge function
-        
-        // Générer un mot de passe temporaire
         const tempPassword = generateTemporaryPassword();
         
-        // Appeler l'edge function qui crée le compte et envoie l'email
         const { data, error: inviteError } = await supabase.functions.invoke('send-admin-invitation', {
           body: {
             email: formData.email,
@@ -138,7 +308,6 @@ export const AdminManager = () => {
       setEditingAdmin(null);
       setFormData({ email: '', is_super_admin: false });
       
-      // Recharger immédiatement et après un court délai pour être sûr
       await loadAdministrators();
       setTimeout(() => loadAdministrators(), 1000);
     } catch (error: any) {
@@ -157,18 +326,15 @@ export const AdminManager = () => {
     const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
     let password = "";
     
-    // Assurer au moins un caractère de chaque type
-    password += "ABCDEFGHIJKLMNOPQRSTUVWXYZ".charAt(Math.floor(Math.random() * 26)); // Majuscule
-    password += "abcdefghijklmnopqrstuvwxyz".charAt(Math.floor(Math.random() * 26)); // Minuscule
-    password += "0123456789".charAt(Math.floor(Math.random() * 10)); // Chiffre
-    password += "!@#$%^&*".charAt(Math.floor(Math.random() * 8)); // Caractère spécial
+    password += "ABCDEFGHIJKLMNOPQRSTUVWXYZ".charAt(Math.floor(Math.random() * 26));
+    password += "abcdefghijklmnopqrstuvwxyz".charAt(Math.floor(Math.random() * 26));
+    password += "0123456789".charAt(Math.floor(Math.random() * 10));
+    password += "!@#$%^&*".charAt(Math.floor(Math.random() * 8));
     
-    // Remplir le reste
     for (let i = password.length; i < length; i++) {
       password += charset.charAt(Math.floor(Math.random() * charset.length));
     }
     
-    // Mélanger les caractères
     return password.split('').sort(() => Math.random() - 0.5).join('');
   };
 
@@ -206,61 +372,94 @@ export const AdminManager = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
+        <CardTitle className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
             Gestion des administrateurs
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={openAddDialog} className="flex items-center gap-2">
-                <Mail className="h-4 w-4" />
-                Inviter un administrateur
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>
-                  {editingAdmin ? 'Modifier l\'administrateur' : 'Inviter un administrateur'}
-                </DialogTitle>
-                <DialogDescription>
-                  {editingAdmin 
-                    ? 'Modifiez les informations de l\'administrateur'
-                    : 'Invitez un nouvel administrateur. Un email avec les informations de connexion sera automatiquement envoyé.'
-                  }
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                    placeholder="admin@exemple.com"
-                    required
-                  />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="is_super_admin"
-                    checked={formData.is_super_admin}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_super_admin: checked }))}
-                  />
-                  <Label htmlFor="is_super_admin">Super administrateur</Label>
-                </div>
-                <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                    Annuler
-                  </Button>
-                  <Button type="submit">
-                    {editingAdmin ? 'Modifier' : 'Inviter'}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Bouton Modèle CSV */}
+            <Button variant="outline" size="sm" onClick={downloadTemplate}>
+              <FileText className="h-4 w-4 mr-2" />
+              Modèle CSV
+            </Button>
+            
+            {/* Bouton Export */}
+            <Button variant="outline" size="sm" onClick={exportAdministrators}>
+              <Download className="h-4 w-4 mr-2" />
+              Exporter ({administrators.length})
+            </Button>
+            
+            {/* Bouton Import */}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isImporting}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              {isImporting ? 'Import en cours...' : 'Importer'}
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv"
+              onChange={handleImport}
+              className="hidden"
+            />
+
+            {/* Bouton Inviter */}
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={openAddDialog} className="flex items-center gap-2">
+                  <Mail className="h-4 w-4" />
+                  Inviter un administrateur
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingAdmin ? 'Modifier l\'administrateur' : 'Inviter un administrateur'}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {editingAdmin 
+                      ? 'Modifiez les informations de l\'administrateur'
+                      : 'Invitez un nouvel administrateur. Un email avec les informations de connexion sera automatiquement envoyé.'
+                    }
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                      placeholder="admin@exemple.com"
+                      required
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="is_super_admin"
+                      checked={formData.is_super_admin}
+                      onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_super_admin: checked }))}
+                    />
+                    <Label htmlFor="is_super_admin">Super administrateur</Label>
+                  </div>
+                  <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                      Annuler
+                    </Button>
+                    <Button type="submit">
+                      {editingAdmin ? 'Modifier' : 'Inviter'}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
         </CardTitle>
         <CardDescription>
           Gérez les utilisateurs qui ont accès aux fonctionnalités d'administration
