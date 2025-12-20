@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { usePendingPurchase } from '@/hooks/usePendingPurchase';
+import { useReferenceValues } from '@/hooks/useReferenceValues';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ArrowLeft, CheckCircle, Tag } from 'lucide-react';
-import { SCHOOLS, CLASS_LEVELS, CITIES } from '@/constants/userData';
 import { BalzacWorksBackground } from '@/components/BalzacWorksBackground';
 
 const Auth = () => {
@@ -25,6 +25,12 @@ const Auth = () => {
   const { user, signIn, signUp, resetPassword } = useAuth();
   const navigate = useNavigate();
   const { pendingPurchase } = usePendingPurchase();
+  const { getAllSchools, getAllClasses, getAllCities } = useReferenceValues();
+  
+  // Valeurs de référence dynamiques
+  const schools = getAllSchools();
+  const classes = getAllClasses();
+  const cities = getAllCities();
 
   // Déterminer l'onglet par défaut (signup si on vient de "commencer maintenant")
   const defaultTab = searchParams.get('tab') === 'signup' ? 'signup' : 'signin';
@@ -254,7 +260,7 @@ const Auth = () => {
                         <SelectValue placeholder="Sélectionnez votre école" />
                       </SelectTrigger>
                       <SelectContent>
-                        {SCHOOLS.map((school) => (
+                        {schools.map((school) => (
                           <SelectItem key={school} value={school}>
                             {school}
                           </SelectItem>
@@ -269,7 +275,7 @@ const Auth = () => {
                         <SelectValue placeholder="Sélectionnez votre classe" />
                       </SelectTrigger>
                       <SelectContent>
-                        {CLASS_LEVELS.map((className) => (
+                        {classes.map((className) => (
                           <SelectItem key={className} value={className}>
                             {className}
                           </SelectItem>
@@ -284,7 +290,7 @@ const Auth = () => {
                         <SelectValue placeholder="Sélectionnez votre ville" />
                       </SelectTrigger>
                       <SelectContent>
-                        {CITIES.map((city) => (
+                        {cities.map((city) => (
                           <SelectItem key={city} value={city}>
                             {city}
                           </SelectItem>
