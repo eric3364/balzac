@@ -719,37 +719,111 @@ export const UserManagement = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const text = await file.text();
-    const lines = text.split('\n');
-    const headers = lines[0].split(',').map(h => h.trim());
-    
-    if (!headers.includes('email')) {
+    const formatErrorMessage = "Le format d'importation n'est pas conforme. Merci de télécharger le modèle CSV pour réaliser la mise en conformité.";
+
+    // Vérifier l'extension du fichier
+    if (!file.name.toLowerCase().endsWith('.csv')) {
       toast({
         title: "Format invalide",
-        description: "Le fichier doit contenir au minimum une colonne 'email'",
+        description: formatErrorMessage,
         variant: "destructive"
       });
+      event.target.value = '';
       return;
     }
 
-    const usersToImport = lines.slice(1)
-      .filter(line => line.trim())
-      .map(line => {
-        const values = line.split(',').map(v => v.trim());
-        const userObj: any = {};
-        headers.forEach((header, index) => {
-          userObj[header] = values[index] || '';
-        });
-        return userObj;
-      })
-      .filter(user => user.email);
+    const text = await file.text();
+    const lines = text.split('\n').filter(line => line.trim());
+
+    // Vérifier qu'il y a au moins une ligne d'en-tête et une ligne de données
+    if (lines.length < 2) {
+      toast({
+        title: "Format invalide",
+        description: formatErrorMessage,
+        variant: "destructive"
+      });
+      event.target.value = '';
+      return;
+    }
+
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+    
+    // Vérifier les colonnes requises
+    const requiredHeaders = ['email'];
+    const expectedHeaders = ['email', 'first_name', 'last_name', 'school', 'class_name', 'city'];
+    
+    // Vérifier que 'email' est présent
+    if (!headers.includes('email')) {
+      toast({
+        title: "Format invalide",
+        description: formatErrorMessage,
+        variant: "destructive"
+      });
+      event.target.value = '';
+      return;
+    }
+
+    // Vérifier qu'il n'y a pas de colonnes inconnues
+    const unknownHeaders = headers.filter(h => h && !expectedHeaders.includes(h));
+    if (unknownHeaders.length > 0) {
+      toast({
+        title: "Format invalide",
+        description: formatErrorMessage,
+        variant: "destructive"
+      });
+      event.target.value = '';
+      return;
+    }
+
+    // Parser les données
+    const usersToImport: any[] = [];
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    let hasFormatError = false;
+
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+
+      const values = line.split(',').map(v => v.trim());
+      
+      // Vérifier que le nombre de colonnes correspond aux en-têtes
+      if (values.length !== headers.length) {
+        hasFormatError = true;
+        break;
+      }
+
+      const userObj: any = {};
+      headers.forEach((header, index) => {
+        // Mapper les en-têtes normalisés
+        userObj[header] = values[index] || '';
+      });
+
+      // Valider le format de l'email
+      if (!userObj.email || !emailRegex.test(userObj.email)) {
+        hasFormatError = true;
+        break;
+      }
+
+      usersToImport.push(userObj);
+    }
+
+    if (hasFormatError) {
+      toast({
+        title: "Format invalide",
+        description: formatErrorMessage,
+        variant: "destructive"
+      });
+      event.target.value = '';
+      return;
+    }
 
     if (usersToImport.length === 0) {
       toast({
         title: "Aucun utilisateur trouvé",
-        description: "Le fichier ne contient aucun utilisateur valide",
+        description: formatErrorMessage,
         variant: "destructive"
       });
+      event.target.value = '';
       return;
     }
 
