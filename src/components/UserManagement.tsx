@@ -84,6 +84,7 @@ export const UserManagement = () => {
   const [isNormalizationDialogOpen, setIsNormalizationDialogOpen] = useState(false);
   const [unmatchedValues, setUnmatchedValues] = useState<{field: string, value: string, suggestions: string[]}[]>([]);
   const [normalizationChoices, setNormalizationChoices] = useState<Record<string, string>>({});
+  const [customInputValues, setCustomInputValues] = useState<Record<string, string>>({});
   const [pendingNormalizationUsers, setPendingNormalizationUsers] = useState<any[]>([]);
 
   const [userForm, setUserForm] = useState<UserFormData>({
@@ -992,7 +993,12 @@ export const UserManagement = () => {
         const chosenValue = normalizationChoices[choiceKey];
         
         if (chosenValue && user[field]?.toLowerCase() === value.toLowerCase()) {
-          normalizedUser[field] = chosenValue;
+          // Si c'est "__custom__", utiliser la valeur saisie manuellement
+          if (chosenValue === '__custom__') {
+            normalizedUser[field] = customInputValues[choiceKey] || value;
+          } else {
+            normalizedUser[field] = chosenValue;
+          }
         }
       });
       
@@ -1004,6 +1010,7 @@ export const UserManagement = () => {
     // Réinitialiser les états
     setUnmatchedValues([]);
     setNormalizationChoices({});
+    setCustomInputValues({});
     setPendingNormalizationUsers([]);
   };
 
@@ -1011,6 +1018,7 @@ export const UserManagement = () => {
     setIsNormalizationDialogOpen(false);
     setUnmatchedValues([]);
     setNormalizationChoices({});
+    setCustomInputValues({});
     setPendingNormalizationUsers([]);
     if (importFileInputRef) {
       importFileInputRef.value = '';
@@ -1746,7 +1754,7 @@ export const UserManagement = () => {
             </DialogTitle>
             <DialogDescription>
               Certaines valeurs du fichier d'importation ne correspondent pas aux données de référence. 
-              Veuillez sélectionner la correspondance appropriée pour chaque valeur.
+              Veuillez sélectionner la correspondance appropriée pour chaque valeur ou ajouter une nouvelle valeur.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 max-h-[400px] overflow-y-auto">
@@ -1757,6 +1765,7 @@ export const UserManagement = () => {
                 'city': 'Ville'
               };
               const choiceKey = `${item.field}:${item.value}`;
+              const isCustom = normalizationChoices[choiceKey] === '__custom__';
               
               return (
                 <div key={index} className="bg-muted/50 border rounded-lg p-4">
@@ -1764,12 +1773,18 @@ export const UserManagement = () => {
                     {fieldLabels[item.field] || item.field} : <span className="text-amber-600">"{item.value}"</span>
                   </p>
                   <p className="text-xs text-muted-foreground mb-3">
-                    Sélectionnez la valeur correspondante :
+                    Sélectionnez la valeur correspondante ou ajoutez-en une nouvelle :
                   </p>
                   <Select 
                     value={normalizationChoices[choiceKey] || ''} 
                     onValueChange={(value) => {
                       setNormalizationChoices(prev => ({ ...prev, [choiceKey]: value }));
+                      // Si on sélectionne "Autre", pré-remplir avec la valeur importée formatée
+                      if (value === '__custom__' && !customInputValues[choiceKey]) {
+                        // Formater la valeur: première lettre majuscule, reste minuscule
+                        const formattedValue = item.value.charAt(0).toUpperCase() + item.value.slice(1).toLowerCase();
+                        setCustomInputValues(prev => ({ ...prev, [choiceKey]: formattedValue }));
+                      }
                     }}
                   >
                     <SelectTrigger>
@@ -1781,8 +1796,28 @@ export const UserManagement = () => {
                           {suggestion}
                         </SelectItem>
                       ))}
+                      <SelectItem value="__custom__" className="text-primary font-medium border-t mt-1 pt-2">
+                        <span className="flex items-center gap-2">
+                          <Plus className="h-4 w-4" />
+                          Autre (saisir manuellement)
+                        </span>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
+                  
+                  {isCustom && (
+                    <div className="mt-3">
+                      <Label className="text-xs text-muted-foreground mb-1 block">
+                        Nouvelle valeur pour {fieldLabels[item.field]?.toLowerCase() || item.field} :
+                      </Label>
+                      <Input
+                        value={customInputValues[choiceKey] || ''}
+                        onChange={(e) => setCustomInputValues(prev => ({ ...prev, [choiceKey]: e.target.value }))}
+                        placeholder={`Saisir une nouvelle ${fieldLabels[item.field]?.toLowerCase() || 'valeur'}...`}
+                        className="mt-1"
+                      />
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -1796,7 +1831,13 @@ export const UserManagement = () => {
             </Button>
             <Button 
               onClick={handleApplyNormalization}
-              disabled={unmatchedValues.some(item => !normalizationChoices[`${item.field}:${item.value}`])}
+              disabled={unmatchedValues.some(item => {
+                const choiceKey = `${item.field}:${item.value}`;
+                const choice = normalizationChoices[choiceKey];
+                if (!choice) return true;
+                if (choice === '__custom__' && !customInputValues[choiceKey]?.trim()) return true;
+                return false;
+              })}
             >
               Appliquer et continuer
             </Button>
