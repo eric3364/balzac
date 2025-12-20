@@ -35,6 +35,30 @@ export const useReferenceValues = () => {
     fetchCustomValues();
   }, [fetchCustomValues]);
 
+  // Écouter les changements en temps réel
+  useEffect(() => {
+    const channel = supabase
+      .channel('reference_values_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'reference_values'
+        },
+        (payload) => {
+          console.log('Reference values updated:', payload);
+          // Refetch toutes les valeurs pour maintenir la cohérence
+          fetchCustomValues();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchCustomValues]);
+
   // Combiner les valeurs statiques avec les valeurs personnalisées
   const getAllSchools = useCallback((): string[] => {
     const staticSchools = [...SCHOOLS];
