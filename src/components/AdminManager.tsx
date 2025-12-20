@@ -786,10 +786,22 @@ export const AdminManager = () => {
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Renvoyer les mots de passe</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Êtes-vous sûr de vouloir renvoyer le mot de passe à {selectedAdmins.size} administrateur(s) ?
-                      Un email avec le nouveau mot de passe sera envoyé à chaque administrateur.
+                    <AlertDialogTitle>
+                      {selectedAdmins.size === 1 ? 'Renvoyer le mot de passe' : 'Renvoyer les mots de passe'}
+                    </AlertDialogTitle>
+                    <AlertDialogDescription className="space-y-2">
+                      <p>
+                        {selectedAdmins.size === 1 
+                          ? 'Un email avec le nouveau mot de passe sera envoyé à :' 
+                          : `Un email avec le nouveau mot de passe sera envoyé aux ${selectedAdmins.size} administrateurs suivants :`}
+                      </p>
+                      <ul className="list-disc list-inside text-sm font-medium">
+                        {administrators
+                          .filter(a => selectedAdmins.has(a.id))
+                          .map(a => (
+                            <li key={a.id}>{a.email}</li>
+                          ))}
+                      </ul>
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
