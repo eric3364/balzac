@@ -742,11 +742,30 @@ export const UserManagement = () => {
   };
 
   const downloadTemplate = () => {
-    const template = [
-      ['email', 'first_name', 'last_name', 'school', 'class_name', 'city'],
-      ['exemple@email.com', 'Jean', 'Dupont', 'ESCEN', 'N1', 'Paris'],
-      ['autre@email.com', 'Marie', 'Martin', 'Bachelor Institute', 'N2', 'Lyon']
-    ].map(row => row.join(',')).join('\n');
+    // Générer des lignes d'exemple avec toutes les valeurs de référence disponibles
+    const maxRows = Math.max(schools.length, classes.length, cities.length);
+    
+    const templateRows: string[][] = [
+      ['email', 'first_name', 'last_name', 'school', 'class_name', 'city']
+    ];
+    
+    // Créer des lignes avec toutes les combinaisons de valeurs possibles
+    for (let i = 0; i < maxRows; i++) {
+      const school = schools[i] || '';
+      const className = classes[i] || '';
+      const city = cities[i] || '';
+      
+      templateRows.push([
+        `exemple${i + 1}@email.com`,
+        `Prénom${i + 1}`,
+        `Nom${i + 1}`,
+        school,
+        className,
+        city
+      ]);
+    }
+    
+    const template = templateRows.map(row => row.join(',')).join('\n');
 
     const blob = new Blob([template], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
