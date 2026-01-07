@@ -1,86 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
-import { encodeBase64 } from "https://deno.land/std@0.168.0/encoding/base64.ts";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY") as string);
-const hookSecret = Deno.env.get("SEND_EMAIL_HOOK_SECRET") as string;
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") as string;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
-
-// Helper function to verify webhook signature for Supabase Auth Hooks
-async function verifyWebhookSignature(payload: string, headers: Record<string, string>, secret: string): Promise<boolean> {
-  try {
-    const webhookId = headers["webhook-id"];
-    const webhookTimestamp = headers["webhook-timestamp"];
-    const webhookSignature = headers["webhook-signature"];
-
-    // If no webhook headers, this might be a direct Supabase Auth Hook call
-    // Supabase Auth Hooks don't always include these headers
-    if (!webhookId || !webhookTimestamp || !webhookSignature) {
-      console.log("No standard webhook headers found - accepting request from Supabase Auth Hook");
-      return true;
-    }
-
-    console.log("Webhook headers present, verifying signature...");
-    console.log("webhook-id:", webhookId);
-    console.log("webhook-timestamp:", webhookTimestamp);
-
-    const signedContent = `${webhookId}.${webhookTimestamp}.${payload}`;
-    
-    // Extract the secret key (remove 'whsec_' or 'v1,whpk_' prefix if present)
-    let secretKey = secret;
-    if (secret.startsWith("whsec_")) {
-      secretKey = secret.slice(6);
-    } else if (secret.startsWith("v1,whpk_")) {
-      secretKey = secret.slice(8);
-    }
-    
-    // Try to decode the secret from base64, fall back to raw encoding
-    let keyBytes: Uint8Array;
-    try {
-      keyBytes = Uint8Array.from(atob(secretKey), c => c.charCodeAt(0));
-    } catch {
-      const encoder = new TextEncoder();
-      keyBytes = encoder.encode(secretKey);
-    }
-
-    const key = await globalThis.crypto.subtle.importKey(
-      "raw",
-      keyBytes.buffer as ArrayBuffer,
-      { name: "HMAC", hash: "SHA-256" },
-      false,
-      ["sign"]
-    );
-
-    const signatureBytes = await globalThis.crypto.subtle.sign(
-      "HMAC",
-      key,
-      new TextEncoder().encode(signedContent)
-    );
-
-    const expectedSignature = `v1,${encodeBase64(signatureBytes)}`;
-    
-    // Check if any of the provided signatures match
-    const signatures = webhookSignature.split(" ");
-    const isValid = signatures.some(sig => sig === expectedSignature);
-    
-    if (!isValid) {
-      console.log("Signature mismatch - expected:", expectedSignature.substring(0, 20) + "...");
-      console.log("Received signatures:", signatures.map(s => s.substring(0, 20) + "...").join(", "));
-      // For Supabase Auth Hooks, allow even if signature doesn't match (they use a different format)
-      console.log("Allowing request despite signature mismatch (Supabase Auth Hook compatibility)");
-      return true;
-    }
-    
-    return true;
-  } catch (error) {
-    console.error("Error verifying webhook signature:", error);
-    return true; // Allow on error for Supabase Auth Hook compatibility
-  }
-}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -93,23 +18,9 @@ serve(async (req) => {
   }
 
   const payload = await req.text();
-  const headers = Object.fromEntries(req.headers);
-
   console.log("Received auth email hook request");
 
   try {
-    // Verify signature if secret is configured
-    if (hookSecret) {
-      const isValid = await verifyWebhookSignature(payload, headers, hookSecret);
-      if (!isValid) {
-        console.error("Invalid webhook signature");
-        return new Response(
-          JSON.stringify({ error: { message: "Invalid signature" } }),
-          { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
-        );
-      }
-    }
-
     // Parse the payload
     const data = JSON.parse(payload);
     const user = data.user;
@@ -184,19 +95,29 @@ serve(async (req) => {
         `;
     }
 
-    const { error } = await resend.emails.send({
-      from: "Balzac Certification <noreply@send.balzac.education>",
-      to: [user.email],
-      subject,
-      html: htmlContent,
+    // Send email using Resend API directly via fetch
+    const resendResponse = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: "Balzac Certification <noreply@send.balzac.education>",
+        to: [user.email],
+        subject,
+        html: htmlContent,
+      }),
     });
 
-    if (error) {
-      console.error("Error sending email:", error);
-      throw error;
+    if (!resendResponse.ok) {
+      const errorData = await resendResponse.json();
+      console.error("Error sending email:", errorData);
+      throw new Error(JSON.stringify(errorData));
     }
 
-    console.log(`Email sent successfully to ${user.email}`);
+    const result = await resendResponse.json();
+    console.log(`Email sent successfully to ${user.email}`, result);
 
     return new Response(JSON.stringify({}), {
       status: 200,
@@ -205,8 +126,6 @@ serve(async (req) => {
   } catch (error: any) {
     console.error("Error in send-auth-email function:", error);
     // IMPORTANT: Supabase Auth Hooks require status 200 even on errors
-    // Return empty object to indicate success to Supabase, but log the error
-    // This prevents "Hook requires authorization token" errors
     return new Response(
       JSON.stringify({}),
       {
