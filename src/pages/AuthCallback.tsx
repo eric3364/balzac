@@ -41,8 +41,9 @@ export default function AuthCallback() {
 
     const run = async () => {
       try {
-        // Erreur éventuelle déjà dans l'URL
         const current = new URL(window.location.href);
+        
+        // Erreur éventuelle déjà dans l'URL
         const urlError = getErrorFromUrl(current);
         if (urlError) {
           toast({ title: "Connexion impossible", description: urlError, variant: "destructive" });
@@ -50,46 +51,88 @@ export default function AuthCallback() {
           return;
         }
 
-        // Déjà connecté ?
+        const type = getTypeFromUrl(current);
+        const hasCode = current.searchParams.has("code");
+        const hash = current.hash;
+        
+        // Pour le flow de recovery, Supabase met les tokens dans le hash
+        // Format: #access_token=...&type=recovery
+        if (hash && hash.includes("access_token")) {
+          // Laisser Supabase gérer automatiquement le hash via onAuthStateChange
+          // Attendre que la session soit établie
+          let attempts = 0;
+          const maxAttempts = 20;
+          
+          while (attempts < maxAttempts && !cancelled) {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+              if (type === "recovery") {
+                toast({ title: "Lien confirmé", description: "Définis ton nouveau mot de passe." });
+                navigate(DEST_RESET_PASS, { replace: true });
+              } else {
+                toast({ title: "Connexion confirmée", description: "Bienvenue !" });
+                navigate(DEST_AFTER_AUTH, { replace: true });
+              }
+              return;
+            }
+            await new Promise(resolve => setTimeout(resolve, 200));
+            attempts++;
+          }
+          
+          // Si toujours pas de session après les tentatives
+          toast({
+            title: "Connexion incomplète",
+            description: "Le lien a peut-être expiré. Réessaie.",
+            variant: "destructive",
+          });
+          navigate(DEST_AUTH_PAGE, { replace: true });
+          return;
+        }
+
+        // Pour les flows avec code (email confirmation, magic link)
+        if (hasCode) {
+          const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
+          if (error) {
+            toast({
+              title: "Connexion impossible",
+              description: error.message || "Le lien n'est plus valide.",
+              variant: "destructive",
+            });
+            navigate(DEST_AUTH_PAGE, { replace: true });
+            return;
+          }
+
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) {
+            toast({
+              title: "Connexion incomplète",
+              description: "Impossible de créer la session.",
+              variant: "destructive",
+            });
+            navigate(DEST_AUTH_PAGE, { replace: true });
+            return;
+          }
+
+          if (type === "recovery") {
+            toast({ title: "Lien confirmé", description: "Définis ton nouveau mot de passe." });
+            navigate(DEST_RESET_PASS, { replace: true });
+          } else {
+            toast({ title: "Connexion confirmée", description: "Bienvenue !" });
+            navigate(DEST_AFTER_AUTH, { replace: true });
+          }
+          return;
+        }
+
+        // Aucun code ni hash - vérifier si déjà connecté
         const { data: { session: existing } } = await supabase.auth.getSession();
         if (existing) {
           navigate(DEST_AFTER_AUTH, { replace: true });
           return;
         }
 
-        // Échanger l'URL contre une session
-        const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
-        if (error) {
-          toast({
-            title: "Connexion impossible",
-            description: error.message || "Le lien n'est plus valide.",
-            variant: "destructive",
-          });
-          navigate(DEST_AUTH_PAGE, { replace: true });
-          return;
-        }
-
-        // Double check : session bien créée
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          toast({
-            title: "Connexion incomplète",
-            description: "Impossible de créer la session. Réessaie depuis la page d'authentification.",
-            variant: "destructive",
-          });
-          navigate(DEST_AUTH_PAGE, { replace: true });
-          return;
-        }
-
-        // Routing selon le flow
-        const type = getTypeFromUrl(new URL(window.location.href));
-        if (type === "recovery") {
-          toast({ title: "Lien confirmé", description: "Définis ton nouveau mot de passe." });
-          navigate(DEST_RESET_PASS, { replace: true }); // -> /auth?type=recovery
-        } else {
-          toast({ title: "Connexion confirmée", description: "Bienvenue !" });
-          navigate(DEST_AFTER_AUTH, { replace: true }); // -> /dashboard
-        }
+        // Sinon rediriger vers auth
+        navigate(DEST_AUTH_PAGE, { replace: true });
+        
       } catch (e: any) {
         console.error("Auth callback error:", e);
         toast({
