@@ -75,10 +75,22 @@ export default function Payment() {
     const formData = new FormData(e.currentTarget);
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
+    const passwordConfirm = formData.get('passwordConfirm') as string;
     const firstName = formData.get('firstName') as string;
     const lastName = formData.get('lastName') as string;
     const school = formData.get('school') as string;
     const className = formData.get('className') as string;
+
+    // Vérifier que les mots de passe correspondent
+    if (password !== passwordConfirm) {
+      toast({
+        title: "Erreur",
+        description: "Les mots de passe ne correspondent pas.",
+        variant: "destructive"
+      });
+      setAuthLoading(false);
+      return;
+    }
 
     const { error } = await signUp(email, password, firstName, lastName, school, className);
     
@@ -407,6 +419,17 @@ export default function Payment() {
                           <Input
                             id="signup-password"
                             name="password"
+                            type="password"
+                            placeholder="••••••••"
+                            minLength={6}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="signup-password-confirm">Confirmer le mot de passe</Label>
+                          <Input
+                            id="signup-password-confirm"
+                            name="passwordConfirm"
                             type="password"
                             placeholder="••••••••"
                             minLength={6}

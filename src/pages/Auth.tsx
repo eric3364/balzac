@@ -22,6 +22,7 @@ const Auth = () => {
   const [selectedClass, setSelectedClass] = useState('');
   const [selectedCity, setSelectedCity] = useState('');
   const [promoCode, setPromoCode] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const { user, signIn, signUp, resetPassword } = useAuth();
   const navigate = useNavigate();
   const { pendingPurchase } = usePendingPurchase();
@@ -66,8 +67,17 @@ const Auth = () => {
     const formData = new FormData(e.currentTarget);
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
+    const passwordConfirm = formData.get('passwordConfirm') as string;
     const firstName = formData.get('firstName') as string;
     const lastName = formData.get('lastName') as string;
+
+    // Vérifier que les mots de passe correspondent
+    if (password !== passwordConfirm) {
+      setPasswordError('Les mots de passe ne correspondent pas.');
+      setIsLoading(false);
+      return;
+    }
+    setPasswordError('');
 
     const { error } = await signUp(email, password, firstName, lastName, selectedSchool, selectedClass, selectedCity, promoCode.trim().toUpperCase() || undefined);
     
@@ -252,6 +262,20 @@ const Auth = () => {
                       minLength={6}
                       required
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password-confirm">Confirmer le mot de passe</Label>
+                    <Input
+                      id="signup-password-confirm"
+                      name="passwordConfirm"
+                      type="password"
+                      placeholder="••••••••"
+                      minLength={6}
+                      required
+                    />
+                    {passwordError && (
+                      <p className="text-sm text-destructive">{passwordError}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="school">École</Label>
