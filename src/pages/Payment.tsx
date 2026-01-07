@@ -88,14 +88,15 @@ export default function Payment() {
         description: error.message,
         variant: "destructive"
       });
+      setAuthLoading(false);
     } else {
       toast({
         title: "Inscription réussie",
-        description: "Votre compte a été créé avec succès.",
+        description: "Bienvenue ! Redirection vers votre tableau de bord...",
       });
+      // Rediriger vers le dashboard après une inscription réussie
+      navigate('/dashboard');
     }
-    
-    setAuthLoading(false);
   };
 
   const handleCheckPromoCode = async () => {
