@@ -10,8 +10,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ArrowLeft, CheckCircle, Tag } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Tag, KeyRound } from 'lucide-react';
 import { BalzacWorksBackground } from '@/components/BalzacWorksBackground';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
@@ -23,8 +25,11 @@ const Auth = () => {
   const [selectedCity, setSelectedCity] = useState('');
   const [promoCode, setPromoCode] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const { user, signIn, signUp, resetPassword } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { pendingPurchase } = usePendingPurchase();
   const { getAllSchools, getAllClasses, getAllCities } = useReferenceValues();
   
@@ -33,15 +38,68 @@ const Auth = () => {
   const classes = getAllClasses();
   const cities = getAllCities();
 
+  // Déterminer si c'est un flow de récupération de mot de passe
+  const isRecoveryMode = searchParams.get('type') === 'recovery';
+
   // Déterminer l'onglet par défaut (signup si on vient de "commencer maintenant")
   const defaultTab = searchParams.get('tab') === 'signup' ? 'signup' : 'signin';
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated (sauf en mode recovery)
   useEffect(() => {
-    if (user) {
+    if (user && !isRecoveryMode) {
       navigate('/');
     }
-  }, [user, navigate]);
+  }, [user, navigate, isRecoveryMode]);
+
+  // Fonction pour mettre à jour le mot de passe après recovery
+  const handleUpdatePassword = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setPasswordError('');
+
+    if (newPassword !== confirmNewPassword) {
+      setPasswordError('Les mots de passe ne correspondent pas.');
+      setIsLoading(false);
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setPasswordError('Le mot de passe doit contenir au moins 6 caractères.');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) {
+        toast({
+          title: "Erreur",
+          description: error.message,
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      toast({
+        title: "Mot de passe mis à jour",
+        description: "Votre mot de passe a été modifié avec succès."
+      });
+      
+      navigate('/dashboard');
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la mise à jour du mot de passe.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -118,13 +176,63 @@ const Auth = () => {
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-primary">Balzac Certification</h1>
           <p className="text-muted-foreground mt-2">
-            {pendingPurchase 
-              ? `Finalisez votre achat - ${pendingPurchase.name}`
-              : "Plateforme d'apprentissage du français"
+            {isRecoveryMode 
+              ? "Réinitialisation du mot de passe"
+              : pendingPurchase 
+                ? `Finalisez votre achat - ${pendingPurchase.name}`
+                : "Plateforme d'apprentissage du français"
             }
           </p>
         </div>
 
+        {/* Mode Recovery - Formulaire de nouveau mot de passe */}
+        {isRecoveryMode ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <KeyRound className="h-5 w-5" />
+                Nouveau mot de passe
+              </CardTitle>
+              <CardDescription>
+                Définissez votre nouveau mot de passe
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleUpdatePassword} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="new-password">Nouveau mot de passe</Label>
+                  <Input
+                    id="new-password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    minLength={6}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-new-password">Confirmer le mot de passe</Label>
+                  <Input
+                    id="confirm-new-password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={confirmNewPassword}
+                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    minLength={6}
+                    required
+                  />
+                  {passwordError && (
+                    <p className="text-sm text-destructive">{passwordError}</p>
+                  )}
+                </div>
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? 'Mise à jour...' : 'Mettre à jour le mot de passe'}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        ) : (
         <Tabs defaultValue={defaultTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="signin">Connexion</TabsTrigger>
@@ -346,6 +454,7 @@ const Auth = () => {
             </Card>
           </TabsContent>
         </Tabs>
+        )}
 
         <Dialog open={showSignupSuccess} onOpenChange={setShowSignupSuccess}>
           <DialogContent className="sm:max-w-md">
