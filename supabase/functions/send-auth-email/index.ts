@@ -1,6 +1,6 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
-import { encode as base64Encode } from "https://deno.land/std@0.190.0/encoding/base64.ts";
+import { encodeBase64 } from "https://deno.land/std@0.168.0/encoding/base64.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY") as string);
 const hookSecret = Deno.env.get("SEND_EMAIL_HOOK_SECRET") as string;
@@ -61,7 +61,7 @@ async function verifyWebhookSignature(payload: string, headers: Record<string, s
       new TextEncoder().encode(signedContent)
     );
 
-    const expectedSignature = `v1,${base64Encode(signatureBytes)}`;
+    const expectedSignature = `v1,${encodeBase64(signatureBytes)}`;
     
     // Check if any of the provided signatures match
     const signatures = webhookSignature.split(" ");
