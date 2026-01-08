@@ -337,6 +337,16 @@ export const AdminManager = () => {
         if (error) throw error;
         toast.success('Administrateur modifié avec succès');
       } else {
+        // Vérifier si cet email existe déjà comme administrateur
+        const existingAdmin = administrators.find(
+          admin => admin.email.toLowerCase() === formData.email.toLowerCase()
+        );
+        
+        if (existingAdmin) {
+          toast.error('Cet utilisateur est déjà administrateur');
+          return;
+        }
+        
         // Ajouter un nouvel administrateur via edge function
         const tempPassword = generateTemporaryPassword();
         
@@ -350,7 +360,18 @@ export const AdminManager = () => {
 
         if (inviteError) {
           console.error('Invite error:', inviteError);
-          toast.error(`Erreur: ${inviteError.message || 'Impossible d\'inviter l\'administrateur'}`);
+          // Essayer de parser le message d'erreur du body si disponible
+          let errorMessage = inviteError.message || 'Impossible d\'inviter l\'administrateur';
+          try {
+            // L'erreur peut contenir le body JSON
+            if (inviteError.context?.body) {
+              const errorBody = JSON.parse(inviteError.context.body);
+              errorMessage = errorBody.error || errorMessage;
+            }
+          } catch (e) {
+            // Ignorer les erreurs de parsing
+          }
+          toast.error(errorMessage);
           return;
         }
 
@@ -372,11 +393,14 @@ export const AdminManager = () => {
       setTimeout(() => loadAdministrators(), 1000);
     } catch (error: any) {
       console.error('Erreur:', error);
+      // Essayer de parser le message d'erreur
+      let errorMessage = 'Erreur lors de la sauvegarde';
       if (error.code === '23505') {
-        toast.error('Cet email existe déjà comme administrateur');
-      } else {
-        toast.error('Erreur lors de la sauvegarde');
+        errorMessage = 'Cet email existe déjà comme administrateur';
+      } else if (error.message?.includes('already')) {
+        errorMessage = 'Cet utilisateur est déjà administrateur';
       }
+      toast.error(errorMessage);
     }
   };
 
