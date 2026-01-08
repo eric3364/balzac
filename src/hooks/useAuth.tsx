@@ -47,7 +47,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(session?.user ?? null);
         
         // Vérifier si c'est la première connexion d'un apprenant ou un admin qui doit changer son mot de passe
-        if (session?.user && event === 'SIGNED_IN') {
+        // Ne pas rediriger si on est en mode recovery (réinitialisation de mot de passe)
+        const currentUrl = window.location.href;
+        const isRecoveryFlow = currentUrl.includes('type=recovery') || currentUrl.includes('recovery');
+        
+        if (session?.user && event === 'SIGNED_IN' && !isRecoveryFlow) {
           setTimeout(async () => {
             try {
               // Vérifier si l'utilisateur doit changer son mot de passe (administrateur)

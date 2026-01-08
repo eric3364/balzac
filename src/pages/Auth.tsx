@@ -45,10 +45,12 @@ const Auth = () => {
   const defaultTab = searchParams.get('tab') === 'signup' ? 'signup' : 'signin';
 
   // Redirect if already authenticated (sauf en mode recovery)
+  // En mode recovery, on laisse l'utilisateur définir son nouveau mot de passe
   useEffect(() => {
     if (user && !isRecoveryMode) {
       navigate('/');
     }
+    // Ne pas rediriger si on est en mode recovery, même si l'utilisateur est connecté
   }, [user, navigate, isRecoveryMode]);
 
   // Fonction pour mettre à jour le mot de passe après recovery
