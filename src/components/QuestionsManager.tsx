@@ -8,10 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Edit2, Trash2, Search, Filter, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Plus, Edit2, Trash2, Search, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { QuestionImportExport } from '@/components/questions/QuestionImportExport';
 
 interface Question {
   id: number;
@@ -48,6 +49,7 @@ export const QuestionsManager: React.FC<QuestionsManagerProps> = ({ difficultyLe
   const [currentPage, setCurrentPage] = useState(1);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedQuestions, setSelectedQuestions] = useState<Set<number>>(new Set());
   const { toast } = useToast();
 
   const questionsPerPage = 20;
@@ -220,33 +222,83 @@ export const QuestionsManager: React.FC<QuestionsManagerProps> = ({ difficultyLe
     );
   }
 
+  // Gestion de la sélection
+  const toggleSelectAll = () => {
+    if (selectedQuestions.size === currentQuestions.length) {
+      // Désélectionner tout
+      const newSelected = new Set(selectedQuestions);
+      currentQuestions.forEach(q => newSelected.delete(q.id));
+      setSelectedQuestions(newSelected);
+    } else {
+      // Sélectionner tout sur la page courante
+      const newSelected = new Set(selectedQuestions);
+      currentQuestions.forEach(q => newSelected.add(q.id));
+      setSelectedQuestions(newSelected);
+    }
+  };
+
+  const toggleSelectQuestion = (questionId: number) => {
+    const newSelected = new Set(selectedQuestions);
+    if (newSelected.has(questionId)) {
+      newSelected.delete(questionId);
+    } else {
+      newSelected.add(questionId);
+    }
+    setSelectedQuestions(newSelected);
+  };
+
+  const selectAllFiltered = () => {
+    const newSelected = new Set(selectedQuestions);
+    filteredQuestions.forEach(q => newSelected.add(q.id));
+    setSelectedQuestions(newSelected);
+  };
+
+  const clearSelection = () => {
+    setSelectedQuestions(new Set());
+  };
+
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
               Gestion des questions ({filteredQuestions.length})
             </CardTitle>
+            {selectedQuestions.size > 0 && (
+              <p className="text-sm text-muted-foreground mt-1">
+                {selectedQuestions.size} question(s) sélectionnée(s)
+                <Button variant="link" className="p-0 h-auto ml-2" onClick={clearSelection}>
+                  Effacer la sélection
+                </Button>
+              </p>
+            )}
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => setEditingQuestion(null)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Ajouter une question
-              </Button>
-            </DialogTrigger>
-            <QuestionDialog
-              question={editingQuestion}
-              difficultyLevels={difficultyLevels}
-              onSave={saveQuestion}
-              onCancel={() => {
-                setIsDialogOpen(false);
-                setEditingQuestion(null);
-              }}
+          <div className="flex items-center gap-2 flex-wrap">
+            <QuestionImportExport
+              questions={questions}
+              selectedQuestions={selectedQuestions}
+              onImportComplete={loadQuestions}
             />
-          </Dialog>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => setEditingQuestion(null)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Ajouter une question
+                </Button>
+              </DialogTrigger>
+              <QuestionDialog
+                question={editingQuestion}
+                difficultyLevels={difficultyLevels}
+                onSave={saveQuestion}
+                onCancel={() => {
+                  setIsDialogOpen(false);
+                  setEditingQuestion(null);
+                }}
+              />
+            </Dialog>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -291,11 +343,26 @@ export const QuestionsManager: React.FC<QuestionsManagerProps> = ({ difficultyLe
           </Select>
         </div>
 
+        {/* Actions de sélection rapide */}
+        {filteredQuestions.length > 0 && (
+          <div className="flex items-center gap-2 text-sm">
+            <Button variant="ghost" size="sm" onClick={selectAllFiltered}>
+              Sélectionner les {filteredQuestions.length} questions filtrées
+            </Button>
+          </div>
+        )}
+
         {/* Tableau des questions */}
-        <div className="border rounded-lg">
+        <div className="border rounded-lg overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={currentQuestions.length > 0 && currentQuestions.every(q => selectedQuestions.has(q.id))}
+                    onCheckedChange={toggleSelectAll}
+                  />
+                </TableHead>
                 <TableHead className="w-20">ID</TableHead>
                 <TableHead>Niveau</TableHead>
                 <TableHead>Type</TableHead>
@@ -308,8 +375,15 @@ export const QuestionsManager: React.FC<QuestionsManagerProps> = ({ difficultyLe
             <TableBody>
               {currentQuestions.map((question) => {
                 const levelInfo = getLevelInfo(question.level);
+                const isSelected = selectedQuestions.has(question.id);
                 return (
-                  <TableRow key={question.id}>
+                  <TableRow key={question.id} className={isSelected ? 'bg-muted/50' : ''}>
+                    <TableCell>
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => toggleSelectQuestion(question.id)}
+                      />
+                    </TableCell>
                     <TableCell className="font-mono text-sm">
                       {question.id}
                     </TableCell>
