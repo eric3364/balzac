@@ -217,6 +217,44 @@ export type Database = {
         }
         Relationships: []
       }
+      email_replies: {
+        Row: {
+          created_at: string
+          id: string
+          received_email_id: string
+          replied_by: string
+          reply_html: string | null
+          reply_text: string
+          sent_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          received_email_id: string
+          replied_by: string
+          reply_html?: string | null
+          reply_text: string
+          sent_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          received_email_id?: string
+          replied_by?: string
+          reply_html?: string | null
+          reply_text?: string
+          sent_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_replies_received_email_id_fkey"
+            columns: ["received_email_id"]
+            isOneToOne: false
+            referencedRelation: "received_emails"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_resend_log: {
         Row: {
           created_at: string
@@ -638,6 +676,54 @@ export type Database = {
           level?: string | null
           rule?: string | null
           type?: string | null
+        }
+        Relationships: []
+      }
+      received_emails: {
+        Row: {
+          body_html: string | null
+          body_text: string | null
+          created_at: string
+          from_email: string
+          from_name: string | null
+          id: string
+          is_archived: boolean
+          is_read: boolean
+          received_at: string
+          status: string
+          subject: string
+          to_email: string
+          updated_at: string
+        }
+        Insert: {
+          body_html?: string | null
+          body_text?: string | null
+          created_at?: string
+          from_email: string
+          from_name?: string | null
+          id?: string
+          is_archived?: boolean
+          is_read?: boolean
+          received_at?: string
+          status?: string
+          subject?: string
+          to_email?: string
+          updated_at?: string
+        }
+        Update: {
+          body_html?: string | null
+          body_text?: string | null
+          created_at?: string
+          from_email?: string
+          from_name?: string | null
+          id?: string
+          is_archived?: boolean
+          is_read?: boolean
+          received_at?: string
+          status?: string
+          subject?: string
+          to_email?: string
+          updated_at?: string
         }
         Relationships: []
       }
