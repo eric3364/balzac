@@ -28,6 +28,7 @@ import { PlanningObjectivesTimeline } from '@/components/PlanningObjectivesTimel
 import { ReferenceValuesManager } from '@/components/ReferenceValuesManager';
 import { AdminPrivilegesManager } from '@/components/AdminPrivilegesManager';
 import { useAdminPrivileges } from '@/hooks/useAdminPrivileges';
+import { EmailInbox } from '@/components/EmailInbox';
 
 interface AdminUser {
   id: number;
@@ -384,6 +385,7 @@ const Admin = () => {
             {canViewFinance(isSuperAdmin) && (
               <TabsTrigger value="finance">Finance/admin</TabsTrigger>
             )}
+            <TabsTrigger value="messagerie">Messagerie</TabsTrigger>
           </TabsList>
 
           <TabsContent value="students" className="space-y-6">
@@ -602,6 +604,10 @@ const Admin = () => {
               <FinanceManager />
             </TabsContent>
           )}
+
+          <TabsContent value="messagerie" className="space-y-6">
+            <EmailInbox />
+          </TabsContent>
         </Tabs>
       </div>
     </div>
