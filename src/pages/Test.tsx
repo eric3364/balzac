@@ -464,35 +464,31 @@ export default function Test() {
 
   const checkCertificationEligibility = async (level: number) => {
     try {
-      const levelName = getLevelName(level);
-      // Get all correct attempts for this level
-      const { data: correctAttempts } = await supabase
-        .from('question_attempts')
-        .select('question_id')
-        .eq('user_id', user!.id)
-        .eq('level', level)
-        .eq('is_correct', true);
+      // Attempt certification via secure edge function (server validates score)
+      const { data, error } = await supabase.functions.invoke('create-certification', {
+        body: { level }
+      });
       
-      // Get total questions for this level
-      const { data: totalQuestions } = await supabase
-        .from('questions')
-        .select('id')
-        .eq('level', levelName);
-      
-      const correctCount = correctAttempts?.length || 0;
-      const totalCount = totalQuestions?.length || 0;
-      
-      if (totalCount === 0) return;
-      
-      const overallScore = Math.round((correctCount / totalCount) * 100);
-      
-      if (overallScore >= 75) {
-        // User is certified for this level
-        await createCertification(level, overallScore);
-        setIsCompleted(true);
-        setScore(overallScore);
+      if (error) {
+        // Score too low or other validation failure - not an error to show
+        console.log('Certification check:', error);
+        return;
       }
       
+      if (data?.certification) {
+        const certification = data.certification;
+        setCertifications(prev => [...prev, {
+          ...certification,
+          certified_at: certification.certified_at || '',
+        }]);
+        setIsCompleted(true);
+        setScore(certification.score || 0);
+        
+        toast({
+          title: "🎉 Certification obtenue !",
+          description: `Félicitations ! Vous êtes certifié niveau ${level} !`,
+        });
+      }
     } catch (error) {
       console.error('Error checking certification eligibility:', error);
     }
