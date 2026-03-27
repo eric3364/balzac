@@ -57,7 +57,7 @@ const BadgeCriteria = () => {
 
         const difficultyLevel = difficultyResult.data;
         const template = templateResult.data;
-        const questionCount = questionsResult.count || 0;
+        const questionCount = questionsResult.data || 0;
 
         setCriteria({
           level: difficultyLevel.level_number,
