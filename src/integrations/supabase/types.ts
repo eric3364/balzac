@@ -1148,6 +1148,18 @@ export type Database = {
         Args: { level_num: number }
         Returns: number
       }
+      get_public_footer_settings: {
+        Args: never
+        Returns: {
+          company_address: string
+          company_email: string
+          company_phone: string
+          cookie_management_url: string
+          copyright_text: string
+          legal_link_enabled: boolean
+          legal_link_label: string
+        }[]
+      }
       get_questions_safe: {
         Args: { level_filter?: string }
         Returns: {
