@@ -116,22 +116,9 @@ export default function Test() {
     return;
   }, [testSession, isCompleted]);
 
-  // Cleanup on page unload
+  // Cleanup on component unmount
   useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (testSession) {
-        // Use sendBeacon for reliable cleanup on page unload
-        navigator.sendBeacon('/api/end-session', JSON.stringify({
-          sessionId: testSession.id
-        }));
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      // Also cleanup when component unmounts
       endTestSession();
     };
   }, [testSession]);
