@@ -7,24 +7,19 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Simple in-memory rate limiting
+// In-memory rate limiting per user
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT = 10; // 10 verification attempts per window
-const RATE_WINDOW_MS = 60 * 1000; // 1 minute
+const RATE_LIMIT = 10;
+const RATE_WINDOW_MS = 60 * 1000;
 
 function checkRateLimit(userId: string): boolean {
   const now = Date.now();
   const record = rateLimitMap.get(userId);
-  
   if (!record || now > record.resetAt) {
     rateLimitMap.set(userId, { count: 1, resetAt: now + RATE_WINDOW_MS });
     return true;
   }
-  
-  if (record.count >= RATE_LIMIT) {
-    return false;
-  }
-  
+  if (record.count >= RATE_LIMIT) return false;
   record.count++;
   return true;
 }
@@ -46,16 +41,11 @@ serve(async (req) => {
       );
     }
 
-    // Validate sessionId format (Stripe session IDs start with cs_)
     if (!sessionId.startsWith("cs_") || sessionId.length > 100) {
       return new Response(
         JSON.stringify({ error: "Format de session ID invalide" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
       );
-    }
-    
-    if (!sessionId) {
-      throw new Error("Session ID requis");
     }
 
     // Authentification utilisateur
@@ -64,13 +54,31 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_ANON_KEY") ?? ""
     );
 
-    const authHeader = req.headers.get("Authorization")!;
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Non authentifié" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
+    }
+
     const token = authHeader.replace("Bearer ", "");
     const { data } = await supabaseClient.auth.getUser(token);
     const user = data.user;
-    
+
     if (!user) {
-      throw new Error("Utilisateur non authentifié");
+      return new Response(
+        JSON.stringify({ error: "Non authentifié" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
+    }
+
+    // Rate limiting
+    if (!checkRateLimit(user.id)) {
+      return new Response(
+        JSON.stringify({ error: "Trop de tentatives. Veuillez réessayer dans une minute." }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 429 }
+      );
     }
 
     // Initialiser Stripe
@@ -80,9 +88,8 @@ serve(async (req) => {
 
     // Récupérer les détails de la session
     const session = await stripe.checkout.sessions.retrieve(sessionId);
-    
+
     if (session.payment_status === 'paid' && session.metadata?.user_id === user.id) {
-      // Mettre à jour le statut du paiement
       const supabaseService = createClient(
         Deno.env.get("SUPABASE_URL") ?? "",
         Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
@@ -91,16 +98,16 @@ serve(async (req) => {
 
       await supabaseService
         .from("user_level_purchases")
-        .update({ 
+        .update({
           status: "completed",
           purchased_at: new Date().toISOString()
         })
         .eq("stripe_payment_intent_id", sessionId)
         .eq("user_id", user.id);
 
-      return new Response(JSON.stringify({ 
-        success: true, 
-        level: parseInt(session.metadata.level) 
+      return new Response(JSON.stringify({
+        success: true,
+        level: parseInt(session.metadata.level)
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -113,8 +120,7 @@ serve(async (req) => {
     });
   } catch (error: unknown) {
     console.error('Erreur lors de la vérification du paiement:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({ error: "Erreur lors de la vérification du paiement" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

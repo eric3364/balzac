@@ -144,8 +144,7 @@ serve(async (req) => {
     });
   } catch (error: unknown) {
     console.error('Erreur lors de la création du paiement:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({ error: "Erreur lors de la création du paiement" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
