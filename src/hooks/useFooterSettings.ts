@@ -38,13 +38,14 @@ export const useFooterSettings = () => {
 
   const loadSettings = async () => {
     try {
-      const { data: settingsData, error: settingsError } = await supabase
-        .from('footer_settings')
-        .select('*')
-        .maybeSingle();
+      // Use safe RPC for public display (no direct table access needed)
+      const { data: rpcData, error: rpcError } = await supabase
+        .rpc('get_public_footer_settings');
 
-      if (settingsError) {
-        throw settingsError;
+      const settingsData = rpcData && rpcData.length > 0 ? rpcData[0] : null;
+
+      if (rpcError) {
+        throw rpcError;
       }
 
       const { data: socialData, error: socialError } = await supabase
