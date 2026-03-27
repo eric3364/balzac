@@ -1,13 +1,23 @@
 {
-  "extends": "./tsconfig.json",
   "compilerOptions": {
     "jsx": "react-jsx",
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": [
+        "src/*"
+      ]
     },
-    "types": ["vite/client", "react", "react-dom"]
+    "types": [
+      "vite/client",
+      "react",
+      "react-dom"
+    ]
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": [
+    "node_modules",
+    "dist"
+  ],
+  "extends": "./tsconfig.json",
+  "include": [
+    "src"
+  ]
 }
