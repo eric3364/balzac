@@ -49,10 +49,9 @@ export const TestSettingsManager = () => {
       if (levelsError) throw levelsError;
       setLevels(levelsData || []);
 
-      // Charger les questions pour chaque niveau
+      // Charger les questions pour chaque niveau via RPC safe
       const { data: questionsData, error: questionsError } = await supabase
-        .from('questions')
-        .select('level');
+        .rpc('get_questions_safe');
 
       if (questionsError) throw questionsError;
 

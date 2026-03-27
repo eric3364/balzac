@@ -1138,11 +1138,27 @@ export type Database = {
           }
         | { Args: { p_email: string }; Returns: boolean }
       check_is_super_admin: { Args: never; Returns: boolean }
+      count_questions_by_level: {
+        Args: { level_filter: string }
+        Returns: number
+      }
       generate_credential_id: { Args: never; Returns: string }
       generate_temporary_access_code: { Args: never; Returns: string }
       get_free_sessions_for_level: {
         Args: { level_num: number }
         Returns: number
+      }
+      get_questions_safe: {
+        Args: { level_filter?: string }
+        Returns: {
+          choices: string[]
+          content: string
+          explanation: string
+          id: number
+          level: string
+          rule: string
+          type: string
+        }[]
       }
       get_session_questions: {
         Args: {

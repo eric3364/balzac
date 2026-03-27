@@ -46,9 +46,7 @@ const BadgeCriteria = () => {
             .eq('is_active', true)
             .maybeSingle(),
           supabase
-            .from('questions')
-            .select('count')
-            .eq('level', level)
+            .rpc('count_questions_by_level', { level_filter: level })
         ]);
 
         if (!difficultyResult.data) {
@@ -59,7 +57,7 @@ const BadgeCriteria = () => {
 
         const difficultyLevel = difficultyResult.data;
         const template = templateResult.data;
-        const questionCount = questionsResult.count || 0;
+        const questionCount = questionsResult.data || 0;
 
         setCriteria({
           level: difficultyLevel.level_number,

@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { ArrowLeft, Clock, Trophy, CheckCircle, AlertTriangle, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
-import { getLevelName } from '@/lib/levelMapping';
+// getLevelName removed - certification scoring now handled server-side
 
 interface Question {
   id: number;
@@ -116,22 +116,9 @@ export default function Test() {
     return;
   }, [testSession, isCompleted]);
 
-  // Cleanup on page unload
+  // Cleanup on component unmount
   useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (testSession) {
-        // Use sendBeacon for reliable cleanup on page unload
-        navigator.sendBeacon('/api/end-session', JSON.stringify({
-          sessionId: testSession.id
-        }));
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      // Also cleanup when component unmounts
       endTestSession();
     };
   }, [testSession]);
@@ -477,71 +464,36 @@ export default function Test() {
 
   const checkCertificationEligibility = async (level: number) => {
     try {
-      const levelName = getLevelName(level);
-      // Get all correct attempts for this level
-      const { data: correctAttempts } = await supabase
-        .from('question_attempts')
-        .select('question_id')
-        .eq('user_id', user!.id)
-        .eq('level', level)
-        .eq('is_correct', true);
+      // Attempt certification via secure edge function (server validates score)
+      const { data, error } = await supabase.functions.invoke('create-certification', {
+        body: { level }
+      });
       
-      // Get total questions for this level
-      const { data: totalQuestions } = await supabase
-        .from('questions')
-        .select('id')
-        .eq('level', levelName);
-      
-      const correctCount = correctAttempts?.length || 0;
-      const totalCount = totalQuestions?.length || 0;
-      
-      if (totalCount === 0) return;
-      
-      const overallScore = Math.round((correctCount / totalCount) * 100);
-      
-      if (overallScore >= 75) {
-        // User is certified for this level
-        await createCertification(level, overallScore);
-        setIsCompleted(true);
-        setScore(overallScore);
+      if (error) {
+        // Score too low or other validation failure - not an error to show
+        console.log('Certification check:', error);
+        return;
       }
       
+      if (data?.certification) {
+        const certification = data.certification;
+        setCertifications(prev => [...prev, {
+          ...certification,
+          certified_at: certification.certified_at || '',
+        }]);
+        setIsCompleted(true);
+        setScore(certification.score || 0);
+        
+        toast({
+          title: "🎉 Certification obtenue !",
+          description: `Félicitations ! Vous êtes certifié niveau ${level} !`,
+        });
+      }
     } catch (error) {
       console.error('Error checking certification eligibility:', error);
     }
   };
 
-  const createCertification = async (level: number, score: number) => {
-    try {
-      const { data: certification, error } = await supabase
-        .from('user_certifications')
-        .insert({
-          user_id: user!.id,
-          level: level,
-          score: score
-        })
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      setCertifications(prev => [...prev, {
-        ...certification,
-        certified_at: certification.certified_at || '',
-        issuing_organization: certification.issuing_organization || 'Organisation',
-        expiration_date: certification.expiration_date || null,
-        created_at: certification.created_at || ''
-      }]);
-      
-      toast({
-        title: "🎉 Certification obtenue !",
-        description: `Félicitations ! Vous êtes certifié niveau ${level} avec ${score}% de réussite.`,
-      });
-      
-    } catch (error) {
-      console.error('Error creating certification:', error);
-    }
-  };
 
   const continueWithNewBatch = async () => {
     const incorrectIds = Array.from(incorrectQuestions);

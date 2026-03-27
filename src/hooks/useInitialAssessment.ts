@@ -45,11 +45,9 @@ export const useInitialAssessment = () => {
 
   const getAssessmentQuestions = useCallback(async (): Promise<AssessmentQuestion[]> => {
     try {
-      // Récupérer des questions aléatoires de tous les niveaux
+      // Récupérer des questions sans les réponses via RPC sécurisée
       const { data: questions, error } = await supabase
-        .from('questions')
-        .select('*')
-        .in('level', ['élémentaire', 'intermédiaire', 'avancé']);
+        .rpc('get_questions_safe');
 
       if (error) throw error;
 
@@ -62,16 +60,16 @@ export const useInitialAssessment = () => {
 
       // Classifier les questions par catégorie basée sur la règle
       const categorizedQuestions: AssessmentQuestion[] = safeQuestions
-        .filter(q => q.content && q.answer) // Filtrer les questions valides (content et answer obligatoires)
+        .filter(q => q.content)
         .map(q => ({
           id: q.id,
           content: q.content!,
-          answer: q.answer!,
-          choices: [], // Colonne choices non utilisée
+          answer: '', // Answers are now validated server-side via validate-answer edge function
+          choices: [],
           explanation: q.explanation || '',
           rule: q.rule || '',
           type: q.type || 'multiple_choice',
-          created_at: q.created_at || new Date().toISOString(),
+          created_at: new Date().toISOString(),
           level: q.level || 'élémentaire',
           category: categorizeQuestion(q.rule || '')
         }));
