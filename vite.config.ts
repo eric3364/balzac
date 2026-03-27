@@ -28,7 +28,7 @@ export default defineConfig(({ mode }) => ({
         warn(warning)
       },
     },
-    sourcemap: true
+    sourcemap: false
   },
   optimizeDeps: {
     include: ['react', 'react-dom'],

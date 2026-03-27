@@ -14,15 +14,33 @@ interface UserInvite {
   city?: string
 }
 
-// Génère un mot de passe basé sur prénom.nom (3 premières lettres de chaque)
-function generatePassword(firstName: string, lastName: string): string {
-  const cleanFirstName = (firstName || 'abc').trim().toLowerCase().replace(/[^a-zA-Z]/g, '');
-  const cleanLastName = (lastName || 'xyz').trim().toLowerCase().replace(/[^a-zA-Z]/g, '');
+// Génère un mot de passe aléatoire sécurisé (12 caractères, mix majuscules/minuscules/chiffres/symboles)
+function generateSecurePassword(): string {
+  const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const lower = 'abcdefghjkmnpqrstuvwxyz';
+  const digits = '23456789';
+  const symbols = '!@#$%&*';
+  const all = upper + lower + digits + symbols;
   
-  const firstPart = cleanFirstName.substring(0, 3).padEnd(3, 'a');
-  const lastPart = cleanLastName.substring(0, 3).padEnd(3, 'a');
+  // Garantir au moins un de chaque type
+  const password = [
+    upper[Math.floor(Math.random() * upper.length)],
+    lower[Math.floor(Math.random() * lower.length)],
+    digits[Math.floor(Math.random() * digits.length)],
+    symbols[Math.floor(Math.random() * symbols.length)],
+  ];
   
-  return `${firstPart}.${lastPart}`;
+  for (let i = password.length; i < 12; i++) {
+    password.push(all[Math.floor(Math.random() * all.length)]);
+  }
+  
+  // Shuffle
+  for (let i = password.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [password[i], password[j]] = [password[j], password[i]];
+  }
+  
+  return password.join('');
 }
 
 Deno.serve(async (req) => {
@@ -31,14 +49,19 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Créer le client Supabase avec la clé service
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Vérifier l'authentification et les permissions admin
-    const authHeader = req.headers.get('Authorization')!
+    // Vérifier l'authentification
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Non autorisé' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
     const token = authHeader.replace('Bearer ', '')
     
     const { data: { user } } = await supabaseAdmin.auth.getUser(token)
@@ -46,10 +69,7 @@ Deno.serve(async (req) => {
     if (!user) {
       return new Response(
         JSON.stringify({ error: 'Non autorisé' }),
-        { 
-          status: 401, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -64,22 +84,16 @@ Deno.serve(async (req) => {
     if (!isAdmin) {
       return new Response(
         JSON.stringify({ error: 'Accès refusé' }),
-        { 
-          status: 403, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
     const { users }: { users: UserInvite[] } = await req.json()
     
-    if (!users || !Array.isArray(users)) {
+    if (!users || !Array.isArray(users) || users.length > 500) {
       return new Response(
-        JSON.stringify({ error: 'Format de données invalide' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
+        JSON.stringify({ error: 'Format de données invalide ou trop d\'utilisateurs (max 500)' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -87,7 +101,13 @@ Deno.serve(async (req) => {
     
     for (const userData of users) {
       try {
-        // Vérifier d'abord si l'utilisateur existe déjà dans la table users
+        // Validation basique de l'email
+        if (!userData.email || !userData.email.includes('@') || userData.email.length > 255) {
+          results.push({ email: userData.email || '', success: false, error: 'Email invalide' });
+          continue;
+        }
+
+        // Vérifier si l'utilisateur existe déjà
         const { data: existingUser } = await supabaseAdmin
           .from('users')
           .select('email')
@@ -103,50 +123,46 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Générer le mot de passe basé sur prénom.nom
-        const generatedPassword = generatePassword(userData.first_name || '', userData.last_name || '');
-        console.log(`Génération mot de passe pour ${userData.email}: ${generatedPassword}`);
+        // Générer un mot de passe sécurisé aléatoire
+        const generatedPassword = generateSecurePassword();
+        // Ne JAMAIS loguer le mot de passe
 
-        // Créer l'utilisateur avec mot de passe généré (sans invitation par email)
         const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
           email: userData.email,
           password: generatedPassword,
-          email_confirm: true, // Confirmer l'email automatiquement
+          email_confirm: true,
           user_metadata: {
-            first_name: userData.first_name || '',
-            last_name: userData.last_name || '',
-            school: userData.school || '',
-            class_name: userData.class_name || '',
-            city: userData.city || '',
-            force_password_change: true, // Flag pour forcer le changement de mot de passe
+            first_name: (userData.first_name || '').substring(0, 100),
+            last_name: (userData.last_name || '').substring(0, 100),
+            school: (userData.school || '').substring(0, 200),
+            class_name: (userData.class_name || '').substring(0, 100),
+            city: (userData.city || '').substring(0, 100),
+            force_password_change: true,
             generated_password: true
           }
         })
 
         if (authError) {
-          console.error('Erreur auth pour', userData.email, ':', authError)
+          console.error('Erreur auth pour', userData.email, ':', authError.message)
           let errorMessage = authError.message
           
-          // Gestion spéciale si l'utilisateur Auth existe déjà mais pas dans notre table users
           if (authError.message.includes('A user with this email address has already been registered')) {
-            // Récupérer l'utilisateur existant depuis Auth
             const { data: { users: existingAuthUsers }, error: getUserError } = await supabaseAdmin.auth.admin.listUsers();
             
             if (!getUserError) {
               const existingAuthUser = existingAuthUsers?.find(u => u.email === userData.email);
               
               if (existingAuthUser) {
-                // Créer l'entrée dans la table users pour cet utilisateur Auth existant
                 const { error: insertError } = await supabaseAdmin
                   .from('users')
                   .insert({
                     user_id: existingAuthUser.id,
                     email: userData.email,
-                    first_name: userData.first_name || '',
-                    last_name: userData.last_name || '',
-                    school: userData.school || '',
-                    class_name: userData.class_name || '',
-                    city: userData.city || ''
+                    first_name: (userData.first_name || '').substring(0, 100),
+                    last_name: (userData.last_name || '').substring(0, 100),
+                    school: (userData.school || '').substring(0, 200),
+                    class_name: (userData.class_name || '').substring(0, 100),
+                    city: (userData.city || '').substring(0, 100)
                   });
 
                 if (!insertError) {
@@ -158,28 +174,19 @@ Deno.serve(async (req) => {
                   });
                   continue;
                 } else {
-                  console.error('Erreur insertion users pour', userData.email, ':', insertError);
-                  errorMessage = 'Erreur lors de l\'ajout de l\'utilisateur existant au système';
+                  errorMessage = 'Erreur lors de l\'ajout de l\'utilisateur existant';
                 }
               }
             }
             
-            // Si ça n'a pas marché, utiliser le message d'erreur par défaut
             if (errorMessage === authError.message) {
-              errorMessage = 'Un utilisateur avec cet email existe déjà. Contactez l\'administrateur.';
+              errorMessage = 'Un utilisateur avec cet email existe déjà.';
             }
           }
           
-          results.push({
-            email: userData.email,
-            success: false,
-            error: errorMessage
-          })
+          results.push({ email: userData.email, success: false, error: errorMessage })
           continue
         }
-
-        // Le trigger handle_new_user() crée automatiquement l'entrée dans la table users
-        // Pas besoin de créer manuellement l'entrée
 
         results.push({
           email: userData.email,
@@ -190,12 +197,11 @@ Deno.serve(async (req) => {
         })
 
       } catch (error: unknown) {
-        console.error('Erreur pour', userData.email, ':', error)
-        const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+        console.error('Erreur pour', userData.email)
         results.push({
           email: userData.email,
           success: false,
-          error: errorMessage
+          error: 'Erreur interne'
         })
       }
     }
@@ -206,26 +212,16 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         results,
-        summary: {
-          total: users.length,
-          success: successCount,
-          errors: errorCount
-        }
+        summary: { total: users.length, success: successCount, errors: errorCount }
       }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
   } catch (error: unknown) {
-    console.error('Erreur générale:', error)
-    const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+    console.error('Erreur générale invite-users')
     return new Response(
-      JSON.stringify({ error: errorMessage }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      JSON.stringify({ error: 'Erreur interne du serveur' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
 })
