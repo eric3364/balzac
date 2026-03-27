@@ -64,7 +64,16 @@ export const useFooterSettings = () => {
 
       if (linksError) throw linksError;
 
-      const mappedSettings: FooterSettings = settingsData || {
+      const mappedSettings: FooterSettings = settingsData ? {
+        id: '',
+        copyright_text: settingsData.copyright_text || '© 2025 NEXT-U – Tous droits réservés.',
+        company_address: settingsData.company_address || null,
+        company_email: settingsData.company_email || null,
+        company_phone: settingsData.company_phone || null,
+        cookie_management_url: settingsData.cookie_management_url || '#',
+        legal_link_enabled: settingsData.legal_link_enabled ?? true,
+        legal_link_label: settingsData.legal_link_label || 'Mentions légales'
+      } : {
         id: '',
         copyright_text: '© 2025 NEXT-U – Tous droits réservés.',
         company_address: null,
