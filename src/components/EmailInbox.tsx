@@ -220,7 +220,7 @@ export const EmailInbox = () => {
           {/* Email body */}
           <div className="border rounded-lg p-4 bg-muted/30">
             {selectedEmail.body_html ? (
-              <div dangerouslySetInnerHTML={{ __html: selectedEmail.body_html }} className="prose max-w-none prose-sm" />
+              <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(selectedEmail.body_html, { ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'span', 'div', 'blockquote', 'table', 'tr', 'td', 'th', 'thead', 'tbody'], ALLOWED_ATTR: ['href', 'target', 'rel', 'class'] }) }} className="prose max-w-none prose-sm" />
             ) : (
               <pre className="whitespace-pre-wrap text-sm font-sans">{selectedEmail.body_text || '(contenu vide)'}</pre>
             )}
