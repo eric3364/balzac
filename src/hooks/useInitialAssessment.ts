@@ -45,11 +45,9 @@ export const useInitialAssessment = () => {
 
   const getAssessmentQuestions = useCallback(async (): Promise<AssessmentQuestion[]> => {
     try {
-      // Récupérer des questions aléatoires de tous les niveaux
+      // Récupérer des questions sans les réponses via RPC sécurisée
       const { data: questions, error } = await supabase
-        .from('questions')
-        .select('*')
-        .in('level', ['élémentaire', 'intermédiaire', 'avancé']);
+        .rpc('get_questions_safe');
 
       if (error) throw error;
 
