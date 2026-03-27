@@ -641,6 +641,13 @@ export type Database = {
             referencedRelation: "questions"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "question_attempts_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       questions: {
@@ -1116,7 +1123,33 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      questions_safe: {
+        Row: {
+          choices: string[] | null
+          content: string | null
+          id: number | null
+          level: string | null
+          rule: string | null
+          type: string | null
+        }
+        Insert: {
+          choices?: string[] | null
+          content?: string | null
+          id?: number | null
+          level?: string | null
+          rule?: string | null
+          type?: string | null
+        }
+        Update: {
+          choices?: string[] | null
+          content?: string | null
+          id?: number | null
+          level?: string | null
+          rule?: string | null
+          type?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       apply_promo_code: {
