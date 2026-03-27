@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { ArrowLeft, Clock, Trophy, CheckCircle, AlertTriangle, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
-import { getLevelName } from '@/lib/levelMapping';
+// getLevelName removed - certification scoring now handled server-side
 
 interface Question {
   id: number;
