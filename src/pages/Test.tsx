@@ -511,31 +511,29 @@ export default function Test() {
     }
   };
 
-  const createCertification = async (level: number, score: number) => {
+  const createCertification = async (level: number, _score: number) => {
     try {
-      const { data: certification, error } = await supabase
-        .from('user_certifications')
-        .insert({
-          user_id: user!.id,
-          level: level,
-          score: score
-        })
-        .select()
-        .single();
+      // Use edge function for secure server-side certification creation
+      const { data, error } = await supabase.functions.invoke('create-certification', {
+        body: { level }
+      });
       
       if (error) throw error;
       
-      setCertifications(prev => [...prev, {
-        ...certification,
-        certified_at: certification.certified_at || '',
-        issuing_organization: certification.issuing_organization || 'Organisation',
-        expiration_date: certification.expiration_date || null,
-        created_at: certification.created_at || ''
-      }]);
+      if (data?.certification) {
+        const certification = data.certification;
+        setCertifications(prev => [...prev, {
+          ...certification,
+          certified_at: certification.certified_at || '',
+          issuing_organization: certification.issuing_organization || 'Organisation',
+          expiration_date: certification.expiration_date || null,
+          created_at: certification.created_at || ''
+        }]);
+      }
       
       toast({
         title: "🎉 Certification obtenue !",
-        description: `Félicitations ! Vous êtes certifié niveau ${level} avec ${score}% de réussite.`,
+        description: `Félicitations ! Vous êtes certifié niveau ${level} !`,
       });
       
     } catch (error) {
