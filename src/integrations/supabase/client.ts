@@ -3,6 +3,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./types";
+import { brokeredPreviewStorage } from "./previewAuthStorage";
 
 // ⚠️ Récupération via variables d’environnement
 const SUPABASE_URL =
@@ -16,7 +17,7 @@ export const supabase = createClient<Database>(
   SUPABASE_ANON_KEY,
   {
     auth: {
-      storage: localStorage,
+      storage: brokeredPreviewStorage(),
       persistSession: true,
       autoRefreshToken: true,
     },
